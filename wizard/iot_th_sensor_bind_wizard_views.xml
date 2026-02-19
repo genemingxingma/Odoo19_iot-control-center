@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_iot_th_sensor_bind_wizard_form" model="ir.ui.view">
+        <field name="name">iot.th.sensor.bind.wizard.form</field>
+        <field name="model">iot.th.sensor.bind.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Bind Node by ID">
+                <group>
+                    <field name="node_id" placeholder="1c9d"/>
+                    <field name="probe_code" placeholder="CH01"/>
+                    <field name="company_id" groups="base.group_multi_company"/>
+                    <field name="location_id"/>
+                    <field name="location_detail"/>
+                </group>
+                <group string="Validation" invisible="candidate_count == 0">
+                    <field name="candidate_count"/>
+                    <field name="candidate_sensor_ids" widget="many2many_tags"/>
+                </group>
+                <footer>
+                    <button string="Validate ID" type="object" name="action_validate_id" class="btn-secondary"/>
+                    <button string="Bind" type="object" name="action_bind" class="btn-primary" invisible="validated != True"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_iot_th_sensor_list" model="ir.ui.view">
+        <field name="name">iot.th.sensor.list</field>
+        <field name="model">iot.th.sensor</field>
+        <field name="arch" type="xml">
+            <list create="0">
+                <field name="name"/>
+                <field name="node_id"/>
+                <field name="probe_code"/>
+                <field name="company_id"/>
+                <field name="location_id"/>
+                <field name="location_detail"/>
+                <field name="last_temperature"/>
+                <field name="last_humidity"/>
+                <field name="last_battery_voltage"/>
+                <field name="last_reported_at"/>
+                <field name="reading_count"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_iot_th_sensor_form" model="ir.ui.view">
+        <field name="name">iot.th.sensor.form</field>
+        <field name="model">iot.th.sensor</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_unbind" type="object" string="Unbind" class="btn-secondary" confirm="Unbind this node from current company?"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="node_id" readonly="1"/>
+                            <field name="probe_code" readonly="1"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                            <field name="gateway_id" readonly="1"/>
+                            <field name="location_id"/>
+                            <field name="location_detail"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="last_temperature" readonly="1"/>
+                            <field name="last_humidity" readonly="1"/>
+                            <field name="last_battery_voltage" readonly="1"/>
+                            <field name="last_reported_at" readonly="1"/>
+                            <field name="reading_count" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Thresholds">
+                        <field name="temperature_low"/>
+                        <field name="temperature_high"/>
+                        <field name="humidity_low"/>
+                        <field name="humidity_high"/>
+                    </group>
+                    <group string="Statistics Window">
+                        <field name="stats_window_hours"/>
+                        <field name="avg_temperature" readonly="1"/>
+                        <field name="min_temperature" readonly="1"/>
+                        <field name="max_temperature" readonly="1"/>
+                        <field name="avg_humidity" readonly="1"/>
+                        <field name="min_humidity" readonly="1"/>
+                        <field name="max_humidity" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_iot_th_sensor" model="ir.actions.act_window">
+        <field name="name">Sensors</field>
+        <field name="res_model">iot.th.sensor</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('company_id', '!=', False)]</field>
+        <field name="context">{'create': False}</field>
+    </record>
+
+    <record id="action_iot_th_sensor_bind_wizard" model="ir.actions.act_window">
+        <field name="name">Bind Node by ID</field>
+        <field name="res_model">iot.th.sensor.bind.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_iot_th_sensor" name="Sensors" parent="menu_iot_environment_root" action="action_iot_th_sensor" sequence="20" groups="base.group_erp_manager"/>
+    <menuitem id="menu_iot_th_sensor_bind" name="Bind Node by ID" parent="menu_iot_environment_root" action="action_iot_th_sensor_bind_wizard" sequence="21" groups="base.group_erp_manager"/>
+</odoo>

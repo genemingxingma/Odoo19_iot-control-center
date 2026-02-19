@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="menu_iot_root" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_user')])]"/>
+        <field name="action" ref="iot_control_center.action_iot_control_board"/>
+    </record>
+    <record id="menu_iot_mode_cards" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_user')])]"/>
+    </record>
+    <record id="menu_iot_mode_detailed" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_user')])]"/>
+    </record>
+    <record id="menu_iot_switch_cards" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_user')])]"/>
+    </record>
+    <record id="menu_iot_switch_root" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_user')])]"/>
+    </record>
+    <record id="menu_iot_device" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_user')])]"/>
+    </record>
+    <record id="menu_iot_device_bind" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_manager')])]"/>
+    </record>
+    <record id="menu_iot_schedule" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_manager')])]"/>
+    </record>
+    <record id="menu_iot_device_group" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_manager')])]"/>
+    </record>
+    <record id="menu_iot_firmware" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_manager')])]"/>
+    </record>
+    <record id="menu_iot_firmware_upgrade_log" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_manager')])]"/>
+    </record>
+    <record id="menu_iot_department" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_manager')])]"/>
+    </record>
+    <record id="menu_iot_location" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_manager')])]"/>
+    </record>
+    <record id="menu_iot_message" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_manager')])]"/>
+    </record>
+    <record id="menu_iot_control_board" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_user')])]"/>
+    </record>
+    <record id="menu_iot_environment_root" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_user')])]"/>
+    </record>
+    <record id="menu_iot_th_sensor" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_user')])]"/>
+    </record>
+    <record id="menu_iot_th_sensor_bind" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_manager')])]"/>
+    </record>
+    <record id="menu_iot_th_reading" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_user')])]"/>
+    </record>
+    <record id="menu_iot_th_alert" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_user')])]"/>
+    </record>
+    <record id="menu_iot_th_raw_packet" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_manager')])]"/>
+    </record>
+</odoo>

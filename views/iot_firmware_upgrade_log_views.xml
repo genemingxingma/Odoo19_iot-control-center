@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_iot_firmware_upgrade_log_list" model="ir.ui.view">
+        <field name="name">iot.firmware.upgrade.log.list</field>
+        <field name="model">iot.firmware.upgrade.log</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0" delete="0">
+                <field name="requested_at"/>
+                <field name="device_id"/>
+                <field name="firmware_id"/>
+                <field name="target_version"/>
+                <field name="reported_version"/>
+                <field name="state"/>
+                <field name="completed_at"/>
+                <field name="company_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_iot_firmware_upgrade_log_form" model="ir.ui.view">
+        <field name="name">iot.firmware.upgrade.log.form</field>
+        <field name="model">iot.firmware.upgrade.log</field>
+        <field name="arch" type="xml">
+            <form create="0" edit="0" delete="0">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="requested_at"/>
+                            <field name="device_id"/>
+                            <field name="firmware_id"/>
+                            <field name="company_id"/>
+                        </group>
+                        <group>
+                            <field name="target_version"/>
+                            <field name="reported_version"/>
+                            <field name="state"/>
+                            <field name="completed_at"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="command_payload"/>
+                        <field name="note"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_iot_firmware_upgrade_log" model="ir.actions.act_window">
+        <field name="name">Firmware Upgrade Logs</field>
+        <field name="res_model">iot.firmware.upgrade.log</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_iot_firmware_upgrade_log" name="Upgrade Logs" parent="menu_iot_switch_root" action="action_iot_firmware_upgrade_log" sequence="35" groups="base.group_erp_manager"/>
+</odoo>

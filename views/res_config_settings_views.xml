@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form_iot_control_center" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.iot.control.center</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app string="IoT Control Center" name="iot_control_center" groups="base.group_system">
+                    <block title="MQTT Broker">
+                        <setting string="MQTT Host">
+                            <field name="iot_mqtt_host" placeholder="iot.imytest.com"/>
+                        </setting>
+                        <setting string="MQTT Port">
+                            <field name="iot_mqtt_port"/>
+                        </setting>
+                        <setting string="MQTT Username">
+                            <field name="iot_mqtt_username"/>
+                        </setting>
+                        <setting string="MQTT Password">
+                            <field name="iot_mqtt_password" password="True"/>
+                        </setting>
+                        <setting string="Topic Root">
+                            <field name="iot_mqtt_topic_root"/>
+                        </setting>
+                        <setting string="MQTT Keepalive (sec)">
+                            <field name="iot_mqtt_keepalive"/>
+                        </setting>
+                        <setting string="Online Timeout (sec)">
+                            <field name="iot_online_timeout_sec"/>
+                        </setting>
+                        <setting string="Firmware Base URL">
+                            <field name="iot_firmware_base_url" placeholder="iot.imytest.com"/>
+                        </setting>
+                    </block>
+                    <block title="Temperature/Humidity TCP Ingest">
+                        <setting string="TCP Listen Host">
+                            <field name="iot_th_tcp_host" placeholder="0.0.0.0"/>
+                        </setting>
+                        <setting string="TCP Listen Port">
+                            <field name="iot_th_tcp_port"/>
+                        </setting>
+                        <setting string="TH Online Timeout (sec)">
+                            <field name="iot_th_online_timeout_sec"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+</odoo>

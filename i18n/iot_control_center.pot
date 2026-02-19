@@ -1,0 +1,1351 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* iot_control_center
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-02-13 12:15+0000\n"
+"PO-Revision-Date: 2026-02-13 12:15+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: \n"
+"Plural-Forms: \n"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "0.0.0.0"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "192.168.1.10"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_tree
+msgid "Accumulated ON (HH:MM)"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__action_id
+msgid "Action"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__message_needaction
+msgid "Action Needed"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__active
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_department__active
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__active
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_location__active
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__active
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__active
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__active
+msgid "Active"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__actual_value
+msgid "Actual Value"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__alert_count
+msgid "Alert Count"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__alert_type
+msgid "Alert Type"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_th_alert
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_th_alert
+msgid "Alerts"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__message_attachment_count
+msgid "Attachment Count"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__auth_token
+msgid "Auth Token"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__avg_humidity
+msgid "Avg Humidity"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__avg_temperature
+msgid "Avg Temperature"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_firmware_form
+msgid "Batch Push Upgrade"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_firmware_push_wizard_form
+msgid "Batch Upgrade Push"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__last_battery_voltage
+msgid "Battery Voltage (V)"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_control_board__color__blue
+msgid "Blue"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_firmware_push_wizard_form
+msgid "Cancel"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_mode_cards
+msgid "Card Mode"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__checksum
+msgid "Checksum"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_th_alert__state__closed
+msgid "Closed"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__closed_at
+msgid "Closed At"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__color
+msgid "Color"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__command
+msgid "Command"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_department__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_location__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__company_id
+msgid "Company"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_res_config_settings
+msgid "Config Settings"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_control_board
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_control_board
+msgid "Control Cards"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_department__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_location__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__create_uid
+msgid "Created by"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_department__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_location__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__create_date
+msgid "Created on"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_reading_search
+msgid "Day"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,help:iot_control_center.field_iot_th_gateway__statistics_window_hours
+msgid "Default analysis window in hours."
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__department_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__department_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_location__department_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__department_id
+msgid "Department"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_department
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_department
+msgid "Departments"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__description
+msgid "Description"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_mode_detailed
+msgid "Detailed Mode"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__device_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__device_id
+msgid "Device"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__device_serial
+msgid "Device Serial"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__device_ids
+msgid "Devices"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_department__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_location__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__display_name
+msgid "Display Name"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_mqtt_message__state__done
+msgid "Done"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_environment_root
+msgid "Environment"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__error
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_mqtt_message__state__error
+msgid "Error"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_schedule_form
+msgid "Execution Days"
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_device.py:0
+msgid "Failed to publish MQTT command for %s"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__file
+msgid "File"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__filename
+msgid "Filename"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_firmware
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__firmware_id
+msgid "Firmware"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_firmware
+msgid "Firmware Management"
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/wizard/iot_firmware_push_wizard.py:0
+msgid "Firmware Push"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__firmware_version
+msgid "Firmware Version"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__message_follower_ids
+msgid "Followers"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__message_partner_ids
+msgid "Followers (Partners)"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__friday
+msgid "Friday"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__gateway_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__gateway_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__gateway_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__gateway_id
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_reading_search
+msgid "Gateway"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__serial
+msgid "Gateway ID"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_th_gateway
+msgid "Gateways"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_control_board__color__gray
+msgid "Gray"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_control_board__color__green
+msgid "Green"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__has_message
+msgid "Has Message"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__hour
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_reading_search
+msgid "Hour"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__humidity
+msgid "Humidity"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__humidity_high
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_th_alert__alert_type__hum_high
+msgid "Humidity High"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__humidity_low
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_th_alert__alert_type__hum_low
+msgid "Humidity Low"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_department__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_location__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__id
+#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__id
+msgid "ID"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__icon_class
+msgid "Icon Class"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,help:iot_control_center.field_iot_device__message_needaction
+msgid "If checked, new messages require your attention."
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,help:iot_control_center.field_iot_device__message_has_error
+msgid "If checked, some messages have a delivery error."
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__schedule_sync_state__in_sync
+msgid "In Sync"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.actions.server,name:iot_control_center.cron_iot_ensure_mqtt_service_ir_actions_server
+msgid "IoT - Ensure MQTT Service"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.actions.server,name:iot_control_center.cron_iot_process_mqtt_messages_ir_actions_server
+msgid "IoT - Process MQTT Messages"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.actions.server,name:iot_control_center.cron_iot_update_live_uptime_ir_actions_server
+msgid "IoT - Update Live Uptime"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_control_board
+msgid "IoT Control Board Card"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_root
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "IoT Control Center"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_department
+msgid "IoT Department"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_firmware
+msgid "IoT Firmware"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_location
+msgid "IoT Location"
+msgstr ""
+
+#. module: iot_control_center
+#: model:res.groups,name:iot_control_center.group_iot_manager
+msgid "IoT Manager"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_device
+msgid "IoT Relay Device"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_schedule
+msgid "IoT Relay Schedule"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.actions.server,name:iot_control_center.cron_iot_th_ensure_tcp_service_ir_actions_server
+msgid "IoT TH - Ensure TCP Service"
+msgstr ""
+
+#. module: iot_control_center
+#: model:res.groups,name:iot_control_center.group_iot_user
+msgid "IoT User"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_mqtt_host
+msgid "Iot Mqtt Host"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_mqtt_keepalive
+msgid "Iot Mqtt Keepalive"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_mqtt_password
+msgid "Iot Mqtt Password"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_mqtt_port
+msgid "Iot Mqtt Port"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_mqtt_topic_root
+msgid "Iot Mqtt Topic Root"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_mqtt_username
+msgid "Iot Mqtt Username"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_online_timeout_sec
+msgid "Iot Online Timeout Sec"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_th_online_timeout_sec
+msgid "Iot Th Online Timeout Sec"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_th_tcp_host
+msgid "Iot Th Tcp Host"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_th_tcp_port
+msgid "Iot Th Tcp Port"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__message_is_follower
+msgid "Is Follower"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__key
+msgid "Key"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__last_command_at
+msgid "Last Command At"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__last_command_payload
+msgid "Last Command Payload"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__last_humidity
+msgid "Last Humidity"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__last_reported_at
+msgid "Last Reported At"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__last_seen
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__last_seen
+msgid "Last Seen"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__last_temperature
+msgid "Last Temperature"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_department__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_location__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__write_uid
+msgid "Last Updated by"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_department__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_location__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__write_date
+msgid "Last Updated on"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__location_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__location_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__location_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__location_id
+msgid "Location"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__location_detail
+msgid "Location Detail"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_location
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_location
+msgid "Locations"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "MQTT Broker"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "MQTT Host"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "MQTT Keepalive (sec)"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_mqtt_message
+msgid "MQTT Message Queue"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_mqtt_message
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_message
+msgid "MQTT Messages"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "MQTT Password"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "MQTT Port"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "MQTT Username"
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_device.py:0
+msgid "MQTT is not configured. Please set broker settings first."
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__max_humidity
+msgid "Max Humidity"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__max_temperature
+msgid "Max Temperature"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__message_has_error
+msgid "Message Delivery error"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__message_type
+msgid "Message Type"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__message_ids
+msgid "Messages"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__metric_1_label
+msgid "Metric 1 Label"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__metric_1_value
+msgid "Metric 1 Value"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__metric_2_label
+msgid "Metric 2 Label"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__metric_2_value
+msgid "Metric 2 Value"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__min_humidity
+msgid "Min Humidity"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__min_temperature
+msgid "Min Temperature"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__minute
+msgid "Minute"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__monday
+msgid "Monday"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_department__name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_location__name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__name
+msgid "Name"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_mqtt_message__state__new
+msgid "New"
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/wizard/iot_firmware_push_wizard.py:0
+msgid "No matched devices for push."
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__node_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__node_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__node_id
+msgid "Node ID"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__note
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__note
+msgid "Note"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__message_needaction_counter
+msgid "Number of Actions"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__message_has_error_counter
+msgid "Number of errors"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,help:iot_control_center.field_iot_device__message_needaction_counter
+msgid "Number of messages requiring action"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,help:iot_control_center.field_iot_device__message_has_error_counter
+msgid "Number of messages with delivery error"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__occurred_at
+msgid "Occurred At"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__relay_state__off
+msgid "Off"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__relay_state__on
+msgid "On"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__on_since
+msgid "On Since"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__online
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__online
+msgid "Online"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "Online Timeout (sec)"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_th_alert__state__open
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_control_board_kanban
+msgid "Open"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_gateway_form
+msgid "Open Alerts"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,help:iot_control_center.field_iot_th_gateway__tcp_token
+msgid "Optional token for gateway payload authentication."
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_control_board__color__orange
+msgid "Orange"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_control_board__key__other
+msgid "Other"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__schedule_sync_state__outdated
+msgid "Outdated"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__parse_error
+msgid "Parse Error"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_raw_packet_search
+msgid "Parse Fail"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_raw_packet_search
+msgid "Parse OK"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__parse_ok
+msgid "Parse Ok"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__payload
+msgid "Payload"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__schedule_sync_state__pending
+msgid "Pending"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__processed_at
+msgid "Processed At"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__protocol
+msgid "Protocol"
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_firmware.py:0
+msgid "Push Firmware"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_firmware_push_wizard
+msgid "Push Firmware to Devices"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_firmware_push_wizard_form
+msgid "Push Upgrade"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_th_raw_packet
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_th_raw_packet
+msgid "Raw Packets"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__raw_payload
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__raw_payload
+msgid "Raw Payload"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__reading_ids
+msgid "Reading"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__reading_count
+msgid "Reading Count"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_th_reading
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_th_reading
+msgid "Readings & Analysis"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__received_at
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__received_at
+msgid "Received At"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,help:iot_control_center.field_iot_th_gateway__sampling_interval_min
+msgid "Recommended gateway upload interval in minutes."
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_control_board__key__relay
+msgid "Relay"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__relay_state
+msgid "Relay State"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__reported_at
+msgid "Reported At"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_form
+msgid "Reset Accumulated Time"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__sampling_interval_min
+msgid "Sampling Interval Min"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__saturday
+msgid "Saturday"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__schedule_applied_version
+msgid "Schedule Applied Version"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__schedule_dirty
+msgid "Schedule Dirty"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__schedule_last_push_at
+msgid "Schedule Last Push At"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__schedule_last_sync_at
+msgid "Schedule Last Sync At"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__schedule_sync_state
+msgid "Schedule Sync State"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__schedule_version
+msgid "Schedule Version"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_schedule
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_schedule
+msgid "Schedules"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__sensor_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__sensor_ids
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__sensor_id
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_reading_search
+msgid "Sensor"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__sensor_count
+msgid "Sensor Count"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__sensor_code
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__probe_code
+msgid "Sensor ID"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_th_sensor
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_th_sensor
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_gateway_form
+msgid "Sensors"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__sequence
+msgid "Sequence"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__serial
+msgid "Serial"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__serial_hint
+msgid "Serial Hint"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__source_ip
+msgid "Source Ip"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__source_port
+msgid "Source Port"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__state
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__state
+msgid "State"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_sensor_form
+msgid "Statistics Window"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__statistics_window_hours
+msgid "Statistics Window Hours"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__stats_window_hours
+msgid "Stats Window Hours"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_mqtt_message__message_type__status
+msgid "Status"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__sunday
+msgid "Sunday"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_device
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_switch_root
+msgid "Switch"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_device
+msgid "Switches"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_form
+msgid "Sync Schedule"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_th_raw_packet__protocol__tcp_binary
+msgid "TCP Binary"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_th_raw_packet__protocol__tcp_chunk
+msgid "TCP Chunk"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_th_raw_packet__protocol__tcp_json
+msgid "TCP JSON"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "TCP Listen Host"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "TCP Listen Port"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_th_raw_packet__protocol__tcp_unknown
+msgid "TCP Unknown"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_th_gateway
+msgid "TH Gateways"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "TH Online Timeout (sec)"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__tcp_token
+msgid "Tcp Token"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_mqtt_message__message_type__telemetry
+msgid "Telemetry"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__temperature
+msgid "Temperature"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__temperature_high
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_th_alert__alert_type__temp_high
+msgid "Temperature High"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__temperature_low
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_th_alert__alert_type__temp_low
+msgid "Temperature Low"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_control_board__key__th
+msgid "Temperature/Humidity"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_th_alert
+msgid "Temperature/Humidity Alert"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_th_gateway
+msgid "Temperature/Humidity Gateway"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_th_raw_packet
+msgid "Temperature/Humidity Raw Packet"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_th_reading
+msgid "Temperature/Humidity Reading"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_th_sensor
+msgid "Temperature/Humidity Sensor"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_reading_pivot
+msgid "Temperature/Humidity Statistics"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "Temperature/Humidity TCP Ingest"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_reading_graph
+msgid "Temperature/Humidity Trend"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__threshold_value
+msgid "Threshold Value"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_sensor_form
+msgid "Thresholds"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__thursday
+msgid "Thursday"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__timezone
+msgid "Timezone"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_raw_packet_search
+msgid "Today"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_form
+msgid "Toggle"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__topic
+msgid "Topic"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "Topic Root"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__total_on_display
+msgid "Total On Display"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__total_on_minutes
+msgid "Total On Minutes"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__tuesday
+msgid "Tuesday"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_schedule__command__off
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_form
+msgid "Turn Off"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_schedule__command__on
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_form
+msgid "Turn On"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__relay_state__unknown
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_mqtt_message__message_type__unknown
+msgid "Unknown"
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/wizard/iot_firmware_push_wizard.py:0
+msgid "Upgrade command sent to %s device(s)."
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__version
+msgid "Version"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__wednesday
+msgid "Wednesday"
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_firmware.py:0
+msgid "web.base.url is not configured."
+msgstr ""

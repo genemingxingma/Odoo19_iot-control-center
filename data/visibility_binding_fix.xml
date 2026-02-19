@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="menu_iot_th_gateway" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('base.group_no_one')])]"/>
+    </record>
+
+    <record id="card_environment_control" model="iot.control.board">
+        <field name="description">Manage nodes, trends, and threshold alerts.</field>
+        <field name="action_id" ref="iot_control_center.action_iot_th_sensor"/>
+    </record>
+</odoo>

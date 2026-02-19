@@ -1,0 +1,1402 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+# 	* iot_control_center
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-02-13 12:15+0000\n"
+"PO-Revision-Date: 2026-02-13 00:00+0000\n"
+"Last-Translator: mamingxing <mamingxing@imytest.local>\n"
+"Language-Team: Chinese (Simplified)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "0.0.0.0"
+msgstr "0.0.0.0"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "192.168.1.10"
+msgstr "192.168.1.10"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_tree
+msgid "Accumulated ON (HH:MM)"
+msgstr "累计接通 (HH:MM)"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__action_id
+msgid "Action"
+msgstr "动作"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__message_needaction
+msgid "Action Needed"
+msgstr "需要处理"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__active
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_department__active
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__active
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_location__active
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__active
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__active
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__active
+msgid "Active"
+msgstr "启用"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__actual_value
+msgid "Actual Value"
+msgstr "实际值"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__alert_count
+msgid "Alert Count"
+msgstr "告警数量"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__alert_type
+msgid "Alert Type"
+msgstr "告警类型"
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_th_alert
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_th_alert
+msgid "Alerts"
+msgstr "告警"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__message_attachment_count
+msgid "Attachment Count"
+msgstr "附件数量"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__auth_token
+msgid "Auth Token"
+msgstr "认证令牌"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__avg_humidity
+msgid "Avg Humidity"
+msgstr "平均湿度"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__avg_temperature
+msgid "Avg Temperature"
+msgstr "平均温度"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_firmware_form
+msgid "Batch Push Upgrade"
+msgstr "批量下发升级"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_firmware_push_wizard_form
+msgid "Batch Upgrade Push"
+msgstr "批量升级下发"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__last_battery_voltage
+msgid "Battery Voltage (V)"
+msgstr "电池电压 (V)"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_control_board__color__blue
+msgid "Blue"
+msgstr "蓝色"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_firmware_push_wizard_form
+msgid "Cancel"
+msgstr "取消"
+
+#. module: iot_control_center
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_mode_cards
+msgid "Card Mode"
+msgstr "卡片模式"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__checksum
+msgid "Checksum"
+msgstr "校验和"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_th_alert__state__closed
+msgid "Closed"
+msgstr "已关闭"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__closed_at
+msgid "Closed At"
+msgstr "关闭时间"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__color
+msgid "Color"
+msgstr "颜色"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__command
+msgid "Command"
+msgstr "命令"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_department__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_location__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__company_id
+msgid "Company"
+msgstr "公司"
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_res_config_settings
+msgid "Config Settings"
+msgstr "配置设置"
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_control_board
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_control_board
+msgid "Control Cards"
+msgstr "控制卡片"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_department__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_location__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__create_uid
+msgid "Created by"
+msgstr "创建人"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_department__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_location__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__create_date
+msgid "Created on"
+msgstr "创建时间"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_reading_search
+msgid "Day"
+msgstr "天"
+
+#. module: iot_control_center
+#: model:ir.model.fields,help:iot_control_center.field_iot_th_gateway__statistics_window_hours
+msgid "Default analysis window in hours."
+msgstr "默认分析窗口（小时）。"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__department_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__department_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_location__department_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__department_id
+msgid "Department"
+msgstr "部门"
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_department
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_department
+msgid "Departments"
+msgstr "部门"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__description
+msgid "Description"
+msgstr "描述"
+
+#. module: iot_control_center
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_mode_detailed
+msgid "Detailed Mode"
+msgstr "明细模式"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__device_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__device_id
+msgid "Device"
+msgstr "设备"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__device_serial
+msgid "Device Serial"
+msgstr "设备序列号"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__device_ids
+msgid "Devices"
+msgstr "设备"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_department__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_location__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__display_name
+msgid "Display Name"
+msgstr "显示名称"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_mqtt_message__state__done
+msgid "Done"
+msgstr "完成"
+
+#. module: iot_control_center
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_environment_root
+msgid "Environment"
+msgstr "环境监控"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__error
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_mqtt_message__state__error
+msgid "Error"
+msgstr "错误"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_schedule_form
+msgid "Execution Days"
+msgstr "执行日"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_device.py:0
+msgid "Failed to publish MQTT command for %s"
+msgstr "无法为 %s 发布 MQTT 命令"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__file
+msgid "File"
+msgstr "文件"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__filename
+msgid "Filename"
+msgstr "文件名"
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_firmware
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__firmware_id
+msgid "Firmware"
+msgstr "固件"
+
+#. module: iot_control_center
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_firmware
+msgid "Firmware Management"
+msgstr "固件管理"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/wizard/iot_firmware_push_wizard.py:0
+msgid "Firmware Push"
+msgstr "固件下发"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__firmware_version
+msgid "Firmware Version"
+msgstr "固件版本"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__message_follower_ids
+msgid "Followers"
+msgstr "关注者"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__message_partner_ids
+msgid "Followers (Partners)"
+msgstr "关注者（伙伴）"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__friday
+msgid "Friday"
+msgstr "周五"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__gateway_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__gateway_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__gateway_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__gateway_id
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_reading_search
+msgid "Gateway"
+msgstr "网关"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__serial
+msgid "Gateway ID"
+msgstr "网关ID"
+
+#. module: iot_control_center
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_th_gateway
+msgid "Gateways"
+msgstr "网关"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_control_board__color__gray
+msgid "Gray"
+msgstr "灰色"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_control_board__color__green
+msgid "Green"
+msgstr "绿色"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__has_message
+msgid "Has Message"
+msgstr "有消息"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__hour
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_reading_search
+msgid "Hour"
+msgstr "小时"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__humidity
+msgid "Humidity"
+msgstr "湿度"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__humidity_high
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_th_alert__alert_type__hum_high
+msgid "Humidity High"
+msgstr "湿度上限"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__humidity_low
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_th_alert__alert_type__hum_low
+msgid "Humidity Low"
+msgstr "湿度下限"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_department__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_location__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__id
+#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__id
+msgid "ID"
+msgstr "标识"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__icon_class
+msgid "Icon Class"
+msgstr "图标类"
+
+#. module: iot_control_center
+#: model:ir.model.fields,help:iot_control_center.field_iot_device__message_needaction
+msgid "If checked, new messages require your attention."
+msgstr "勾选后，新消息需要你处理。"
+
+#. module: iot_control_center
+#: model:ir.model.fields,help:iot_control_center.field_iot_device__message_has_error
+msgid "If checked, some messages have a delivery error."
+msgstr "勾选后，表示部分消息存在投递错误。"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__schedule_sync_state__in_sync
+msgid "In Sync"
+msgstr "已同步"
+
+#. module: iot_control_center
+#: model:ir.actions.server,name:iot_control_center.cron_iot_ensure_mqtt_service_ir_actions_server
+msgid "IoT - Ensure MQTT Service"
+msgstr "IoT - 确保MQTT服务"
+
+#. module: iot_control_center
+#: model:ir.actions.server,name:iot_control_center.cron_iot_process_mqtt_messages_ir_actions_server
+msgid "IoT - Process MQTT Messages"
+msgstr "IoT - 处理MQTT消息"
+
+#. module: iot_control_center
+#: model:ir.actions.server,name:iot_control_center.cron_iot_update_live_uptime_ir_actions_server
+msgid "IoT - Update Live Uptime"
+msgstr "IoT - 更新实时在线时长"
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_control_board
+msgid "IoT Control Board Card"
+msgstr "IoT 控制看板卡片"
+
+#. module: iot_control_center
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_root
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "IoT Control Center"
+msgstr "IoT控制中心"
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_department
+msgid "IoT Department"
+msgstr "IoT部门"
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_firmware
+msgid "IoT Firmware"
+msgstr "IoT固件"
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_location
+msgid "IoT Location"
+msgstr "IoT位置"
+
+#. module: iot_control_center
+#: model:res.groups,name:iot_control_center.group_iot_manager
+msgid "IoT Manager"
+msgstr "IoT管理员"
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_device
+msgid "IoT Relay Device"
+msgstr "IoT继电器设备"
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_schedule
+msgid "IoT Relay Schedule"
+msgstr "IoT继电器定时"
+
+#. module: iot_control_center
+#: model:ir.actions.server,name:iot_control_center.cron_iot_th_ensure_tcp_service_ir_actions_server
+msgid "IoT TH - Ensure TCP Service"
+msgstr "IoT 温湿度 - 确保TCP服务"
+
+#. module: iot_control_center
+#: model:res.groups,name:iot_control_center.group_iot_user
+msgid "IoT User"
+msgstr "IoT用户"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_mqtt_host
+msgid "Iot Mqtt Host"
+msgstr "MQTT主机"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_mqtt_keepalive
+msgid "Iot Mqtt Keepalive"
+msgstr "MQTT保活"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_mqtt_password
+msgid "Iot Mqtt Password"
+msgstr "MQTT密码"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_mqtt_port
+msgid "Iot Mqtt Port"
+msgstr "MQTT端口"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_mqtt_topic_root
+msgid "Iot Mqtt Topic Root"
+msgstr "MQTT主题根"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_mqtt_username
+msgid "Iot Mqtt Username"
+msgstr "MQTT用户名"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_online_timeout_sec
+msgid "Iot Online Timeout Sec"
+msgstr "在线超时（秒）"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_th_online_timeout_sec
+msgid "Iot Th Online Timeout Sec"
+msgstr "温湿度在线超时（秒）"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_th_tcp_host
+msgid "Iot Th Tcp Host"
+msgstr "温湿度TCP主机"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_th_tcp_port
+msgid "Iot Th Tcp Port"
+msgstr "温湿度TCP端口"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__message_is_follower
+msgid "Is Follower"
+msgstr "是否关注"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__key
+msgid "Key"
+msgstr "键"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__last_command_at
+msgid "Last Command At"
+msgstr "最后命令时间"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__last_command_payload
+msgid "Last Command Payload"
+msgstr "最后命令载荷"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__last_humidity
+msgid "Last Humidity"
+msgstr "最后湿度"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__last_reported_at
+msgid "Last Reported At"
+msgstr "最后上报时间"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__last_seen
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__last_seen
+msgid "Last Seen"
+msgstr "最后在线时间"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__last_temperature
+msgid "Last Temperature"
+msgstr "最后温度"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_department__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_location__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__write_uid
+msgid "Last Updated by"
+msgstr "最后更新人"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_department__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_location__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__write_date
+msgid "Last Updated on"
+msgstr "最后更新时间"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__location_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__location_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__location_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__location_id
+msgid "Location"
+msgstr "位置"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__location_detail
+msgid "Location Detail"
+msgstr "位置说明"
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_location
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_location
+msgid "Locations"
+msgstr "位置"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "MQTT Broker"
+msgstr "MQTT代理"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "MQTT Host"
+msgstr "MQTT主机"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "MQTT Keepalive (sec)"
+msgstr "MQTT保活（秒）"
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_mqtt_message
+msgid "MQTT Message Queue"
+msgstr "MQTT消息队列"
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_mqtt_message
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_message
+msgid "MQTT Messages"
+msgstr "MQTT消息"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "MQTT Password"
+msgstr "MQTT密码"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "MQTT Port"
+msgstr "MQTT端口"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "MQTT Username"
+msgstr "MQTT用户名"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_device.py:0
+msgid "MQTT is not configured. Please set broker settings first."
+msgstr "MQTT 未配置，请先设置 Broker 参数。"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__max_humidity
+msgid "Max Humidity"
+msgstr "最高湿度"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__max_temperature
+msgid "Max Temperature"
+msgstr "最高温度"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__message_has_error
+msgid "Message Delivery error"
+msgstr "消息投递错误"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__message_type
+msgid "Message Type"
+msgstr "消息类型"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__message_ids
+msgid "Messages"
+msgstr "消息"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__metric_1_label
+msgid "Metric 1 Label"
+msgstr "指标1标签"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__metric_1_value
+msgid "Metric 1 Value"
+msgstr "指标1值"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__metric_2_label
+msgid "Metric 2 Label"
+msgstr "指标2标签"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__metric_2_value
+msgid "Metric 2 Value"
+msgstr "指标2值"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__min_humidity
+msgid "Min Humidity"
+msgstr "最低湿度"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__min_temperature
+msgid "Min Temperature"
+msgstr "最低温度"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__minute
+msgid "Minute"
+msgstr "分钟"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__monday
+msgid "Monday"
+msgstr "周一"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_department__name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_location__name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__name
+msgid "Name"
+msgstr "名称"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_mqtt_message__state__new
+msgid "New"
+msgstr "新建"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/wizard/iot_firmware_push_wizard.py:0
+msgid "No matched devices for push."
+msgstr "没有匹配可下发的设备。"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__node_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__node_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__node_id
+msgid "Node ID"
+msgstr "节点ID"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__note
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__note
+msgid "Note"
+msgstr "备注"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__message_needaction_counter
+msgid "Number of Actions"
+msgstr "操作数量"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__message_has_error_counter
+msgid "Number of errors"
+msgstr "错误数量"
+
+#. module: iot_control_center
+#: model:ir.model.fields,help:iot_control_center.field_iot_device__message_needaction_counter
+msgid "Number of messages requiring action"
+msgstr "需要处理的消息数量"
+
+#. module: iot_control_center
+#: model:ir.model.fields,help:iot_control_center.field_iot_device__message_has_error_counter
+msgid "Number of messages with delivery error"
+msgstr "投递失败消息数量"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__occurred_at
+msgid "Occurred At"
+msgstr "发生时间"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__relay_state__off
+msgid "Off"
+msgstr "关"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__relay_state__on
+msgid "On"
+msgstr "开"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__on_since
+msgid "On Since"
+msgstr "接通起始"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__online
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__online
+msgid "Online"
+msgstr "在线"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "Online Timeout (sec)"
+msgstr "在线超时（秒）"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_th_alert__state__open
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_control_board_kanban
+msgid "Open"
+msgstr "打开"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_gateway_form
+msgid "Open Alerts"
+msgstr "当前告警"
+
+#. module: iot_control_center
+#: model:ir.model.fields,help:iot_control_center.field_iot_th_gateway__tcp_token
+msgid "Optional token for gateway payload authentication."
+msgstr "网关载荷认证的可选令牌。"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_control_board__color__orange
+msgid "Orange"
+msgstr "橙色"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_control_board__key__other
+msgid "Other"
+msgstr "其他"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__schedule_sync_state__outdated
+msgid "Outdated"
+msgstr "已过期"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__parse_error
+msgid "Parse Error"
+msgstr "解析错误"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_raw_packet_search
+msgid "Parse Fail"
+msgstr "解析失败"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_raw_packet_search
+msgid "Parse OK"
+msgstr "解析成功"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__parse_ok
+msgid "Parse Ok"
+msgstr "解析成功"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__payload
+msgid "Payload"
+msgstr "载荷"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__schedule_sync_state__pending
+msgid "Pending"
+msgstr "待处理"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__processed_at
+msgid "Processed At"
+msgstr "处理时间"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__protocol
+msgid "Protocol"
+msgstr "协议"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_firmware.py:0
+msgid "Push Firmware"
+msgstr "下发固件"
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_firmware_push_wizard
+msgid "Push Firmware to Devices"
+msgstr "向设备下发固件"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_firmware_push_wizard_form
+msgid "Push Upgrade"
+msgstr "下发升级"
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_th_raw_packet
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_th_raw_packet
+msgid "Raw Packets"
+msgstr "原始报文"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__raw_payload
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__raw_payload
+msgid "Raw Payload"
+msgstr "原始载荷"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__reading_ids
+msgid "Reading"
+msgstr "读数"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__reading_count
+msgid "Reading Count"
+msgstr "读数数量"
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_th_reading
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_th_reading
+msgid "Readings & Analysis"
+msgstr "读数与分析"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__received_at
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__received_at
+msgid "Received At"
+msgstr "接收时间"
+
+#. module: iot_control_center
+#: model:ir.model.fields,help:iot_control_center.field_iot_th_gateway__sampling_interval_min
+msgid "Recommended gateway upload interval in minutes."
+msgstr "建议网关上报间隔（分钟）。"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_control_board__key__relay
+msgid "Relay"
+msgstr "继电器"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__relay_state
+msgid "Relay State"
+msgstr "继电器状态"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__reported_at
+msgid "Reported At"
+msgstr "上报时间"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_form
+msgid "Reset Accumulated Time"
+msgstr "重置累计时间"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__sampling_interval_min
+msgid "Sampling Interval Min"
+msgstr "采样间隔（分钟）"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__saturday
+msgid "Saturday"
+msgstr "周六"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__schedule_applied_version
+msgid "Schedule Applied Version"
+msgstr "计划已应用版本"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__schedule_dirty
+msgid "Schedule Dirty"
+msgstr "计划待同步"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__schedule_last_push_at
+msgid "Schedule Last Push At"
+msgstr "计划最后下发时间"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__schedule_last_sync_at
+msgid "Schedule Last Sync At"
+msgstr "计划最后同步时间"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__schedule_sync_state
+msgid "Schedule Sync State"
+msgstr "计划同步状态"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__schedule_version
+msgid "Schedule Version"
+msgstr "计划版本"
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_schedule
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_schedule
+msgid "Schedules"
+msgstr "定时计划"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__sensor_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__sensor_ids
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__sensor_id
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_reading_search
+msgid "Sensor"
+msgstr "传感器"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__sensor_count
+msgid "Sensor Count"
+msgstr "传感器数量"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__sensor_code
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__probe_code
+msgid "Sensor ID"
+msgstr "传感器ID"
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_th_sensor
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_th_sensor
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_gateway_form
+msgid "Sensors"
+msgstr "传感器"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__sequence
+msgid "Sequence"
+msgstr "序号"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__serial
+msgid "Serial"
+msgstr "序列号"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__serial_hint
+msgid "Serial Hint"
+msgstr "序列提示"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__source_ip
+msgid "Source Ip"
+msgstr "来源IP"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_raw_packet__source_port
+msgid "Source Port"
+msgstr "来源端口"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__state
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__state
+msgid "State"
+msgstr "状态"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_sensor_form
+msgid "Statistics Window"
+msgstr "统计窗口"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__statistics_window_hours
+msgid "Statistics Window Hours"
+msgstr "统计窗口小时数"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__stats_window_hours
+msgid "Stats Window Hours"
+msgstr "统计窗口小时数"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_mqtt_message__message_type__status
+msgid "Status"
+msgstr "状态"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__sunday
+msgid "Sunday"
+msgstr "周日"
+
+#. module: iot_control_center
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_device
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_switch_root
+msgid "Switch"
+msgstr "开关"
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_device
+msgid "Switches"
+msgstr "开关"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_form
+msgid "Sync Schedule"
+msgstr "同步计划"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_th_raw_packet__protocol__tcp_binary
+msgid "TCP Binary"
+msgstr "TCP二进制"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_th_raw_packet__protocol__tcp_chunk
+msgid "TCP Chunk"
+msgstr "TCP分片"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_th_raw_packet__protocol__tcp_json
+msgid "TCP JSON"
+msgstr "TCP JSON"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "TCP Listen Host"
+msgstr "TCP监听主机"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "TCP Listen Port"
+msgstr "TCP监听端口"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_th_raw_packet__protocol__tcp_unknown
+msgid "TCP Unknown"
+msgstr "TCP未知"
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_th_gateway
+msgid "TH Gateways"
+msgstr "温湿度网关"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "TH Online Timeout (sec)"
+msgstr "温湿度在线超时（秒）"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__tcp_token
+msgid "Tcp Token"
+msgstr "TCP令牌"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_mqtt_message__message_type__telemetry
+msgid "Telemetry"
+msgstr "遥测"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__temperature
+msgid "Temperature"
+msgstr "温度"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__temperature_high
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_th_alert__alert_type__temp_high
+msgid "Temperature High"
+msgstr "温度上限"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__temperature_low
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_th_alert__alert_type__temp_low
+msgid "Temperature Low"
+msgstr "温度下限"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_control_board__key__th
+msgid "Temperature/Humidity"
+msgstr "温湿度"
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_th_alert
+msgid "Temperature/Humidity Alert"
+msgstr "温湿度告警"
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_th_gateway
+msgid "Temperature/Humidity Gateway"
+msgstr "温湿度网关"
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_th_raw_packet
+msgid "Temperature/Humidity Raw Packet"
+msgstr "温湿度原始报文"
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_th_reading
+msgid "Temperature/Humidity Reading"
+msgstr "温湿度读数"
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_th_sensor
+msgid "Temperature/Humidity Sensor"
+msgstr "温湿度传感器"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_reading_pivot
+msgid "Temperature/Humidity Statistics"
+msgstr "温湿度统计"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "Temperature/Humidity TCP Ingest"
+msgstr "温湿度TCP接入"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_reading_graph
+msgid "Temperature/Humidity Trend"
+msgstr "温湿度趋势"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__threshold_value
+msgid "Threshold Value"
+msgstr "阈值"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_sensor_form
+msgid "Thresholds"
+msgstr "阈值设置"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__thursday
+msgid "Thursday"
+msgstr "周四"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__timezone
+msgid "Timezone"
+msgstr "时区"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_raw_packet_search
+msgid "Today"
+msgstr "今天"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_form
+msgid "Toggle"
+msgstr "切换"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__topic
+msgid "Topic"
+msgstr "主题"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "Topic Root"
+msgstr "主题根路径"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__total_on_display
+msgid "Total On Display"
+msgstr "累计开启显示"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__total_on_minutes
+msgid "Total On Minutes"
+msgstr "累计开启分钟"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__tuesday
+msgid "Tuesday"
+msgstr "周二"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_schedule__command__off
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_form
+msgid "Turn Off"
+msgstr "关闭"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_schedule__command__on
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_form
+msgid "Turn On"
+msgstr "开启"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__relay_state__unknown
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_mqtt_message__message_type__unknown
+msgid "Unknown"
+msgstr "未知"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/wizard/iot_firmware_push_wizard.py:0
+msgid "Upgrade command sent to %s device(s)."
+msgstr "升级命令已发送到 %s 台设备。"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__version
+msgid "Version"
+msgstr "版本"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__wednesday
+msgid "Wednesday"
+msgstr "周三"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_firmware.py:0
+msgid "web.base.url is not configured."
+msgstr "web.base.url 未配置。"
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_device_bind_wizard
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_device_bind
+msgid "Bind by ID"
+msgstr "按ID绑定"
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_device_bind_wizard
+msgid "Bind Switch by ID"
+msgstr "按ID绑定开关"
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_th_sensor_bind_wizard
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_th_sensor_bind
+msgid "Bind Node by ID"
+msgstr "按ID绑定节点"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_bind_wizard_form
+msgid "Search ID"
+msgstr "搜索ID"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_bind_wizard_form
+msgid "Confirm Bind"
+msgstr "确定绑定"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/wizard/iot_device_bind_wizard.py:0
+msgid "Search Switch ID"
+msgstr "搜索开关ID"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/wizard/iot_device_bind_wizard.py:0
+msgid "Found switch %s. Click Confirm Bind to continue."
+msgstr "已找到开关 %s，请点击“确定绑定”继续。"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/wizard/iot_device_bind_wizard.py:0
+msgid "Bind Success"
+msgstr "绑定成功"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/wizard/iot_device_bind_wizard.py:0
+msgid "Switch %s bound successfully. You can bind next one now."
+msgstr "开关 %s 绑定成功，你可以继续绑定下一个。"

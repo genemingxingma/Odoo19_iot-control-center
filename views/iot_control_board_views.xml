@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_iot_control_board_kanban" model="ir.ui.view">
+        <field name="name">iot.control.board.kanban</field>
+        <field name="model">iot.control.board</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile iot_control_board_kanban">
+                <field name="name"/>
+                <field name="key"/>
+                <field name="color"/>
+                <field name="description"/>
+                <field name="icon_class"/>
+                <field name="metric_1_label"/>
+                <field name="metric_1_value"/>
+                <field name="metric_2_label"/>
+                <field name="metric_2_value"/>
+                <templates>
+                    <t t-name="card">
+                        <div t-attf-class="oe_kanban_card iot_dash_card iot_dash_card_#{record.color.raw_value or 'blue'}">
+                            <div class="iot_dash_card_head">
+                                <strong class="iot_dash_title"><field name="name"/></strong>
+                                <div class="iot_dash_icon_wrap">
+                                    <i t-att-class="record.icon_class.raw_value or 'fa fa-cube'" title="Module icon"/>
+                                </div>
+                            </div>
+                            <div class="iot_dash_desc">
+                                <field name="description"/>
+                            </div>
+
+                            <div class="iot_dash_kpis">
+                                <div class="iot_dash_kpi">
+                                    <div class="iot_dash_kpi_label"><field name="metric_1_label"/></div>
+                                    <div class="iot_dash_kpi_value"><field name="metric_1_value"/></div>
+                                </div>
+                                <div class="iot_dash_kpi">
+                                    <div class="iot_dash_kpi_label"><field name="metric_2_label"/></div>
+                                    <div class="iot_dash_kpi_value"><field name="metric_2_value"/></div>
+                                </div>
+                            </div>
+
+                            <div class="iot_dash_trend">
+                                <t t-if="record.key.raw_value == 'relay'">
+                                    <svg viewBox="0 0 320 72" preserveAspectRatio="none">
+                                        <polyline points="0,58 36,52 72,48 108,50 144,42 180,38 216,32 252,28 288,20 320,14"/>
+                                    </svg>
+                                </t>
+                                <t t-elif="record.key.raw_value == 'th'">
+                                    <svg viewBox="0 0 320 72" preserveAspectRatio="none">
+                                        <polyline points="0,54 36,40 72,46 108,30 144,36 180,22 216,28 252,18 288,24 320,12"/>
+                                    </svg>
+                                </t>
+                                <t t-else="">
+                                    <svg viewBox="0 0 320 72" preserveAspectRatio="none">
+                                        <polyline points="0,60 36,58 72,54 108,50 144,48 180,42 216,40 252,34 288,30 320,26"/>
+                                    </svg>
+                                </t>
+                            </div>
+
+                            <button type="object" name="action_open_module" class="btn iot_dash_open_btn" string="Open"/>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="action_iot_control_board" model="ir.actions.act_window">
+        <field name="name">Control Cards</field>
+        <field name="res_model">iot.control.board</field>
+        <field name="view_mode">kanban</field>
+        <field name="context">{'search_default_active': 1}</field>
+    </record>
+
+    <menuitem id="menu_iot_control_board" name="Control Cards" parent="menu_iot_mode_cards" action="action_iot_control_board" sequence="10" groups="base.group_erp_manager"/>
+</odoo>

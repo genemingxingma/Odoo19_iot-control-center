@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="card_relay_control" model="iot.control.board">
+        <field name="name">Relay Control</field>
+        <field name="key">relay</field>
+        <field name="description">Manage relay devices, schedules, and firmware updates.</field>
+        <field name="sequence">10</field>
+        <field name="icon_class">fa fa-toggle-on</field>
+        <field name="color">blue</field>
+        <field name="action_id" ref="iot_control_center.action_iot_device"/>
+    </record>
+
+    <record id="card_environment_control" model="iot.control.board">
+        <field name="name">Temp/Humidity Monitoring</field>
+        <field name="key">th</field>
+        <field name="description">Manage nodes, trends, and threshold alerts.</field>
+        <field name="sequence">20</field>
+        <field name="icon_class">fa fa-thermometer-half</field>
+        <field name="color">green</field>
+        <field name="action_id" ref="iot_control_center.action_iot_th_sensor"/>
+    </record>
+</odoo>

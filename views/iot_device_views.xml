@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_iot_device_tree" model="ir.ui.view">
+        <field name="name">iot.device.tree</field>
+        <field name="model">iot.device</field>
+        <field name="arch" type="xml">
+            <list create="0">
+                <field name="name"/>
+                <field name="switch_id_display" string="Switch ID"/>
+                <field name="company_id"/>
+                <field name="department_id"/>
+                <field name="location_id"/>
+                <field name="delay_remaining_minutes" string="Delay Remaining (Min)"/>
+                <field name="online"/>
+                <field name="firmware_version" string="Firmware"/>
+                <field name="total_on_hours" string="Accumulated ON (Hours)"/>
+                <field name="last_seen"/>
+                <button name="action_turn_on" type="object" string="ON" class="iot_toggle_btn iot_toggle_left iot_toggle_on_active" invisible="relay_state != 'on'"/>
+                <button name="action_turn_on" type="object" string="ON" class="iot_toggle_btn iot_toggle_left iot_toggle_passive" invisible="relay_state == 'on'"/>
+                <button name="action_turn_off" type="object" string="OFF" class="iot_toggle_btn iot_toggle_right iot_toggle_off_active" invisible="relay_state != 'off'"/>
+                <button name="action_turn_off" type="object" string="OFF" class="iot_toggle_btn iot_toggle_right iot_toggle_passive" invisible="relay_state == 'off'"/>
+                <button name="action_delay_toggle" type="object" string="Delay" class="iot_toggle_btn iot_toggle_single iot_toggle_on_active" invisible="delay_active != True"/>
+                <button name="action_delay_toggle" type="object" string="Delay" class="iot_toggle_btn iot_toggle_single iot_toggle_passive" invisible="delay_active == True"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_iot_device_kanban" model="ir.ui.view">
+        <field name="name">iot.device.kanban</field>
+        <field name="model">iot.device</field>
+        <field name="arch" type="xml">
+            <kanban class="o_kanban_mobile" create="0">
+                <field name="name"/>
+                <field name="switch_id_display"/>
+                <field name="relay_state"/>
+                <field name="delay_active"/>
+                <field name="delay_remaining_minutes"/>
+                <field name="delay_duration_minutes"/>
+                <field name="online"/>
+                <field name="firmware_version"/>
+                <field name="total_on_hours"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="o_kanban_record_top mb-2">
+                                <strong><field name="name"/></strong>
+                            </div>
+                            <div class="text-muted mb-1">
+                                <span>Switch ID: </span><field name="switch_id_display"/>
+                            </div>
+                            <div class="mb-1">
+                                <span>Status: </span><field name="relay_state"/>
+                            </div>
+                            <div class="mb-1">
+                                <span>Delay Active: </span><field name="delay_active"/>
+                            </div>
+                            <div class="mb-1">
+                                <span>Delay Remaining (Min): </span><field name="delay_remaining_minutes"/>
+                            </div>
+                            <div class="mb-1">
+                                <span>Online: </span><field name="online"/>
+                            </div>
+                            <div class="mb-1">
+                                <span>Firmware: </span><field name="firmware_version"/>
+                            </div>
+                            <div class="mb-2">
+                                <span>Accumulated ON (Hours): </span><field name="total_on_hours"/>
+                            </div>
+                            <div class="iot_toggle_group">
+                                <button type="object" name="action_turn_on" class="iot_toggle_btn iot_toggle_left iot_toggle_on_active" invisible="relay_state != 'on'">ON</button>
+                                <button type="object" name="action_turn_on" class="iot_toggle_btn iot_toggle_left iot_toggle_passive" invisible="relay_state == 'on'">ON</button>
+                                <button type="object" name="action_turn_off" class="iot_toggle_btn iot_toggle_right iot_toggle_off_active" invisible="relay_state != 'off'">OFF</button>
+                                <button type="object" name="action_turn_off" class="iot_toggle_btn iot_toggle_right iot_toggle_passive" invisible="relay_state == 'off'">OFF</button>
+                                <button type="object" name="action_delay_toggle" class="iot_toggle_btn iot_toggle_single iot_toggle_on_active" invisible="delay_active != True">Delay</button>
+                                <button type="object" name="action_delay_toggle" class="iot_toggle_btn iot_toggle_single iot_toggle_passive" invisible="delay_active == True">Delay</button>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_iot_device_form" model="ir.ui.view">
+        <field name="name">iot.device.form</field>
+        <field name="model">iot.device</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_unbind" type="object" string="Unbind" class="btn-secondary" confirm="Unbind this switch from current company?"/>
+                    <button name="action_turn_on" type="object" string="Turn On" class="btn-primary" invisible="relay_state != 'on'"/>
+                    <button name="action_turn_on" type="object" string="Turn On" class="btn-secondary" invisible="relay_state == 'on'"/>
+                    <button name="action_turn_off" type="object" string="Turn Off" class="btn-primary" invisible="relay_state != 'off'"/>
+                    <button name="action_turn_off" type="object" string="Turn Off" class="btn-secondary" invisible="relay_state == 'off'"/>
+                    <button name="action_delay_toggle" type="object" string="Delay Switch" class="btn-primary" invisible="delay_active != True"/>
+                    <button name="action_delay_toggle" type="object" string="Delay Switch" class="btn-secondary" invisible="delay_active == True"/>
+                    <button name="action_reset_uptime" type="object" string="Reset Accumulated Time"/>
+                    <field name="relay_state" widget="statusbar" statusbar_visible="unknown,off,on" readonly="1"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="switch_id_display" readonly="1" string="Switch ID"/>
+                            <field name="serial" readonly="1"/>
+                            <field name="module_id" readonly="1"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="department_id"/>
+                            <field name="location_id"/>
+                            <field name="group_ids" widget="many2many_tags"/>
+                        </group>
+                        <group>
+                            <field name="online" readonly="1"/>
+                            <field name="last_seen" readonly="1"/>
+                            <field name="delay_duration_minutes"/>
+                            <field name="delay_active" readonly="1"/>
+                            <field name="delay_started_at" readonly="1"/>
+                            <field name="delay_end_at" readonly="1"/>
+                            <field name="delay_remaining_minutes" readonly="1"/>
+                            <field name="firmware_version" readonly="1"/>
+                            <field name="firmware_target_version" readonly="1"/>
+                            <field name="firmware_upgrade_state" readonly="1"/>
+                            <field name="firmware_upgrade_requested_at" readonly="1"/>
+                            <field name="firmware_upgrade_completed_at" readonly="1"/>
+                            <field name="total_on_hours" readonly="1"/>
+                            <field name="schedule_sync_state" readonly="1"/>
+                            <field name="schedule_dirty" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="auth_token" readonly="1" password="True"/>
+                        <field name="last_command_at" readonly="1"/>
+                        <field name="last_command_payload" readonly="1"/>
+                        <field name="schedule_version" readonly="1"/>
+                        <field name="schedule_applied_version" readonly="1"/>
+                        <field name="schedule_last_push_at" readonly="1"/>
+                        <field name="schedule_last_sync_at" readonly="1"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_iot_device" model="ir.actions.act_window">
+        <field name="name">Switches</field>
+        <field name="res_model">iot.device</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="domain">[('company_id', '!=', False)]</field>
+        <field name="context">{'create': False}</field>
+    </record>
+
+    <record id="action_iot_device_cards" model="ir.actions.act_window">
+        <field name="name">Switch Cards</field>
+        <field name="res_model">iot.device</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="domain">[('company_id', '!=', False)]</field>
+        <field name="context">{'create': False}</field>
+    </record>
+
+    <record id="action_iot_device_bind_wizard" model="ir.actions.act_window">
+        <field name="name">Bind Switch by ID</field>
+        <field name="res_model">iot.device.bind.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <menuitem id="menu_iot_root" name="IoT Control Center" sequence="10" groups="base.group_erp_manager" web_icon="iot_control_center,static/description/icon.png"/>
+    <menuitem id="menu_iot_mode_cards" name="Card Mode" parent="menu_iot_root" sequence="10" groups="base.group_erp_manager"/>
+    <menuitem id="menu_iot_mode_detailed" name="Detailed Mode" parent="menu_iot_root" sequence="20" groups="base.group_erp_manager"/>
+    <menuitem id="menu_iot_switch_cards" name="Switch" parent="menu_iot_mode_cards" action="action_iot_device_cards" sequence="10" groups="base.group_erp_manager"/>
+    <menuitem id="menu_iot_switch_root" name="Switch" parent="menu_iot_mode_detailed" sequence="10" groups="base.group_erp_manager"/>
+    <menuitem id="menu_iot_device" name="Switch" parent="menu_iot_switch_root" action="action_iot_device" sequence="10" groups="base.group_erp_manager"/>
+    <menuitem id="menu_iot_device_bind" name="Bind by ID" parent="menu_iot_switch_root" action="action_iot_device_bind_wizard" sequence="11" groups="base.group_erp_manager"/>
+</odoo>
