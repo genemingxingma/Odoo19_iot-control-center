@@ -39,6 +39,8 @@
     "assets": {
         "web.assets_backend": [
             "iot_control_center/static/src/css/control_board.css",
+        ],
+        "web.assets_backend_lazy": [
             "iot_control_center/static/src/xml/th_reading_graph_lock.xml",
             "iot_control_center/static/src/js/th_reading_graph_lock.js",
         ],
