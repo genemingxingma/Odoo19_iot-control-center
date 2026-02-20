@@ -41,6 +41,8 @@
             "iot_control_center/static/src/css/control_board.css",
         ],
         "web.assets_backend_lazy": [
+            "iot_control_center/static/src/xml/delay_countdown_field.xml",
+            "iot_control_center/static/src/js/delay_countdown_field.js",
             "iot_control_center/static/src/xml/th_reading_graph_lock.xml",
             "iot_control_center/static/src/js/th_reading_graph_lock.js",
         ],

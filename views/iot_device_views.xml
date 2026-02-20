@@ -10,7 +10,8 @@
                 <field name="company_id"/>
                 <field name="department_id"/>
                 <field name="location_id"/>
-                <field name="delay_remaining_minutes" string="Delay Remaining (Min)"/>
+                <field name="delay_active" invisible="1"/>
+                <field name="delay_remaining_minutes" string="Delay Remaining" widget="delay_countdown"/>
                 <field name="online"/>
                 <field name="firmware_version" string="Firmware"/>
                 <field name="total_on_hours" string="Accumulated ON (Hours)"/>
@@ -55,7 +56,7 @@
                                 <span>Delay Active: </span><field name="delay_active"/>
                             </div>
                             <div class="mb-1">
-                                <span>Delay Remaining (Min): </span><field name="delay_remaining_minutes"/>
+                                <span>Delay Remaining: </span><field name="delay_remaining_minutes" widget="delay_countdown"/>
                             </div>
                             <div class="mb-1">
                                 <span>Online: </span><field name="online"/>
@@ -116,7 +117,7 @@
                             <field name="delay_active" readonly="1"/>
                             <field name="delay_started_at" readonly="1"/>
                             <field name="delay_end_at" readonly="1"/>
-                            <field name="delay_remaining_minutes" readonly="1"/>
+                            <field name="delay_remaining_minutes" readonly="1" widget="delay_countdown"/>
                             <field name="firmware_version" readonly="1"/>
                             <field name="firmware_target_version" readonly="1"/>
                             <field name="firmware_upgrade_state" readonly="1"/>
