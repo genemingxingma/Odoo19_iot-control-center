@@ -78,6 +78,8 @@ class IoTMQTTMessage(models.Model):
             self.with_context(**no_track_ctx).device_id = device.id
             device = device.with_context(**no_track_ctx)
             state = payload.get("state") if isinstance(payload, dict) else None
+            ota_state = payload.get("ota_state") if isinstance(payload, dict) else None
+            ota_note = payload.get("ota_note") if isinstance(payload, dict) else None
             reported_at = self._parse_reported_at(payload)
             if state in ("on", "off", "unknown"):
                 device.apply_state_report(state, reported_at=reported_at)
@@ -86,7 +88,7 @@ class IoTMQTTMessage(models.Model):
 
             fw = payload.get("firmware_version") if isinstance(payload, dict) else None
             if fw:
-                device.apply_firmware_report(fw, reported_at=reported_at)
+                device.apply_firmware_report(fw, reported_at=reported_at, ota_state=ota_state)
             module_id = payload.get("module_id") if isinstance(payload, dict) else None
             if module_id:
                 device.apply_identity_report(str(module_id), reported_at=reported_at)
@@ -94,8 +96,6 @@ class IoTMQTTMessage(models.Model):
                 device.apply_manual_override_report(payload, reported_at=reported_at)
             if isinstance(payload, dict) and "delay_active" in payload:
                 device.apply_delay_report(payload, reported_at=reported_at)
-            ota_state = payload.get("ota_state") if isinstance(payload, dict) else None
-            ota_note = payload.get("ota_note") if isinstance(payload, dict) else None
             if ota_state:
                 device.apply_firmware_upgrade_feedback(ota_state, note=ota_note, reported_at=reported_at)
             if isinstance(payload, dict) and "schedule_version" in payload:

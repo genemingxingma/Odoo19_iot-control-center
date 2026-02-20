@@ -7,7 +7,7 @@ class ResConfigSettings(models.TransientModel):
     _inherit = "res.config.settings"
 
     iot_mqtt_host = fields.Char(config_parameter="iot_control_center.mqtt_host", default="iot.imytest.com")
-    iot_mqtt_port = fields.Integer(config_parameter="iot_control_center.mqtt_port", default=9910)
+    iot_mqtt_port = fields.Integer(config_parameter="iot_control_center.mqtt_port", default=1883)
     iot_mqtt_username = fields.Char(config_parameter="iot_control_center.mqtt_username", default="imytest")
     iot_mqtt_password = fields.Char(config_parameter="iot_control_center.mqtt_password", default="imytest")
     iot_mqtt_topic_root = fields.Char(config_parameter="iot_control_center.mqtt_topic_root", default="iot/relay")

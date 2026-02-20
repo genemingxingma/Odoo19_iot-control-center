@@ -11,5 +11,4 @@ from . import th_gateway
 from . import th_sensor
 from . import th_reading
 from . import th_alert
-from . import th_raw_packet
 from . import res_config_settings

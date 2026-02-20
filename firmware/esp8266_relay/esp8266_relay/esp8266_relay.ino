@@ -1,19 +1,15 @@
 #include <ArduinoJson.h>
-#include <ArduinoOTA.h>
-#include <ESP8266HTTPClient.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266httpUpdate.h>
 #include <WiFiClientSecureBearSSL.h>
 #include <LittleFS.h>
 #include <PubSubClient.h>
-#include <Updater.h>
 #include <time.h>
 
 static const unsigned long WIFI_FAST_BLINK_MS = 120;
 static const unsigned long MQTT_SLOW_BLINK_MS = 500;
 static const unsigned long OTA_ULTRA_FAST_BLINK_MS = 45;
-static const unsigned long CONFIG_BLINK_MS = 35;
 static const unsigned long CONFIG_REQUIRE_CLIENT_MS = 30000;
 
 const char* DEFAULT_WIFI_SSID = "iMyTest_IoT";
@@ -24,14 +20,13 @@ const char* DEFAULT_MQTT_USERNAME = "imytest";
 const char* DEFAULT_MQTT_PASSWORD = "imytest";
 const char* DEFAULT_TOPIC_ROOT = "iot/relay";
 const char* DEFAULT_DEVICE_SERIAL = "relay-001";
-const char* DEFAULT_BOARD_PROFILE = "IoT-Relay";
+const char* DEFAULT_BOARD_PROFILE = "";
 const char* DEFAULT_FIRMWARE_UPGRADE_URL = "iot.imytest.com";
 
 const char* PROFILE_RELAY = "IoT-Relay";
 const char* PROFILE_OUTLET = "IoT-Outlet";
 
-const char* FIRMWARE_VERSION = "1.7.8";
-const char* OTA_PASSWORD = "iMyTest_IoT";
+const char* FIRMWARE_VERSION = "1.8.5";
 
 const char* NTP_SERVER_1 = "pool.ntp.org";
 const char* NTP_SERVER_2 = "time.cloudflare.com";
@@ -86,7 +81,6 @@ bool wifiLedBlinkState = false;
 unsigned long wifiLedBlinkIntervalMs = WIFI_FAST_BLINK_MS;
 bool otaPending = false;
 String otaUrlPending;
-String otaTargetVersion;
 String otaState = "idle";
 String otaNote;
 bool delayActive = false;
@@ -103,12 +97,6 @@ bool configClientSeen = false;
 
 unsigned long lastWifiConnectAttemptMs = 0;
 unsigned long lastMqttConnectAttemptMs = 0;
-bool localUploadRebootPending = false;
-unsigned long localUploadRebootAtMs = 0;
-
-enum ConnectionLedMode { LED_MODE_WIFI_CONNECTING, LED_MODE_MQTT_CONNECTING, LED_MODE_ONLINE };
-ConnectionLedMode connectionLedMode = LED_MODE_WIFI_CONNECTING;
-
 void setRelay(bool on, bool persist = true);
 void setWifiLed(bool on);
 void blinkWifiLed(unsigned long intervalMs);
@@ -118,19 +106,22 @@ void refreshRuntimeConfig();
 void startRuntime();
 void startConfigPortal();
 String normalizeUpgradeUrl(const String& rawUrl);
+void detectBoardProfileFromPowerOnButton();
 
 void applyBoardProfile() {
   String p = cfgBoardProfile;
   if (p.equalsIgnoreCase(PROFILE_OUTLET)) {
     relayPin = 4;
-    wifiLedPin = 5;
-    buttonPin = 16;
+    buttonPin = 5;
+    wifiLedPin = 16;
     cfgBoardProfile = PROFILE_OUTLET;
-  } else {
+  } else if (p.equalsIgnoreCase(PROFILE_RELAY)) {
     relayPin = 4;
     wifiLedPin = 2;
     buttonPin = 12;
     cfgBoardProfile = PROFILE_RELAY;
+  } else {
+    cfgBoardProfile = "";
   }
 }
 
@@ -314,8 +305,11 @@ String normalizeUpgradeUrl(const String& rawUrl) {
   if (url.length() == 0) {
     return String("");
   }
-  if (!(url.startsWith("http://") || url.startsWith("https://"))) {
-    url = String("http://") + url;
+  if (url.startsWith("http://")) {
+    url.remove(0, 7);
+    url = String("https://") + url;
+  } else if (!url.startsWith("https://")) {
+    url = String("https://") + url;
   }
   return url;
 }
@@ -386,6 +380,25 @@ void loadConfig() {
   applyBoardProfile();
 }
 
+void detectBoardProfileFromPowerOnButton() {
+  // Let users hold button during power-on to set board profile automatically.
+  pinMode(12, INPUT_PULLUP);
+  pinMode(5, INPUT_PULLUP);
+  delay(40);
+  bool relayPressed = (digitalRead(12) == LOW);
+  bool outletPressed = (digitalRead(5) == LOW);
+
+  if (relayPressed && !outletPressed) {
+    cfgBoardProfile = PROFILE_RELAY;
+    applyBoardProfile();
+    saveConfig();
+  } else if (outletPressed && !relayPressed) {
+    cfgBoardProfile = PROFILE_OUTLET;
+    applyBoardProfile();
+    saveConfig();
+  }
+}
+
 void publishStatus() {
   bool active = isDelayActive();
   StaticJsonDocument<512> doc;
@@ -396,16 +409,12 @@ void publishStatus() {
   doc["schedule_count"] = (int)scheduleCount;
   doc["ota_state"] = otaState;
   doc["board_profile"] = cfgBoardProfile;
-  if (otaTargetVersion.length() > 0) {
-    doc["ota_target_version"] = otaTargetVersion;
-  }
   if (otaNote.length() > 0) {
     doc["ota_note"] = otaNote;
   }
   doc["delay_active"] = active;
   doc["delay_duration_sec"] = delayDurationSec;
   doc["delay_remaining_sec"] = active ? delayRemainingSec() : 0;
-  doc["manual_override"] = false;
 
   char out[320];
   size_t len = serializeJson(doc, out);
@@ -470,9 +479,9 @@ void applyScheduleClear(JsonDocument& doc) {
 
 void doUpgrade(const char* url) {
   String normalizedUrl = normalizeUpgradeUrl(String(url));
-  if (!(normalizedUrl.startsWith("http://") || normalizedUrl.startsWith("https://"))) {
+  if (!normalizedUrl.startsWith("https://")) {
     otaState = "failed";
-    otaNote = "Invalid OTA URL";
+    otaNote = "Invalid OTA URL (HTTPS required)";
     publishStatus();
     return;
   }
@@ -486,15 +495,9 @@ void doUpgrade(const char* url) {
 
   ESPhttpUpdate.rebootOnUpdate(false);
   ESPhttpUpdate.onProgress(otaProgress);
-  t_httpUpdate_return ret;
-  if (normalizedUrl.startsWith("https://")) {
-    BearSSL::WiFiClientSecure secureClient;
-    secureClient.setInsecure();
-    ret = ESPhttpUpdate.update(secureClient, normalizedUrl);
-  } else {
-    WiFiClient updateClient;
-    ret = ESPhttpUpdate.update(updateClient, normalizedUrl);
-  }
+  BearSSL::WiFiClientSecure secureClient;
+  secureClient.setInsecure();
+  t_httpUpdate_return ret = ESPhttpUpdate.update(secureClient, normalizedUrl);
   if (ret == HTTP_UPDATE_OK) {
     otaState = "ok";
     otaNote = "Update complete, rebooting";
@@ -539,37 +542,18 @@ void blinkWifiLed(unsigned long intervalMs) {
 
 void updateConnectionLedMode() {
   if (WiFi.status() != WL_CONNECTED) {
-    connectionLedMode = LED_MODE_WIFI_CONNECTING;
     blinkWifiLed(WIFI_FAST_BLINK_MS);
     return;
   }
 
   if (!mqttClient.connected()) {
-    connectionLedMode = LED_MODE_MQTT_CONNECTING;
     blinkWifiLed(MQTT_SLOW_BLINK_MS);
     return;
   }
 
-  if (connectionLedMode != LED_MODE_ONLINE) {
-    connectionLedMode = LED_MODE_ONLINE;
-    wifiLedBlinkState = true;
-    lastWifiLedToggleMs = millis();
-  }
+  wifiLedBlinkState = true;
+  lastWifiLedToggleMs = millis();
   setWifiLed(true);
-}
-
-void setupOta() {
-  ArduinoOTA.setHostname(cfgDeviceSerial.c_str());
-  if (strlen(OTA_PASSWORD) > 0) {
-    ArduinoOTA.setPassword(OTA_PASSWORD);
-  }
-  ArduinoOTA.onStart([]() {
-    setWifiLed(true);
-  });
-  ArduinoOTA.onEnd([]() {
-    setWifiLed(true);
-  });
-  ArduinoOTA.begin();
 }
 
 String htmlEscape(const String& s) {
@@ -598,13 +582,13 @@ void startConfigPortal() {
     configClientSeen = true;
     String page;
     page += "<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>";
-    page += "<title>iMyTest IoT Module Config</title><style>body{font-family:Arial,sans-serif;max-width:680px;margin:20px auto;padding:0 14px}label{display:block;margin-top:10px;font-weight:600}input,select{width:100%;padding:8px;box-sizing:border-box}button{margin-top:14px;padding:10px 16px}.hint{color:#666;font-size:12px}</style></head><body>";
+    page += "<title>iMyTest IoT Module Config</title><style>body{font-family:Arial,sans-serif;max-width:560px;margin:16px auto;padding:0 12px}label{display:block;margin-top:10px;font-weight:600}input,select{width:100%;padding:8px;box-sizing:border-box}button{margin-top:12px;padding:9px 14px}</style></head><body>";
     page += "<h2>iMyTest IoT Module Config</h2>";
     page += "<p>AP SSID: <b>" + htmlEscape(apSsid) + "</b></p>";
     page += "<p>Firmware Version: <b>" + String(FIRMWARE_VERSION) + "</b></p>";
-    page += "<p class='hint'>Blank values will be saved as blank. OTA URL supports both HTTP and HTTPS. Click Factory Default to restore defaults.</p>";
     page += "<form method='POST' action='/save'>";
     page += "<label>Board Profile</label><select name='board_profile'>";
+    page += "<option value=''" + String(cfgBoardProfile.length() == 0 ? " selected" : "") + ">Unselected</option>";
     page += "<option value='IoT-Relay'" + String(cfgBoardProfile == "IoT-Relay" ? " selected" : "") + ">IoT-Relay</option>";
     page += "<option value='IoT-Outlet'" + String(cfgBoardProfile == "IoT-Outlet" ? " selected" : "") + ">IoT-Outlet</option>";
     page += "</select>";
@@ -615,13 +599,10 @@ void startConfigPortal() {
     page += "<label>MQTT Username</label><input name='mqtt_username' value='" + htmlEscape(cfgMqttUsername) + "'>";
     page += "<label>MQTT Password</label><input name='mqtt_password' value='" + htmlEscape(cfgMqttPassword) + "'>";
     page += "<label>Firmware Upgrade URL</label><input name='firmware_upgrade_url' value='" + htmlEscape(cfgFirmwareUpgradeUrl) + "'>";
+    page += "<p style='margin-top:6px;font-size:12px;color:#666'>URL format: https://xxx.xx.xx</p>";
     page += "<button type='submit'>Save And Reboot</button></form>";
     page += "<form method='POST' action='/reboot'><button type='submit'>Reboot Now</button></form>";
     page += "<form method='POST' action='/factory_default'><button type='submit'>Factory Default</button></form>";
-    page += "<form method='POST' action='/upgrade_url'><button type='submit'>Upgrade From URL</button></form>";
-    page += "<form method='POST' action='/upload_firmware' enctype='multipart/form-data'>";
-    page += "<label>Manual Firmware Upload (.bin)</label><input type='file' name='firmware' accept='.bin' required>";
-    page += "<button type='submit'>Upload And Upgrade</button></form>";
     page += "</body></html>";
     configServer.send(200, "text/html; charset=utf-8", page);
   });
@@ -637,8 +618,10 @@ void startConfigPortal() {
     String mqttPassword = configServer.arg("mqtt_password");
     String fwUrl = configServer.arg("firmware_upgrade_url");
 
-    if (!(profile.equalsIgnoreCase(PROFILE_RELAY) || profile.equalsIgnoreCase(PROFILE_OUTLET))) {
-      profile = PROFILE_RELAY;
+    if (profile.length() == 0) {
+      profile = "";
+    } else if (!(profile.equalsIgnoreCase(PROFILE_RELAY) || profile.equalsIgnoreCase(PROFILE_OUTLET))) {
+      profile = "";
     }
 
     cfgBoardProfile = profile;
@@ -654,65 +637,15 @@ void startConfigPortal() {
 
     configRestartPending = true;
     configSavedAtMs = millis();
-    configServer.send(200, "text/plain; charset=utf-8", "Saved. Device will reboot in 2 seconds.");
+    configServer.send(200, "text/plain; charset=utf-8", "Saved. Device will reboot in 5 seconds.");
   });
 
   configServer.on("/reboot", HTTP_POST, []() {
     configClientSeen = true;
     configRestartPending = true;
     configSavedAtMs = millis();
-    configServer.send(200, "text/plain; charset=utf-8", "Rebooting in 2 seconds.");
+    configServer.send(200, "text/plain; charset=utf-8", "Rebooting in 5 seconds.");
   });
-
-  configServer.on("/upgrade_url", HTTP_POST, []() {
-    configClientSeen = true;
-    String url = normalizeUpgradeUrl(cfgFirmwareUpgradeUrl);
-    if (!(url.startsWith("http://") || url.startsWith("https://"))) {
-      configServer.send(400, "text/plain; charset=utf-8", "Invalid upgrade URL.");
-      return;
-    }
-    cfgFirmwareUpgradeUrl = url;
-    saveConfig();
-    configServer.send(200, "text/plain; charset=utf-8", "Starting URL upgrade now...");
-    delay(200);
-    doUpgrade(cfgFirmwareUpgradeUrl.c_str());
-  });
-
-  configServer.on(
-      "/upload_firmware",
-      HTTP_POST,
-      []() {
-        configClientSeen = true;
-        bool ok = !Update.hasError();
-        if (!ok) {
-          configServer.send(500, "text/plain; charset=utf-8", "Upload failed.");
-          return;
-        }
-        localUploadRebootPending = true;
-        localUploadRebootAtMs = millis() + 1200;
-        configServer.send(200, "text/plain; charset=utf-8", "Upload complete. Rebooting to apply firmware...");
-      },
-      []() {
-        HTTPUpload& upload = configServer.upload();
-        if (upload.status == UPLOAD_FILE_START) {
-          WiFiUDP::stopAll();
-          uint32_t maxSketchSpace = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
-          Update.begin(maxSketchSpace);
-        } else if (upload.status == UPLOAD_FILE_WRITE) {
-          if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
-            otaState = "failed";
-            otaNote = "Upload write failed";
-          }
-        } else if (upload.status == UPLOAD_FILE_END) {
-          if (!Update.end(true)) {
-            otaState = "failed";
-            otaNote = "Upload finalize failed";
-          }
-        } else if (upload.status == UPLOAD_FILE_ABORTED) {
-          otaState = "failed";
-          otaNote = "Upload aborted";
-        }
-      });
 
   configServer.on("/factory_default", HTTP_POST, []() {
     configClientSeen = true;
@@ -730,7 +663,7 @@ void startConfigPortal() {
     saveConfig();
     configRestartPending = true;
     configSavedAtMs = millis();
-    configServer.send(200, "text/plain; charset=utf-8", "Factory default restored. Rebooting in 2 seconds.");
+    configServer.send(200, "text/plain; charset=utf-8", "Factory default restored. Rebooting in 5 seconds.");
   });
 
   configServer.begin();
@@ -779,10 +712,8 @@ void handleCommand(char* topic, byte* payload, unsigned int length) {
     publishStatus();
   } else if (strcmp(command, "upgrade") == 0) {
     const char* url = doc["url"] | "";
-    const char* version = doc["version"] | "";
     if (strlen(url) > 0) {
       otaUrlPending = String(url);
-      otaTargetVersion = String(version);
       otaState = "queued";
       otaNote = "Upgrade command queued";
       otaPending = true;
@@ -915,7 +846,6 @@ void publishTelemetry() {
   doc["delay_active"] = isDelayActive();
   doc["delay_duration_sec"] = delayDurationSec;
   doc["delay_remaining_sec"] = delayRemainingSec();
-  doc["manual_override"] = false;
   doc["board_profile"] = cfgBoardProfile;
 
   char out[320];
@@ -937,7 +867,6 @@ void startRuntime() {
   loadState();
   refreshRuntimeConfig();
   mqttClient.setBufferSize(768);
-  setupOta();
   configTime(0, 0, NTP_SERVER_1, NTP_SERVER_2);
   runtimeStarted = true;
 }
@@ -954,6 +883,7 @@ void setup() {
   apSsid = String("IoT-") + moduleId;
 
   loadConfig();
+  detectBoardProfileFromPowerOnButton();
 
   mqttClient.setCallback(handleCommand);
   startConfigPortal();
@@ -963,20 +893,16 @@ void loop() {
   if (configMode) {
     configServer.handleClient();
 
-    if (localUploadRebootPending && millis() >= localUploadRebootAtMs) {
-      ESP.restart();
-    }
-
     if (!configClientSeen && WiFi.softAPgetStationNum() > 0) {
       configClientSeen = true;
     }
 
     unsigned long elapsed = millis() - configWindowStartMs;
-    if (!configClientSeen && elapsed >= CONFIG_REQUIRE_CLIENT_MS) {
+    if (!configClientSeen && elapsed >= CONFIG_REQUIRE_CLIENT_MS && cfgBoardProfile.length() > 0) {
       startRuntime();
     }
 
-    if (configRestartPending && (millis() - configSavedAtMs > 2000)) {
+    if (configRestartPending && (millis() - configSavedAtMs > 5000)) {
       ESP.restart();
     }
 
@@ -987,9 +913,7 @@ void loop() {
   handleButton();
   updateConnectionLedMode();
   ensureWifi();
-  ArduinoOTA.handle();
   ensureMqtt();
-  ArduinoOTA.handle();
   updateConnectionLedMode();
 
   mqttClient.loop();

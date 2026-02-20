@@ -6,10 +6,10 @@ from odoo.exceptions import UserError
 
 class IoTTHSensor(models.Model):
     _name = "iot.th.sensor"
-    _description = "Temperature/Humidity Sensor"
+    _description = "Node Sensor Channel (Temp+Humidity)"
 
     name = fields.Char(required=True)
-    probe_code = fields.Char(string="Sensor ID", required=True, index=True)
+    probe_code = fields.Char(string="Sensor Channel", required=True, index=True)
     active = fields.Boolean(default=True)
 
     gateway_id = fields.Many2one("iot.th.gateway", required=True, ondelete="cascade")
@@ -43,19 +43,39 @@ class IoTTHSensor(models.Model):
         (
             "iot_th_sensor_node_probe_uniq",
             "unique(node_id, probe_code)",
-            "Sensor ID must be unique by node + probe.",
+            "Sensor Channel must be unique by Node ID + Channel.",
         ),
     ]
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        normalized = []
+        for vals in vals_list:
+            v = dict(vals)
+            if v.get("node_id"):
+                v["node_id"] = str(v["node_id"]).strip().upper()
+            if v.get("probe_code"):
+                v["probe_code"] = str(v["probe_code"]).strip().upper()
+            normalized.append(v)
+        return super().create(normalized)
+
+    def write(self, vals):
+        v = dict(vals)
+        if v.get("node_id"):
+            v["node_id"] = str(v["node_id"]).strip().upper()
+        if v.get("probe_code"):
+            v["probe_code"] = str(v["probe_code"]).strip().upper()
+        return super().write(v)
 
     @api.model
     def find_bind_candidates(self, node_id, probe_code=None, require_online=False):
         nid = (node_id or "").strip()
         if not nid:
             raise UserError("Node ID is required")
-        domain = [("node_id", "=ilike", nid)]
+        domain = [("node_id", "=", nid)]
         probe = (probe_code or "").strip()
         if probe:
-            domain.append(("probe_code", "=ilike", probe))
+            domain.append(("probe_code", "=", probe))
         sensors = self.sudo().search(domain, order="last_reported_at desc, id desc")
         if not sensors:
             raise UserError("No sensor found for this Node ID.")

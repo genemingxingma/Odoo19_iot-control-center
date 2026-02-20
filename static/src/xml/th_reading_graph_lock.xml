@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="iot_control_center.GraphViewButtonsPatch" t-inherit="web.GraphView.Buttons" t-inherit-mode="extension">
+        <xpath expr="//ReportViewMeasures" position="attributes">
+            <attribute name="activeMeasures">this._iotGetActiveMeasures()</attribute>
+        </xpath>
+    </t>
+</templates>

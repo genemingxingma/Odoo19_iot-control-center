@@ -442,10 +442,11 @@ class IoTDevice(models.Model):
                 rec.module_id = module_id
             rec.last_seen = at
 
-    def apply_firmware_report(self, reported_version, reported_at=None):
+    def apply_firmware_report(self, reported_version, reported_at=None, ota_state=None):
         at = reported_at or fields.Datetime.now()
         log_model = self.env["iot.firmware.upgrade.log"]
         for rec in self:
+            prev_version = rec.firmware_version
             rec.firmware_version = reported_version
             rec.last_seen = at
 
@@ -455,22 +456,33 @@ class IoTDevice(models.Model):
                 limit=1,
             )
             if log:
-                state = "success" if (log.target_version or "") == (reported_version or "") else "mismatch"
-                log.write(
-                    {
-                        "reported_version": reported_version,
-                        "state": state,
-                        "completed_at": at,
-                    }
+                # Do not mark success only by periodic telemetry with same version.
+                confirmed = ota_state == "ok" or (
+                    prev_version
+                    and (prev_version != reported_version)
                 )
-                rec.firmware_upgrade_completed_at = at
-                rec.firmware_upgrade_state = state
-            elif rec.firmware_target_version:
-                rec.firmware_upgrade_completed_at = at
-                if rec.firmware_target_version == reported_version:
-                    rec.firmware_upgrade_state = "success"
-                elif rec.firmware_upgrade_state != "failed":
-                    rec.firmware_upgrade_state = "mismatch"
+                if confirmed:
+                    state = "success" if (log.target_version or "") == (reported_version or "") else "mismatch"
+                    log.write(
+                        {
+                            "reported_version": reported_version,
+                            "state": state,
+                            "completed_at": at,
+                        }
+                    )
+                    rec.firmware_upgrade_completed_at = at
+                    rec.firmware_upgrade_state = state
+            elif rec.firmware_target_version and rec.firmware_upgrade_state == "pending":
+                confirmed = ota_state == "ok" or (
+                    prev_version
+                    and (prev_version != reported_version)
+                )
+                if confirmed:
+                    rec.firmware_upgrade_completed_at = at
+                    if rec.firmware_target_version == reported_version:
+                        rec.firmware_upgrade_state = "success"
+                    elif rec.firmware_upgrade_state != "failed":
+                        rec.firmware_upgrade_state = "mismatch"
 
     def apply_firmware_upgrade_feedback(self, ota_state, note=None, reported_at=None):
         at = reported_at or fields.Datetime.now()

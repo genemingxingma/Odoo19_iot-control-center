@@ -6,8 +6,8 @@
         <field name="arch" type="xml">
             <form string="Bind Node by ID">
                 <group>
-                    <field name="node_id" placeholder="1c9d"/>
-                    <field name="probe_code" placeholder="CH01"/>
+                    <field name="node_id" placeholder="68C7"/>
+                    <field name="probe_code" placeholder="ch01"/>
                     <field name="company_id" groups="base.group_multi_company"/>
                     <field name="location_id"/>
                     <field name="location_detail"/>
@@ -17,8 +17,8 @@
                     <field name="candidate_sensor_ids" widget="many2many_tags"/>
                 </group>
                 <footer>
-                    <button string="Validate ID" type="object" name="action_validate_id" class="btn-secondary"/>
-                    <button string="Bind" type="object" name="action_bind" class="btn-primary" invisible="validated != True"/>
+                    <button string="Search ID" type="object" name="action_search_id" class="btn-secondary"/>
+                    <button string="Confirm Bind" type="object" name="action_confirm_bind" class="btn-primary"/>
                     <button string="Cancel" class="btn-secondary" special="cancel"/>
                 </footer>
             </form>

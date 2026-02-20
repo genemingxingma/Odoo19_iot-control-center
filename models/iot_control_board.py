@@ -62,9 +62,9 @@ class IoTControlBoard(models.Model):
             action["res_model"] = default_model
         if not action.get("view_mode"):
             action["view_mode"] = default_view_mode
-        if not action.get("views"):
-            modes = [m.strip() for m in action["view_mode"].split(",") if m.strip()]
-            action["views"] = [(False, mode) for mode in modes]
+        # Force canonical views from view_mode, so stale DB view tuples do not hide switch buttons.
+        modes = [m.strip() for m in action["view_mode"].split(",") if m.strip()]
+        action["views"] = [(False, mode) for mode in modes]
         action.setdefault("target", "current")
         action.pop("id", None)
         return action
@@ -103,10 +103,10 @@ class IoTControlBoard(models.Model):
             )
         if self.key == "th":
             return self._safe_window_action(
-                "iot_control_center.action_iot_th_sensor",
-                "Sensors",
-                "iot.th.sensor",
-                default_view_mode="list,form",
+                "iot_control_center.action_iot_th_reading",
+                "Readings & Analysis",
+                "iot.th.reading",
+                default_view_mode="graph,list,pivot",
             )
         if self.action_id and self.action_id.type == "ir.actions.act_window":
             action = self.action_id.sudo().read()[0]

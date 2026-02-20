@@ -101,10 +101,4 @@
         <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
     </record>
 
-    <record id="rule_iot_th_raw_packet_company" model="ir.rule">
-        <field name="name">IoT TH Raw Packet multi-company</field>
-        <field name="model_id" ref="model_iot_th_raw_packet"/>
-        <field name="global" eval="True"/>
-        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
-    </record>
 </odoo>

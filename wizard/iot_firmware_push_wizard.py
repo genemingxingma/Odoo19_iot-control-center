@@ -32,39 +32,60 @@ class IoTFirmwarePushWizard(models.TransientModel):
             raise UserError(_("No matched devices for push."))
 
         firmware = self.firmware_id
+        ok_count = 0
+        failed = []
         for device in devices:
-            url = firmware.build_download_url(device)
-            payload = {
-                "url": url,
-                "version": firmware.version,
-            }
-            device._publish_command("upgrade", payload)
-            now = fields.Datetime.now()
-            device.write(
-                {
-                    "firmware_target_version": firmware.version,
-                    "firmware_upgrade_requested_at": now,
-                    "firmware_upgrade_state": "pending",
+            try:
+                url = firmware.build_download_url(device)
+                payload = {
+                    "url": url,
+                    "version": firmware.version,
                 }
-            )
-            self.env["iot.firmware.upgrade.log"].create(
-                {
-                    "device_id": device.id,
-                    "firmware_id": firmware.id,
-                    "target_version": firmware.version or "",
-                    "state": "pending",
-                    "requested_at": now,
-                    "command_payload": json.dumps(payload, ensure_ascii=False),
-                }
-            )
+                # Keep batch push robust: one failure should not abort all devices.
+                published = device._publish_command("upgrade", payload, raise_on_fail=False)
+                if not published:
+                    failed.append("%s: MQTT publish failed" % (device.switch_id_display or device.display_name))
+                    continue
+                now = fields.Datetime.now()
+                device.write(
+                    {
+                        "firmware_target_version": firmware.version,
+                        "firmware_upgrade_requested_at": now,
+                        "firmware_upgrade_state": "pending",
+                    }
+                )
+                self.env["iot.firmware.upgrade.log"].create(
+                    {
+                        "device_id": device.id,
+                        "firmware_id": firmware.id,
+                        "target_version": firmware.version or "",
+                        "state": "pending",
+                        "requested_at": now,
+                        "command_payload": json.dumps(payload, ensure_ascii=False),
+                    }
+                )
+                ok_count += 1
+            except Exception as exc:
+                failed.append("%s: %s" % ((device.switch_id_display or device.display_name), str(exc)))
+
+        if ok_count == 0:
+            detail = "\n".join(failed[:5]) if failed else _("Unknown error")
+            raise UserError(_("No upgrade command sent successfully.\n%s") % detail)
+
+        msg = _("Upgrade command sent to %s device(s).") % ok_count
+        if failed:
+            msg += "\n" + _("Failed: %s") % len(failed)
+            msg += "\n" + "\n".join(failed[:3])
+            if len(failed) > 3:
+                msg += "\n..."
 
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",
             "params": {
                 "title": _("Firmware Push"),
-                "message": _("Upgrade command sent to %s device(s).") % len(devices),
-                "sticky": False,
-                "type": "success",
+                "message": msg,
+                "sticky": bool(failed),
+                "type": "warning" if failed else "success",
             },
         }

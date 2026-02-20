@@ -8,7 +8,6 @@
                 <field name="occurred_at"/>
                 <field name="state"/>
                 <field name="alert_type"/>
-                <field name="gateway_id"/>
                 <field name="sensor_id"/>
                 <field name="threshold_value"/>
                 <field name="actual_value"/>
@@ -26,7 +25,6 @@
                     <group>
                         <field name="state" readonly="1"/>
                         <field name="alert_type" readonly="1"/>
-                        <field name="gateway_id" readonly="1"/>
                         <field name="sensor_id" readonly="1"/>
                         <field name="occurred_at" readonly="1"/>
                         <field name="closed_at" readonly="1"/>

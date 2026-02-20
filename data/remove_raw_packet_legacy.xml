@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <delete id="iot_control_center.menu_iot_th_raw_packet" model="ir.ui.menu"/>
+    <delete id="iot_control_center.action_iot_th_raw_packet" model="ir.actions.act_window"/>
+    <delete id="iot_control_center.view_iot_th_raw_packet_list" model="ir.ui.view"/>
+    <delete id="iot_control_center.view_iot_th_raw_packet_form" model="ir.ui.view"/>
+    <delete id="iot_control_center.view_iot_th_raw_packet_search" model="ir.ui.view"/>
+
+    <delete id="iot_control_center.rule_iot_th_raw_packet_company" model="ir.rule"/>
+
+    <delete id="iot_control_center.access_iot_th_raw_packet_manager" model="ir.model.access"/>
+    <delete id="iot_control_center.access_iot_th_raw_packet_user" model="ir.model.access"/>
+    <delete id="iot_control_center.access_iot_th_raw_packet_admin" model="ir.model.access"/>
+</odoo>

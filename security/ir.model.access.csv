@@ -44,6 +44,3 @@ access_iot_th_reading_admin,access.iot.th.reading.admin,model_iot_th_reading,bas
 access_iot_th_alert_user,access.iot.th.alert.user,model_iot_th_alert,iot_control_center.group_iot_user,1,0,0,0
 access_iot_th_alert_manager,access.iot.th.alert.manager,model_iot_th_alert,iot_control_center.group_iot_manager,1,1,0,0
 access_iot_th_alert_admin,access.iot.th.alert.admin,model_iot_th_alert,base.group_system,1,1,1,1
-access_iot_th_raw_packet_manager,access.iot.th.raw.packet.manager,model_iot_th_raw_packet,iot_control_center.group_iot_manager,1,0,0,0
-access_iot_th_raw_packet_user,access.iot.th.raw.packet.user,model_iot_th_raw_packet,iot_control_center.group_iot_user,1,0,0,0
-access_iot_th_raw_packet_admin,access.iot.th.raw.packet.admin,model_iot_th_raw_packet,base.group_system,1,1,1,1

@@ -61,7 +61,4 @@
     <record id="menu_iot_th_alert" model="ir.ui.menu">
         <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_user')])]"/>
     </record>
-    <record id="menu_iot_th_raw_packet" model="ir.ui.menu">
-        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_manager')])]"/>
-    </record>
 </odoo>

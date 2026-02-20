@@ -6,7 +6,6 @@
         <field name="arch" type="xml">
             <list>
                 <field name="reported_at"/>
-                <field name="gateway_id"/>
                 <field name="node_id"/>
                 <field name="sensor_id"/>
                 <field name="sensor_code"/>
@@ -22,8 +21,8 @@
         <field name="arch" type="xml">
             <graph string="Temperature/Humidity Trend" type="line">
                 <field name="reported_at" interval="hour"/>
-                <field name="temperature" type="measure"/>
-                <field name="humidity" type="measure"/>
+                <field name="temperature" type="measure" operator="avg"/>
+                <field name="humidity" type="measure" operator="avg"/>
                 <field name="sensor_id" type="row"/>
             </graph>
         </field>
@@ -36,8 +35,8 @@
             <pivot string="Temperature/Humidity Statistics">
                 <field name="reported_at" type="col" interval="day"/>
                 <field name="sensor_id" type="row"/>
-                <field name="temperature" type="measure"/>
-                <field name="humidity" type="measure"/>
+                <field name="temperature" type="measure" operator="avg"/>
+                <field name="humidity" type="measure" operator="avg"/>
             </pivot>
         </field>
     </record>
@@ -47,12 +46,10 @@
         <field name="model">iot.th.reading</field>
         <field name="arch" type="xml">
             <search>
-                <field name="gateway_id"/>
                 <field name="node_id"/>
                 <field name="sensor_id"/>
                 <field name="sensor_code"/>
                 <group>
-                    <filter string="Gateway" name="group_gateway" context="{'group_by': 'gateway_id'}"/>
                     <filter string="Sensor" name="group_sensor" context="{'group_by': 'sensor_id'}"/>
                     <filter string="Hour" name="group_hour" context="{'group_by': 'reported_at:hour'}"/>
                     <filter string="Day" name="group_day" context="{'group_by': 'reported_at:day'}"/>
@@ -64,9 +61,10 @@
     <record id="action_iot_th_reading" model="ir.actions.act_window">
         <field name="name">Readings &amp; Analysis</field>
         <field name="res_model">iot.th.reading</field>
-        <field name="view_mode">graph,pivot,list</field>
+        <field name="view_mode">graph,list,pivot</field>
         <field name="search_view_id" ref="view_iot_th_reading_search"/>
         <field name="domain">[('company_id', '!=', False)]</field>
+        <field name="context">{'graph_mode': 'line', 'graph_measure': 'temperature', 'graph_stacked': False, 'graph_cumulated': False}</field>
     </record>
 
     <menuitem id="menu_iot_th_reading" name="Readings &amp; Analysis" parent="menu_iot_environment_root" action="action_iot_th_reading" sequence="30" groups="base.group_erp_manager"/>

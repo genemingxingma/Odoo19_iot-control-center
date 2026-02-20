@@ -25,13 +25,8 @@ class _GatewayTCPHandler(socketserver.BaseRequestHandler):
         while True:
             chunk = self.request.recv(4096)
             if not chunk:
+                service.flush_unparsed_tail(buffer, source_ip=source_ip, source_port=source_port)
                 return
-            service._create_raw_packet(
-                "tcp_chunk",
-                chunk.hex().upper(),
-                source_ip=source_ip,
-                source_port=source_port,
-            )
             buffer.extend(chunk)
             service.process_buffer(buffer, source_ip=source_ip, source_port=source_port)
 
@@ -72,6 +67,7 @@ class TCPIngestService:
 
     def _ensure_sensor(self, env, gateway, node_id, probe_code):
         sensor_model = env["iot.th.sensor"].sudo()
+        canonical_name = f"{node_id}-{str(probe_code or '').strip().lower()}"
         sensor = sensor_model.search(
             [("node_id", "=", node_id), ("probe_code", "=", probe_code)],
             limit=1,
@@ -82,12 +78,18 @@ class TCPIngestService:
                     "gateway_id": gateway.id,
                     "node_id": node_id,
                     "probe_code": probe_code,
-                    "name": f"{gateway.serial}-{node_id}-{probe_code}",
+                    "name": canonical_name,
                     "stats_window_hours": gateway.statistics_window_hours or 24,
                 }
             )
-        elif sensor.gateway_id != gateway:
-            sensor.gateway_id = gateway.id
+        else:
+            vals = {}
+            if sensor.gateway_id != gateway:
+                vals["gateway_id"] = gateway.id
+            if sensor.name != canonical_name:
+                vals["name"] = canonical_name
+            if vals:
+                sensor.write(vals)
         return sensor
 
     def _ingest_measurements(
@@ -95,7 +97,6 @@ class TCPIngestService:
         serial,
         reported_at,
         measurements,
-        raw_payload,
         token=None,
         extra_gateway_vals=None,
         node_id=None,
@@ -126,7 +127,7 @@ class TCPIngestService:
                 if temperature is None or humidity is None:
                     continue
 
-                sensor_node_id = (m.get("node_id") or node_id or "").strip().lower()
+                sensor_node_id = (m.get("node_id") or node_id or "").strip().upper()
                 if not sensor_node_id:
                     sensor_node_id = "unknown"
 
@@ -138,87 +139,29 @@ class TCPIngestService:
                         "reported_at": reported_at,
                         "temperature": float(temperature),
                         "humidity": float(humidity),
-                        "raw_payload": raw_payload,
                     }
                 )
                 sensor.apply_reading(float(temperature), float(humidity), reported_at, battery_voltage=battery_voltage)
 
             cr.commit()
 
-    def _create_raw_packet(
-        self,
-        protocol,
-        raw_payload,
-        source_ip=None,
-        source_port=None,
-        serial_hint=None,
-        node_id=None,
-    ):
-        registry = Registry(self.dbname)
-        with registry.cursor() as cr:
-            env = api.Environment(cr, SUPERUSER_ID, {})
-            raw_model = env["iot.th.raw.packet"].sudo()
-            gateway = False
-            if serial_hint:
-                gateway = env["iot.th.gateway"].sudo().search([("serial", "=", serial_hint)], limit=1)
-
-            rec = raw_model.create(
-                {
-                    "gateway_id": gateway.id if gateway else False,
-                    "source_ip": source_ip,
-                    "source_port": source_port,
-                    "protocol": protocol,
-                    "node_id": node_id,
-                    "serial_hint": serial_hint,
-                    "raw_payload": raw_payload,
-                    "parse_ok": False,
-                }
-            )
-            cr.commit()
-            return rec.id
-
-    def _update_raw_packet_parse_status(self, packet_id, parse_ok, parse_error=None, serial_hint=None, node_id=None):
-        if not packet_id:
-            return
-        registry = Registry(self.dbname)
-        with registry.cursor() as cr:
-            env = api.Environment(cr, SUPERUSER_ID, {})
-            vals = {"parse_ok": bool(parse_ok), "parse_error": parse_error or False}
-            if serial_hint:
-                gateway = env["iot.th.gateway"].sudo().search([("serial", "=", serial_hint)], limit=1)
-                if gateway:
-                    vals["gateway_id"] = gateway.id
-                    vals["serial_hint"] = serial_hint
-            if node_id:
-                vals["node_id"] = node_id
-            env["iot.th.raw.packet"].sudo().browse(packet_id).write(vals)
-            cr.commit()
-
     def process_json_line(self, payload_text, source_ip=None, source_port=None):
-        packet_id = self._create_raw_packet(
-            "tcp_json",
-            payload_text,
-            source_ip=source_ip,
-            source_port=source_port,
-        )
         try:
             payload = json.loads(payload_text)
         except Exception:
             _logger.warning("Invalid TH JSON payload: %s", payload_text)
-            self._update_raw_packet_parse_status(packet_id, False, parse_error="Invalid JSON payload")
             return
 
         serial = payload.get("gateway_serial") or source_ip
         if not serial:
             _logger.warning("TH JSON payload missing gateway_serial: %s", payload_text)
-            self._update_raw_packet_parse_status(packet_id, False, parse_error="Missing gateway_serial")
             return
         node_id = str(
             payload.get("node_id")
             or payload.get("nodeId")
             or payload.get("gateway_node_id")
             or ""
-        ).strip().lower() or None
+        ).strip().upper() or None
 
         reported_at = self._parse_reported_at(payload.get("reported_at"))
         token = payload.get("token")
@@ -244,40 +187,30 @@ class TCPIngestService:
                 bv = None
             measurements.append({"probe_code": code, "node_id": node_id, "temperature": t, "humidity": h, "battery_voltage": bv})
 
-        self._ingest_measurements(serial, reported_at, measurements, payload_text, token=token, node_id=node_id)
-        self._update_raw_packet_parse_status(packet_id, True, serial_hint=serial, node_id=node_id)
+        self._ingest_measurements(serial, reported_at, measurements, token=token, node_id=node_id)
 
     def process_binary_frame(self, frame, source_ip=None, source_port=None):
-        raw_payload = frame.hex().upper()
-        node_id = f"{((frame[3] << 8) | frame[4]):04x}" if len(frame) >= 5 else None
-        packet_id = self._create_raw_packet(
-            "tcp_binary",
-            raw_payload,
-            source_ip=source_ip,
-            source_port=source_port,
-            node_id=node_id,
-        )
+        node_id = f"{((frame[3] << 8) | frame[4]):04X}" if len(frame) >= 5 else None
         try:
         # Format per gateway spec:
         # BYTE0=0xFA BYTE1=0xCE BYTE2=control BYTE3-4=sender addr BYTE5=device info BYTE6=seq BYTE7=data count(16-bit words)
         # BYTE8.. data area, each word is 16-bit big-endian; 1 channel => temp(signed*10), humidity(unsigned)
         # Last byte checksum = sum(BYTE0..BYTE(n-1)) & 0xFF
             if len(frame) < 9:
-                self._update_raw_packet_parse_status(packet_id, False, parse_error="Frame too short")
+                _logger.warning("TH binary frame too short from %s:%s", source_ip, source_port)
                 return
             if frame[0] != 0xFA or frame[1] != 0xCE:
-                self._update_raw_packet_parse_status(packet_id, False, parse_error="Invalid frame header")
+                _logger.warning("TH binary frame invalid header from %s:%s", source_ip, source_port)
                 return
 
             expected_checksum = sum(frame[:-1]) & 0xFF
             if expected_checksum != frame[-1]:
                 _logger.warning("TH binary checksum mismatch, drop frame: got=%s expected=%s", frame[-1], expected_checksum)
-                self._update_raw_packet_parse_status(packet_id, False, parse_error="Checksum mismatch")
                 return
 
             data_count = frame[7]
             if data_count < 2:
-                self._update_raw_packet_parse_status(packet_id, False, parse_error="Invalid data_count")
+                _logger.warning("TH binary invalid data_count=%s from %s:%s", data_count, source_ip, source_port)
                 return
 
             data_start = 8
@@ -286,7 +219,6 @@ class TCPIngestService:
 
             if len(data) != data_count * 2:
                 _logger.warning("TH binary length mismatch: data_count=%s bytes=%s", data_count, len(data))
-                self._update_raw_packet_parse_status(packet_id, False, parse_error="Data length mismatch")
                 return
 
             addr = (frame[3] << 8) | frame[4]
@@ -318,15 +250,12 @@ class TCPIngestService:
                 serial,
                 reported_at,
                 measurements,
-                raw_payload,
                 token=None,
                 extra_gateway_vals=extra_gateway_vals,
                 node_id=node_id,
             )
-            self._update_raw_packet_parse_status(packet_id, True, serial_hint=serial, node_id=node_id)
         except Exception as exc:
-            _logger.exception("TH binary frame processing failed")
-            self._update_raw_packet_parse_status(packet_id, False, parse_error=f"Exception: {exc}")
+            _logger.exception("TH binary frame processing failed: %s", exc)
 
     def process_buffer(self, buffer, source_ip=None, source_port=None):
         # Mixed protocol parser: legacy JSON lines + binary frames.
@@ -345,29 +274,12 @@ class TCPIngestService:
             # Binary frame mode.
             idx = buffer.find(b"\xFA\xCE")
             if idx < 0:
-                # Keep last byte in case it is partial header.
-                unknown = bytes(buffer[:-1]) if len(buffer) > 1 else b""
-                if unknown:
-                    raw_payload = unknown.hex().upper()
-                    self._create_raw_packet(
-                        "tcp_unknown",
-                        raw_payload,
-                        source_ip=source_ip,
-                        source_port=source_port,
-                    )
+                # Keep the last byte in case it is a partial frame header.
                 if len(buffer) > 1:
                     del buffer[:-1]
                 return
 
             if idx > 0:
-                unknown = bytes(buffer[:idx])
-                if unknown:
-                    self._create_raw_packet(
-                        "tcp_unknown",
-                        unknown.hex().upper(),
-                        source_ip=source_ip,
-                        source_port=source_port,
-                    )
                 del buffer[:idx]
 
             if len(buffer) < 9:
@@ -381,6 +293,17 @@ class TCPIngestService:
             frame = bytes(buffer[:frame_len])
             del buffer[:frame_len]
             self.process_binary_frame(frame, source_ip=source_ip, source_port=source_port)
+
+    def flush_unparsed_tail(self, buffer, source_ip=None, source_port=None):
+        if not buffer:
+            return
+        _logger.info(
+            "TH TCP connection closed with %s unparsed bytes from %s:%s, discarded",
+            len(buffer),
+            source_ip,
+            source_port,
+        )
+        buffer.clear()
 
     def start(self):
         with self._lock:
