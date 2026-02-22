@@ -1,5 +1,4 @@
 import logging
-import os
 import threading
 import time
 
@@ -23,9 +22,10 @@ class MQTTService:
         self._lock = threading.Lock()
 
     def _make_client(self):
-        # Use a process-unique client_id to avoid broker session collisions
-        # when Odoo runs with multiple workers/processes.
-        client_id = f"odoo-iot-{self.dbname}-{os.getpid()}"
+        # Use a DB-scoped stable client_id so broker keeps only one active
+        # subscriber per database, preventing duplicate message processing
+        # across Odoo worker processes.
+        client_id = f"odoo-iot-{self.dbname}"
         client = mqtt.Client(client_id=client_id, clean_session=True)
         username = self.config.get("username")
         password = self.config.get("password")

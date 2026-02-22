@@ -1,9 +1,11 @@
 import json
 import logging
+import time
 import uuid
 from datetime import datetime
 from datetime import timedelta
 
+import psycopg2
 import pytz
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
@@ -86,6 +88,19 @@ class IoTDevice(models.Model):
             "mail_notrack": True,
             "mail_create_nolog": True,
         }
+
+    @api.model
+    def _run_with_serialization_retry(self, func, retries=3, sleep_sec=0.05):
+        for attempt in range(retries):
+            try:
+                with self.env.cr.savepoint():
+                    return func()
+            except psycopg2.errors.SerializationFailure:
+                if attempt >= retries - 1:
+                    raise
+                self.env.cr.rollback()
+                time.sleep(sleep_sec * (attempt + 1))
+        return None
 
     @api.depends("last_seen")
     def _compute_online(self):
@@ -529,10 +544,18 @@ class IoTDevice(models.Model):
             [("delay_active", "=", True), ("delay_end_at", "!=", False), ("delay_end_at", "<=", now)]
         )
         if expired:
-            expired.write({"delay_active": False, "delay_started_at": False, "delay_end_at": False})
+            self._run_with_serialization_retry(
+                lambda: expired.write({"delay_active": False, "delay_started_at": False, "delay_end_at": False})
+            )
 
     @api.model
     def _cron_update_live_uptime(self):
-        devices = self.with_context(**self._system_no_track_context()).search([("relay_state", "=", "on"), ("on_since", "!=", False)])
-        now = fields.Datetime.now()
-        devices._accumulate_on_minutes_until(now)
+        def _do_update():
+            devices = self.with_context(**self._system_no_track_context()).search(
+                [("relay_state", "=", "on"), ("on_since", "!=", False)]
+            )
+            if devices:
+                now = fields.Datetime.now()
+                devices._accumulate_on_minutes_until(now)
+
+        self._run_with_serialization_retry(_do_update)

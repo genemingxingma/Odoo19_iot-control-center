@@ -161,15 +161,15 @@ class IoTTHSensor(models.Model):
             elif humidity < rec.humidity_low:
                 checks.append(("hum_low", rec.humidity_low, humidity))
 
+            open_alerts = alert_model.search(
+                [
+                    ("sensor_id", "=", rec.id),
+                    ("state", "=", "open"),
+                ]
+            )
+            open_types = set(open_alerts.mapped("alert_type"))
             for alert_type, threshold, actual in checks:
-                already_open = alert_model.search_count(
-                    [
-                        ("sensor_id", "=", rec.id),
-                        ("alert_type", "=", alert_type),
-                        ("state", "=", "open"),
-                    ]
-                )
-                if not already_open:
+                if alert_type not in open_types:
                     alert_model.create(
                         {
                             "sensor_id": rec.id,
@@ -182,20 +182,14 @@ class IoTTHSensor(models.Model):
                     )
 
             # Close opposite alerts once value returns to normal range.
+            close_types = set()
             if rec.temperature_low <= temperature <= rec.temperature_high:
-                alert_model.search(
-                    [
-                        ("sensor_id", "=", rec.id),
-                        ("alert_type", "in", ["temp_high", "temp_low"]),
-                        ("state", "=", "open"),
-                    ]
-                ).write({"state": "closed", "closed_at": fields.Datetime.now()})
+                close_types.update(["temp_high", "temp_low"])
 
             if rec.humidity_low <= humidity <= rec.humidity_high:
-                alert_model.search(
-                    [
-                        ("sensor_id", "=", rec.id),
-                        ("alert_type", "in", ["hum_high", "hum_low"]),
-                        ("state", "=", "open"),
-                    ]
-                ).write({"state": "closed", "closed_at": fields.Datetime.now()})
+                close_types.update(["hum_high", "hum_low"])
+
+            if close_types:
+                to_close = open_alerts.filtered(lambda a: a.alert_type in close_types)
+                if to_close:
+                    to_close.write({"state": "closed", "closed_at": fields.Datetime.now()})

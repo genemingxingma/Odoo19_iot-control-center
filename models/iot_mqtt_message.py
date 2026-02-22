@@ -55,18 +55,12 @@ class IoTMQTTMessage(models.Model):
         except Exception:
             return fields.Datetime.now()
 
-    def _process_one(self):
+    def _process_one(self, preloaded_device=None):
         self.ensure_one()
         payload = self._parse_payload()
         device_model = self.env["iot.device"]
         no_track_ctx = device_model._system_no_track_context()
-        device = device_model.browse()
-        if self.device_serial:
-            device = device_model.search(
-                ["|", ("serial", "=ilike", self.device_serial), ("module_id", "=ilike", self.device_serial)],
-                limit=1,
-                order="last_seen desc, id desc",
-            )
+        device = preloaded_device or device_model.browse()
         if not device and self.device_serial:
             device = device_model.with_context(**no_track_ctx).create(
                 {
@@ -74,8 +68,12 @@ class IoTMQTTMessage(models.Model):
                     "serial": self.device_serial.lower(),
                 }
             )
+        done_vals = {
+            "state": "done",
+            "processed_at": fields.Datetime.now(),
+        }
         if device:
-            self.with_context(**no_track_ctx).device_id = device.id
+            done_vals["device_id"] = device.id
             device = device.with_context(**no_track_ctx)
             state = payload.get("state") if isinstance(payload, dict) else None
             ota_state = payload.get("ota_state") if isinstance(payload, dict) else None
@@ -101,20 +99,77 @@ class IoTMQTTMessage(models.Model):
             if isinstance(payload, dict) and "schedule_version" in payload:
                 device.apply_schedule_report(payload, reported_at=reported_at)
 
-        self.with_context(**no_track_ctx).write(
-            {
-                "state": "done",
-                "processed_at": fields.Datetime.now(),
-            }
+        self.with_context(**no_track_ctx).write(done_vals)
+
+    @api.model
+    def _preload_devices(self, serials):
+        key_list = [s.strip().lower() for s in serials if s and s.strip()]
+        if not key_list:
+            return {}
+        key_set = set(key_list)
+        device_model = self.env["iot.device"].sudo()
+        no_track_ctx = device_model._system_no_track_context()
+
+        devices = device_model.search(
+            ["|", ("serial", "in", list(key_set)), ("module_id", "in", list(key_set))]
         )
+        device_map = {}
+        for dev in devices:
+            if dev.serial:
+                device_map[dev.serial.strip().lower()] = dev
+            if dev.module_id:
+                device_map[dev.module_id.strip().lower()] = dev
+
+        missing = [k for k in key_set if k not in device_map]
+        if missing:
+            try:
+                created = device_model.with_context(**no_track_ctx).create(
+                    [{"name": k, "serial": k} for k in missing]
+                )
+            except Exception:
+                created = device_model.search([("serial", "in", missing)])
+            for dev in created:
+                if dev.serial:
+                    device_map[dev.serial.strip().lower()] = dev
+        return device_map
 
     @api.model
     def _cron_process_new_messages(self, limit=500):
         no_track_ctx = self.env["iot.device"]._system_no_track_context()
-        messages = self.with_context(**no_track_ctx).search([("state", "=", "new")], limit=limit)
+        messages = self.with_context(**no_track_ctx).search(
+            [("state", "=", "new")],
+            limit=limit,
+            order="id asc",
+        )
+        if not messages:
+            return
+
+        # Keep only the latest message per (device_serial, message_type) in this batch.
+        # Older duplicates are marked as done directly to reduce write amplification.
+        latest_by_key = {}
         for msg in messages:
+            serial_key = (msg.device_serial or "").strip().lower()
+            if serial_key:
+                key = (serial_key, msg.message_type or "unknown")
+            else:
+                key = (f"__msg_{msg.id}", msg.message_type or "unknown")
+            latest_by_key[key] = msg
+
+        selected = self.browse([m.id for m in latest_by_key.values()])
+        skipped = messages - selected
+        if skipped:
+            skipped.with_context(**no_track_ctx).write(
+                {
+                    "state": "done",
+                    "processed_at": fields.Datetime.now(),
+                }
+            )
+        serials = selected.mapped("device_serial")
+        device_map = self._preload_devices(serials)
+        for msg in selected:
             try:
-                msg._process_one()
+                key = (msg.device_serial or "").strip().lower()
+                msg._process_one(preloaded_device=device_map.get(key))
             except Exception as exc:
                 msg.with_context(**no_track_ctx).write(
                     {
