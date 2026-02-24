@@ -41,4 +41,14 @@
         <field name="interval_type">minutes</field>
         <field name="active">True</field>
     </record>
+
+    <record id="cron_iot_th_rollup_old_readings" model="ir.cron">
+        <field name="name">IoT TH - Rollup Old Readings</field>
+        <field name="model_id" ref="model_iot_th_reading"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_rollup_old_readings()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active">True</field>
+    </record>
 </odoo>

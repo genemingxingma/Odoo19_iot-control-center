@@ -9,6 +9,7 @@
                 <field name="node_id"/>
                 <field name="sensor_id"/>
                 <field name="sensor_code"/>
+                <field name="is_daily_rollup"/>
                 <field name="temperature"/>
                 <field name="humidity"/>
             </list>
@@ -49,11 +50,6 @@
                 <field name="node_id"/>
                 <field name="sensor_id"/>
                 <field name="sensor_code"/>
-                <group>
-                    <filter string="Sensor" name="group_sensor" context="{'group_by': 'sensor_id'}"/>
-                    <filter string="Hour" name="group_hour" context="{'group_by': 'reported_at:hour'}"/>
-                    <filter string="Day" name="group_day" context="{'group_by': 'reported_at:day'}"/>
-                </group>
             </search>
         </field>
     </record>

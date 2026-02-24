@@ -30,6 +30,11 @@ class IoTTHSensor(models.Model):
     reading_count = fields.Integer(default=0)
 
     stats_window_hours = fields.Integer(default=24)
+    keep_full_history = fields.Boolean(
+        string="Keep Full History",
+        default=False,
+        help="If enabled, this node keeps all raw readings and skips 30-day rollup.",
+    )
     avg_temperature = fields.Float(compute="_compute_stats")
     avg_humidity = fields.Float(compute="_compute_stats")
     min_temperature = fields.Float(compute="_compute_stats")
@@ -116,7 +121,13 @@ class IoTTHSensor(models.Model):
             now = fields.Datetime.now()
             since = now - timedelta(hours=max(rec.stats_window_hours or 24, 1))
             rows = reading_model.search_read(
-                [("sensor_id", "=", rec.id), ("reported_at", ">=", since)],
+                [
+                    ("sensor_id", "=", rec.id),
+                    ("reported_at", ">=", since),
+                    "|",
+                    ("temperature", "!=", 0.0),
+                    ("humidity", "!=", 0.0),
+                ],
                 ["temperature", "humidity"],
                 limit=5000,
             )

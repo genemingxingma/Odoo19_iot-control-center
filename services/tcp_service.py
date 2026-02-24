@@ -126,6 +126,14 @@ class TCPIngestService:
                 battery_voltage = m.get("battery_voltage")
                 if temperature is None or humidity is None:
                     continue
+                try:
+                    t_val = float(temperature)
+                    h_val = float(humidity)
+                except Exception:
+                    continue
+                # Drop invalid zero-pair samples (T=0 and H=0) from gateway glitches.
+                if abs(t_val) < 1e-9 and abs(h_val) < 1e-9:
+                    continue
 
                 sensor_node_id = (m.get("node_id") or node_id or "").strip().upper()
                 if not sensor_node_id:
@@ -137,11 +145,11 @@ class TCPIngestService:
                         "sensor_id": sensor.id,
                         "gateway_id": gateway.id,
                         "reported_at": reported_at,
-                        "temperature": float(temperature),
-                        "humidity": float(humidity),
+                        "temperature": t_val,
+                        "humidity": h_val,
                     }
                 )
-                sensor.apply_reading(float(temperature), float(humidity), reported_at, battery_voltage=battery_voltage)
+                sensor.apply_reading(t_val, h_val, reported_at, battery_voltage=battery_voltage)
 
             cr.commit()
 

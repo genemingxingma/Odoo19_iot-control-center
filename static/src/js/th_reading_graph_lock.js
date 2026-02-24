@@ -47,6 +47,27 @@ patch(GraphRenderer.prototype, {
 });
 
 patch(GraphModel.prototype, {
+    _getData(dataPoints, forceUseAllDataPoints) {
+        const result = super._getData(dataPoints, forceUseAllDataPoints);
+        if (this.metaData?.resModel !== "iot.th.reading" || this.metaData?.mode !== "line") {
+            return result;
+        }
+        // Odoo graph model initializes missing buckets with 0.
+        // For TH trend we must treat missing buckets as null to avoid false drops to zero.
+        for (const dataset of result.datasets || []) {
+            const data = dataset?.data || [];
+            const domains = dataset?.domains || [];
+            for (let i = 0; i < data.length; i++) {
+                const d = domains[i];
+                const hasPoint = Array.isArray(d) ? d.length > 0 : Boolean(d);
+                if (!hasPoint) {
+                    data[i] = null;
+                }
+            }
+        }
+        return result;
+    },
+
     async _loadDataPoints(metaData) {
         if (metaData?.resModel !== "iot.th.reading") {
             return super._loadDataPoints(metaData);
@@ -64,11 +85,15 @@ patch(GraphModel.prototype, {
             groupBy.map((gb) => gb.spec),
             ["__count", "temperature:avg", "humidity:avg"],
             {
-                context: { fill_temporal: true, ...this.searchParams.context },
+                // Do not backfill missing temporal buckets with synthetic zeros.
+                context: { ...this.searchParams.context, fill_temporal: false },
             }
         );
         const dataPoints = [];
         for (const group of groups) {
+            if (!group.__count || group.__count <= 0) {
+                continue;
+            }
             const labels = [];
             const rawValues = [];
             for (const gb of groupBy) {
@@ -111,22 +136,28 @@ patch(GraphModel.prototype, {
                 domain: group.__domain,
             };
             if (useTemperature) {
+                const tempVal = group["temperature:avg"];
+                if (tempVal !== false && tempVal !== null && tempVal !== undefined) {
                 dataPoints.push({
                     ...common,
-                    value: group["temperature:avg"],
+                    value: Number(tempVal),
                     labels: [...labels, "Temperature"],
                     identifier: JSON.stringify([...rawValues, { metric: "temperature" }]),
                     cumulatedStart: 0,
                 });
+                }
             }
             if (useHumidity) {
+                const humVal = group["humidity:avg"];
+                if (humVal !== false && humVal !== null && humVal !== undefined) {
                 dataPoints.push({
                     ...common,
-                    value: group["humidity:avg"],
+                    value: Number(humVal),
                     labels: [...labels, "Humidity"],
                     identifier: JSON.stringify([...rawValues, { metric: "humidity" }]),
                     cumulatedStart: 0,
                 });
+                }
             }
         }
         metaData.measure = useTemperature ? "temperature" : "humidity";

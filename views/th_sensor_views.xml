@@ -16,6 +16,7 @@
                 <field name="last_battery_voltage"/>
                 <field name="last_reported_at"/>
                 <field name="reading_count"/>
+                <field name="keep_full_history"/>
             </list>
         </field>
     </record>
@@ -38,6 +39,7 @@
                             <field name="location_id"/>
                             <field name="location_detail"/>
                             <field name="active"/>
+                            <field name="keep_full_history"/>
                         </group>
                         <group>
                             <field name="last_temperature" readonly="1"/>
