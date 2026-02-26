@@ -34,5 +34,5 @@
         <field name="view_mode">list,form</field>
     </record>
 
-    <menuitem id="menu_iot_department" name="Departments" parent="menu_iot_switch_root" action="action_iot_department" sequence="40" groups="base.group_erp_manager"/>
+    <menuitem id="menu_iot_department" name="Departments" parent="menu_iot_switch_root" action="action_iot_department" sequence="40" groups="base.group_no_one"/>
 </odoo>

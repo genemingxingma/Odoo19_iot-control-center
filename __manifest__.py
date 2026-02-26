@@ -8,7 +8,7 @@
     "company": "iMyTest",
     "images": ["static/description/icon.png"],
     "license": "LGPL-3",
-    "depends": ["base", "web", "mail"],
+    "depends": ["base", "web", "mail", "hr", "stock"],
     "data": [
         "security/iot_security.xml",
         "security/ir.model.access.csv",

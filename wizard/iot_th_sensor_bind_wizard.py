@@ -18,7 +18,7 @@ class IoTTHSensorBindWizard(models.TransientModel):
         default=lambda self: self.env.company,
         domain=lambda self: [("id", "in", self.env.companies.ids)],
     )
-    location_id = fields.Many2one("iot.location", domain="[('company_id', '=', company_id)]")
+    location_id = fields.Many2one("stock.location", domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]")
     location_detail = fields.Char()
 
     @api.onchange("node_id", "probe_code", "company_id")

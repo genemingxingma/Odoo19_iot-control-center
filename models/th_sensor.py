@@ -15,7 +15,11 @@ class IoTTHSensor(models.Model):
     gateway_id = fields.Many2one("iot.th.gateway", required=True, ondelete="cascade")
     node_id = fields.Char(string="Node ID", required=True, index=True)
     company_id = fields.Many2one("res.company", index=True)
-    location_id = fields.Many2one("iot.location", string="Location", domain="[('company_id', '=', company_id)]")
+    location_id = fields.Many2one(
+        "stock.location",
+        string="Location",
+        domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]",
+    )
     location_detail = fields.Char(string="Location Detail")
 
     temperature_low = fields.Float(default=5.0)

@@ -10,8 +10,8 @@ class IoTFirmwarePushWizard(models.TransientModel):
 
     firmware_id = fields.Many2one("iot.firmware", required=True)
     company_id = fields.Many2one("res.company", required=True, default=lambda self: self.env.company)
-    department_id = fields.Many2one("iot.department", domain="[('company_id', '=', company_id)]")
-    location_id = fields.Many2one("iot.location", domain="[('company_id', '=', company_id)]")
+    department_id = fields.Many2one("hr.department", domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]")
+    location_id = fields.Many2one("stock.location", domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]")
     device_ids = fields.Many2many("iot.device", string="Devices")
 
     def _domain_devices(self):

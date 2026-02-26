@@ -10,6 +10,7 @@
                 <field name="company_id"/>
                 <field name="department_id"/>
                 <field name="location_id"/>
+                <field name="location_detail"/>
                 <field name="relay_state" invisible="1"/>
                 <field name="delay_active" invisible="1"/>
                 <field name="delay_remaining_minutes" string="Delay Remaining" widget="delay_countdown"/>
@@ -109,6 +110,7 @@
                             <field name="company_id" groups="base.group_multi_company"/>
                             <field name="department_id"/>
                             <field name="location_id"/>
+                            <field name="location_detail"/>
                             <field name="group_ids" widget="many2many_tags"/>
                         </group>
                         <group>

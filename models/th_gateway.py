@@ -14,8 +14,9 @@ class IoTTHGateway(models.Model):
     active = fields.Boolean(default=True)
 
     company_id = fields.Many2one("res.company", index=True)
-    department_id = fields.Many2one("iot.department", domain="[('company_id', '=', company_id)]")
-    location_id = fields.Many2one("iot.location", domain="[('company_id', '=', company_id)]")
+    department_id = fields.Many2one("hr.department", domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]")
+    location_id = fields.Many2one("stock.location", domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]")
+    location_detail = fields.Char(string="Location Detail")
 
     tcp_token = fields.Char(help="Optional token for gateway payload authentication.")
     sampling_interval_min = fields.Integer(default=5, help="Recommended gateway upload interval in minutes.")

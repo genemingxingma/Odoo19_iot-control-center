@@ -9,6 +9,7 @@
                 <field name="company_id"/>
                 <field name="department_id"/>
                 <field name="location_id"/>
+                <field name="location_detail"/>
                 <field name="active"/>
             </list>
         </field>
@@ -30,6 +31,7 @@
                             <field name="company_id" groups="base.group_multi_company"/>
                             <field name="department_id"/>
                             <field name="location_id"/>
+                            <field name="location_detail"/>
                             <field name="active"/>
                         </group>
                     </group>

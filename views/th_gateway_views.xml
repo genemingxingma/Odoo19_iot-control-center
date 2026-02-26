@@ -10,6 +10,7 @@
                 <field name="company_id"/>
                 <field name="department_id"/>
                 <field name="location_id"/>
+                <field name="location_detail"/>
                 <field name="online"/>
                 <field name="sensor_count"/>
                 <field name="alert_count"/>
@@ -35,6 +36,7 @@
                             <field name="company_id" groups="base.group_multi_company"/>
                             <field name="department_id"/>
                             <field name="location_id"/>
+                            <field name="location_detail"/>
                             <field name="active"/>
                         </group>
                         <group>

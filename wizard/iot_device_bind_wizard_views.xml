@@ -11,6 +11,7 @@
                     <field name="company_id" groups="base.group_multi_company"/>
                     <field name="department_id"/>
                     <field name="location_id"/>
+                    <field name="location_detail"/>
                 </group>
                 <group string="Validation" invisible="candidate_device_id == False">
                     <field name="candidate_device_id"/>

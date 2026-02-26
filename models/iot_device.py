@@ -10,7 +10,7 @@ import pytz
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
 
-from ..services.mqtt_service import ensure_running
+from ..services.mqtt_service import ensure_running, publish_once
 
 _logger = logging.getLogger(__name__)
 
@@ -27,8 +27,13 @@ class IoTDevice(models.Model):
     active = fields.Boolean(default=True)
 
     company_id = fields.Many2one("res.company", index=True)
-    department_id = fields.Many2one("iot.department", domain="[('company_id', '=', company_id)]", tracking=True)
-    location_id = fields.Many2one("iot.location", domain="[('company_id', '=', company_id)]", tracking=True)
+    department_id = fields.Many2one("hr.department", domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]", tracking=True)
+    location_id = fields.Many2one(
+        "stock.location",
+        domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]",
+        tracking=True,
+    )
+    location_detail = fields.Char(string="Location Detail", tracking=True)
     group_ids = fields.Many2many("iot.device.group", "iot_device_group_rel", "device_id", "group_id", string="Groups")
 
     relay_state = fields.Selection(
@@ -177,7 +182,7 @@ class IoTDevice(models.Model):
         return rec.with_env(self.env)
 
     @api.model
-    def bind_by_serial(self, serial, company=None, department=None, location=None):
+    def bind_by_serial(self, serial, company=None, department=None, location=None, location_detail=None):
         serial_or_id = (serial or "").strip()
         rec = self.find_bind_candidate(serial_or_id, require_online=False)
         target_company = company or self.env.company
@@ -188,6 +193,8 @@ class IoTDevice(models.Model):
             vals["department_id"] = department.id
         if location:
             vals["location_id"] = location.id
+        if location_detail is not None:
+            vals["location_detail"] = location_detail
         rec.write(vals)
         return rec.with_env(self.env)
 
@@ -198,6 +205,7 @@ class IoTDevice(models.Model):
                     "company_id": False,
                     "department_id": False,
                     "location_id": False,
+                    "location_detail": False,
                     "group_ids": [(5, 0, 0)],
                     "schedule_dirty": True,
                 }
@@ -214,8 +222,8 @@ class IoTDevice(models.Model):
             raise UserError(_("Delay mode is active. This action is blocked for: %s") % names)
 
     def _publish_command(self, command, payload=None, raise_on_fail=True):
-        service = ensure_running(self.env)
-        if not service:
+        mqtt_host = self.env["ir.config_parameter"].sudo().get_param("iot_control_center.mqtt_host")
+        if not mqtt_host or str(mqtt_host).strip().lower() in ("false", ""):
             if raise_on_fail:
                 raise UserError(_("MQTT is not configured. Please set broker settings first."))
             return False
@@ -224,7 +232,7 @@ class IoTDevice(models.Model):
         for rec in self:
             topic = f"{self._mqtt_topic_root()}/{rec.serial}/command"
             body = {"command": command, **payload}
-            ok = service.publish(topic, json.dumps(body))
+            ok = publish_once(self.env, topic, json.dumps(body))
             if not ok:
                 all_ok = False
                 if raise_on_fail:

@@ -18,8 +18,9 @@ class IoTDeviceBindWizard(models.TransientModel):
         default=lambda self: self.env.company,
         domain=lambda self: [("id", "in", self.env.companies.ids)],
     )
-    department_id = fields.Many2one("iot.department", domain="[('company_id', '=', company_id)]")
-    location_id = fields.Many2one("iot.location", domain="[('company_id', '=', company_id)]")
+    department_id = fields.Many2one("hr.department", domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]")
+    location_id = fields.Many2one("stock.location", domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]")
+    location_detail = fields.Char()
 
     @api.onchange("serial", "company_id")
     def _onchange_reset_validation(self):
@@ -138,6 +139,7 @@ class IoTDeviceBindWizard(models.TransientModel):
             company=self.company_id,
             department=self.department_id,
             location=self.location_id,
+            location_detail=self.location_detail,
         )
         if not rec:
             raise UserError(_("Failed to bind switch."))
