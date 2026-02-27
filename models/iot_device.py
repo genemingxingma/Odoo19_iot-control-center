@@ -238,14 +238,31 @@ class IoTDevice(models.Model):
                 if raise_on_fail:
                     raise UserError(_("Failed to publish MQTT command for %s") % rec.display_name)
                 continue
-            rec.last_command_at = fields.Datetime.now()
-            rec.last_command_payload = json.dumps(body, ensure_ascii=False)
+            # Metadata write should never block command success.
+            # Under concurrent MQTT/status updates, this row can be hot.
+            try:
+                self._run_with_serialization_retry(
+                    lambda: rec.with_context(**self._system_no_track_context()).write(
+                        {
+                            "last_command_at": fields.Datetime.now(),
+                            "last_command_payload": json.dumps(body, ensure_ascii=False),
+                        }
+                    )
+                )
+            except Exception as exc:
+                _logger.warning("Skip command metadata write for %s due to contention: %s", rec.display_name, exc)
         return all_ok
+
+    def _apply_state_report_safe(self, state, reported_at=None):
+        try:
+            self._run_with_serialization_retry(lambda: self.apply_state_report(state, reported_at=reported_at))
+        except Exception as exc:
+            _logger.warning("Skip optimistic state write for %s due to contention: %s", self.mapped("display_name"), exc)
 
     def action_turn_on(self):
         self._ensure_not_delay_locked()
         ok = self._publish_command("relay", {"state": "on"}, raise_on_fail=False)
-        self.apply_state_report("on", reported_at=fields.Datetime.now())
+        self._apply_state_report_safe("on", reported_at=fields.Datetime.now())
         if ok:
             return {"type": "ir.actions.client", "tag": "reload"}
         return {
@@ -262,7 +279,7 @@ class IoTDevice(models.Model):
     def action_turn_off(self):
         self._ensure_not_delay_locked()
         ok = self._publish_command("relay", {"state": "off"}, raise_on_fail=False)
-        self.apply_state_report("off", reported_at=fields.Datetime.now())
+        self._apply_state_report_safe("off", reported_at=fields.Datetime.now())
         if ok:
             return {"type": "ir.actions.client", "tag": "reload"}
         return {
@@ -555,6 +572,24 @@ class IoTDevice(models.Model):
             self._run_with_serialization_retry(
                 lambda: expired.write({"delay_active": False, "delay_started_at": False, "delay_end_at": False})
             )
+        self._cron_retry_dirty_schedule_sync()
+
+    @api.model
+    def _cron_retry_dirty_schedule_sync(self):
+        """Retry schedule sync for online devices when previous push failed/offline."""
+        timeout = int(self.env["ir.config_parameter"].sudo().get_param("iot_control_center.online_timeout_sec", 300))
+        recent_cutoff = fields.Datetime.now() - timedelta(seconds=max(timeout, 60) * 2)
+        dirty_devices = self.with_context(**self._system_no_track_context()).search(
+            [
+                ("schedule_dirty", "=", True),
+                ("company_id", "!=", False),
+                ("last_seen", ">=", recent_cutoff),
+            ],
+            limit=200,
+        )
+        if not dirty_devices:
+            return
+        self._run_with_serialization_retry(lambda: dirty_devices._sync_schedule_payload(raise_on_error=False))
 
     @api.model
     def _cron_update_live_uptime(self):
@@ -567,3 +602,45 @@ class IoTDevice(models.Model):
                 devices._accumulate_on_minutes_until(now)
 
         self._run_with_serialization_retry(_do_update)
+
+    @api.model
+    def _cron_dedupe_devices(self):
+        # Keep the latest row for each serial/module key to prevent table bloat if
+        # devices reconnect with inconsistent identifiers or under race conditions.
+        self.env.cr.execute(
+            """
+            WITH ranked AS (
+                SELECT
+                    id,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY lower(serial)
+                        ORDER BY last_seen DESC NULLS LAST, write_date DESC NULLS LAST, id DESC
+                    ) AS rn
+                FROM iot_device
+                WHERE serial IS NOT NULL AND btrim(serial) <> ''
+            )
+            DELETE FROM iot_device d
+            USING ranked r
+            WHERE d.id = r.id AND r.rn > 1
+            """
+        )
+
+    @api.model
+    def _cron_purge_stale_devices(self):
+        icp = self.env["ir.config_parameter"].sudo()
+        retention_days_raw = icp.get_param("iot_control_center.device_retention_days", "30")
+        try:
+            retention_days = max(int(retention_days_raw or 30), 1)
+        except Exception:
+            retention_days = 30
+        cutoff = fields.Datetime.now() - timedelta(days=retention_days)
+        # Keep bound devices; purge only unbound stale rows to prevent table bloat.
+        self.env.cr.execute(
+            """
+            DELETE FROM iot_device
+            WHERE (company_id IS NULL)
+              AND (last_seen IS NULL OR last_seen < %s)
+              AND (firmware_upgrade_state IS NULL OR firmware_upgrade_state <> 'pending')
+            """,
+            [cutoff],
+        )
