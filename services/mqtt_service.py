@@ -1,6 +1,11 @@
 import logging
+import os
 import threading
 import time
+import uuid
+from pathlib import Path
+
+import fcntl
 
 import paho.mqtt.client as mqtt
 import psycopg2
@@ -20,13 +25,45 @@ class MQTTService:
         self._client = None
         self._started = False
         self._lock = threading.Lock()
+        self._singleton_fd = None
+
+    def _singleton_lock_path(self):
+        safe_dbname = "".join(ch if ch.isalnum() or ch in ("_", "-") else "_" for ch in self.dbname)
+        return Path("/tmp") / f"iot_mqtt_subscriber_{safe_dbname}.lock"
+
+    def _acquire_singleton_lock(self):
+        if self._singleton_fd:
+            return True
+        lock_path = self._singleton_lock_path()
+        fd = os.open(str(lock_path), os.O_CREAT | os.O_RDWR, 0o644)
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError:
+            os.close(fd)
+            return False
+        self._singleton_fd = fd
+        return True
+
+    def _release_singleton_lock(self):
+        if not self._singleton_fd:
+            return
+        try:
+            fcntl.flock(self._singleton_fd, fcntl.LOCK_UN)
+        except OSError:
+            pass
+        try:
+            os.close(self._singleton_fd)
+        except OSError:
+            pass
+        self._singleton_fd = None
 
     def _make_client(self):
-        # Use a DB-scoped stable client_id so broker keeps only one active
-        # subscriber per database, preventing duplicate message processing
-        # across Odoo worker processes.
-        client_id = f"odoo-iot-{self.dbname}"
+        # Use process-unique client_id to avoid cross-worker broker kick-out
+        # loops when multiple Odoo workers ensure MQTT service concurrently.
+        client_id = f"odoo-iot-{self.dbname}-{os.getpid()}"
         client = mqtt.Client(client_id=client_id, clean_session=True)
+        # Backoff reconnect attempts to avoid hot reconnect loops under broker/network issues.
+        client.reconnect_delay_set(min_delay=2, max_delay=30)
         username = self.config.get("username")
         password = self.config.get("password")
         if username:
@@ -79,10 +116,14 @@ class MQTTService:
         with self._lock:
             if self._started:
                 return True
+            if not self._acquire_singleton_lock():
+                # Another worker/process owns MQTT subscription loop for this DB.
+                return False
             host = self.config.get("host")
             port = self.config.get("port")
             keepalive = self.config.get("keepalive")
             if not host:
+                self._release_singleton_lock()
                 return False
 
             self._client = self._make_client()
@@ -95,6 +136,7 @@ class MQTTService:
                 _logger.error("IoT MQTT start failed for %s:%s (%s)", host, port, exc)
                 self._client = None
                 self._started = False
+                self._release_singleton_lock()
                 return False
 
     def publish(self, topic, payload):
@@ -119,6 +161,7 @@ class MQTTService:
                 self._client.disconnect()
             self._client = None
             self._started = False
+            self._release_singleton_lock()
 
 
 
@@ -128,12 +171,12 @@ def _load_config(env):
     if host in (False, None, "", "False", "false"):
         host = ""
 
-    port_raw = icp.get_param("iot_control_center.mqtt_port", 9910)
+    port_raw = icp.get_param("iot_control_center.mqtt_port", 1883)
     keepalive_raw = icp.get_param("iot_control_center.mqtt_keepalive", 60)
     try:
         port = int(port_raw)
     except (TypeError, ValueError):
-        port = 9910
+        port = 1883
     try:
         keepalive = int(keepalive_raw)
     except (TypeError, ValueError):
@@ -179,3 +222,31 @@ def ensure_running(env):
 
     current.start()
     return current
+
+
+def publish_once(env, topic, payload, retain=False):
+    config = _load_config(env)
+    host = config.get("host")
+    if not host:
+        return False
+    port = config.get("port") or 1883
+    keepalive = config.get("keepalive") or 60
+    client_id = f"odoo-iot-pub-{env.cr.dbname}-{os.getpid()}-{uuid.uuid4().hex[:8]}"
+    client = mqtt.Client(client_id=client_id, clean_session=True)
+    if config.get("username"):
+        client.username_pw_set(config.get("username"), config.get("password") or None)
+    try:
+        client.connect(host, port=port, keepalive=keepalive)
+        client.loop_start()
+        info = client.publish(topic, payload=payload, qos=1, retain=retain)
+        info.wait_for_publish(timeout=2.0)
+        return info.rc == mqtt.MQTT_ERR_SUCCESS
+    except Exception as exc:
+        _logger.error("IoT MQTT publish_once failed topic=%s error=%s", topic, exc)
+        return False
+    finally:
+        try:
+            client.loop_stop()
+            client.disconnect()
+        except Exception:
+            pass

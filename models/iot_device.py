@@ -221,7 +221,7 @@ class IoTDevice(models.Model):
             names = ", ".join(locked.mapped("display_name"))
             raise UserError(_("Delay mode is active. This action is blocked for: %s") % names)
 
-    def _publish_command(self, command, payload=None, raise_on_fail=True):
+    def _publish_command(self, command, payload=None, raise_on_fail=True, retain=False):
         mqtt_host = self.env["ir.config_parameter"].sudo().get_param("iot_control_center.mqtt_host")
         if not mqtt_host or str(mqtt_host).strip().lower() in ("false", ""):
             if raise_on_fail:
@@ -232,7 +232,7 @@ class IoTDevice(models.Model):
         for rec in self:
             topic = f"{self._mqtt_topic_root()}/{rec.serial}/command"
             body = {"command": command, **payload}
-            ok = publish_once(self.env, topic, json.dumps(body))
+            ok = publish_once(self.env, topic, json.dumps(body), retain=retain)
             if not ok:
                 all_ok = False
                 if raise_on_fail:
@@ -364,9 +364,19 @@ class IoTDevice(models.Model):
             entries = rec._iter_schedule_entries()
             try:
                 if entries:
-                    rec._publish_command("schedule_set", {"version": next_version, "entries": entries}, raise_on_fail=raise_on_error)
+                    rec._publish_command(
+                        "schedule_set",
+                        {"version": next_version, "entries": entries},
+                        raise_on_fail=raise_on_error,
+                        retain=True,
+                    )
                 else:
-                    rec._publish_command("schedule_clear", {"version": next_version}, raise_on_fail=raise_on_error)
+                    rec._publish_command(
+                        "schedule_clear",
+                        {"version": next_version},
+                        raise_on_fail=raise_on_error,
+                        retain=True,
+                    )
                 rec.schedule_version = next_version
                 rec.schedule_last_push_at = fields.Datetime.now()
                 rec.schedule_dirty = False
