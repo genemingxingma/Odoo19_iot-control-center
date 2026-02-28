@@ -232,7 +232,7 @@ class IoTDevice(models.Model):
         for rec in self:
             topic = f"{self._mqtt_topic_root()}/{rec.serial}/command"
             body = {"command": command, **payload}
-            ok = publish_once(self.env, topic, json.dumps(body), retain=retain)
+            ok = publish_once(self.env, topic, json.dumps(body, separators=(",", ":")), retain=retain)
             if not ok:
                 all_ok = False
                 if raise_on_fail:
