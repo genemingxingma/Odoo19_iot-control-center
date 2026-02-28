@@ -363,20 +363,26 @@ class IoTDevice(models.Model):
             next_version = rec.schedule_version + 1
             entries = rec._iter_schedule_entries()
             try:
+                ok = False
                 if entries:
-                    rec._publish_command(
+                    ok = rec._publish_command(
                         "schedule_set",
                         {"version": next_version, "entries": entries},
                         raise_on_fail=raise_on_error,
                         retain=True,
                     )
                 else:
-                    rec._publish_command(
+                    ok = rec._publish_command(
                         "schedule_clear",
                         {"version": next_version},
                         raise_on_fail=raise_on_error,
                         retain=True,
                     )
+                if not ok:
+                    rec.schedule_dirty = True
+                    if raise_on_error:
+                        raise UserError(_("Failed to publish MQTT command for %s") % rec.display_name)
+                    continue
                 rec.schedule_version = next_version
                 rec.schedule_last_push_at = fields.Datetime.now()
                 rec.schedule_dirty = False
