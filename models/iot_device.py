@@ -624,6 +624,27 @@ class IoTDevice(models.Model):
             WHERE d.id = r.id AND r.rn > 1
             """
         )
+        self.env.cr.execute(
+            """
+            WITH ranked AS (
+                SELECT
+                    id,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY lower(module_id)
+                        ORDER BY
+                            CASE WHEN company_id IS NULL THEN 1 ELSE 0 END,
+                            last_seen DESC NULLS LAST,
+                            write_date DESC NULLS LAST,
+                            id DESC
+                    ) AS rn
+                FROM iot_device
+                WHERE module_id IS NOT NULL AND btrim(module_id) <> ''
+            )
+            DELETE FROM iot_device d
+            USING ranked r
+            WHERE d.id = r.id AND r.rn > 1
+            """
+        )
 
     @api.model
     def _cron_purge_stale_devices(self):

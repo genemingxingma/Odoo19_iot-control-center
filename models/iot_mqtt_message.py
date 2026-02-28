@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from datetime import timedelta
 
 from odoo import api, fields, models
 
@@ -19,6 +20,52 @@ class IoTMQTTMessage(models.Model):
     device_serial = fields.Char(index=True)
     message_type = fields.Selection([("status", "Status"), ("telemetry", "Telemetry"), ("unknown", "Unknown")], default="unknown")
     device_id = fields.Many2one("iot.device")
+
+    @api.model
+    def _normalize_device_key(self, value):
+        return (value or "").strip().lower()
+
+    @api.model
+    def _find_or_create_device_by_key(self, key):
+        key = self._normalize_device_key(key)
+        if not key:
+            return self.env["iot.device"].browse()
+        device_model = self.env["iot.device"].sudo()
+        no_track_ctx = device_model._system_no_track_context()
+        device_model = device_model.with_context(**no_track_ctx)
+
+        # Prefer exact serial match over module_id match to avoid route ambiguity
+        # when legacy rows still carry old serial values.
+        device = device_model.search(
+            [("serial", "=ilike", key)],
+            order="company_id desc, last_seen desc, id desc",
+            limit=1,
+        )
+        if not device:
+            device = device_model.search(
+                [("module_id", "=ilike", key)],
+                order="company_id desc, last_seen desc, id desc",
+                limit=1,
+            )
+        if device:
+            return device
+
+        # Serialize create-per-key to avoid duplicate rows under concurrent cron workers.
+        self.env.cr.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", [f"iot.device:{key}"])
+        device = device_model.search(
+            [("serial", "=ilike", key)],
+            order="company_id desc, last_seen desc, id desc",
+            limit=1,
+        )
+        if not device:
+            device = device_model.search(
+                [("module_id", "=ilike", key)],
+                order="company_id desc, last_seen desc, id desc",
+                limit=1,
+            )
+        if device:
+            return device
+        return device_model.create({"name": key, "serial": key})
 
     @api.model
     def create_from_mqtt(self, topic, payload_text):
@@ -62,12 +109,7 @@ class IoTMQTTMessage(models.Model):
         no_track_ctx = device_model._system_no_track_context()
         device = preloaded_device or device_model.browse()
         if not device and self.device_serial:
-            device = device_model.with_context(**no_track_ctx).create(
-                {
-                    "name": self.device_serial.lower(),
-                    "serial": self.device_serial.lower(),
-                }
-            )
+            device = self._find_or_create_device_by_key(self.device_serial)
         done_vals = {
             "state": "done",
             "processed_at": fields.Datetime.now(),
@@ -103,34 +145,56 @@ class IoTMQTTMessage(models.Model):
 
     @api.model
     def _preload_devices(self, serials):
-        key_list = [s.strip().lower() for s in serials if s and s.strip()]
+        key_list = [self._normalize_device_key(s) for s in serials if self._normalize_device_key(s)]
         if not key_list:
             return {}
         key_set = set(key_list)
         device_model = self.env["iot.device"].sudo()
         no_track_ctx = device_model._system_no_track_context()
+        device_model = device_model.with_context(**no_track_ctx)
 
-        devices = device_model.search(
-            ["|", ("serial", "in", list(key_set)), ("module_id", "in", list(key_set))]
-        )
-        device_map = {}
-        for dev in devices:
-            if dev.serial:
-                device_map[dev.serial.strip().lower()] = dev
-            if dev.module_id:
-                device_map[dev.module_id.strip().lower()] = dev
-
-        missing = [k for k in key_set if k not in device_map]
-        if missing:
-            try:
-                created = device_model.with_context(**no_track_ctx).create(
-                    [{"name": k, "serial": k} for k in missing]
+        devices = self.env["iot.device"].browse()
+        try:
+            self.env.cr.execute(
+                """
+                SELECT id
+                FROM iot_device
+                WHERE lower(serial) = ANY(%s)
+                   OR lower(module_id) = ANY(%s)
+                """,
+                (list(key_set), list(key_set)),
+            )
+            devices = device_model.browse([row[0] for row in self.env.cr.fetchall()])
+        except Exception:
+            devices = self.env["iot.device"].browse()
+            for key in key_set:
+                dev = device_model.search(
+                    ["|", ("serial", "=ilike", key), ("module_id", "=ilike", key)],
+                    order="last_seen desc, id desc",
+                    limit=1,
                 )
-            except Exception:
-                created = device_model.search([("serial", "in", missing)])
-            for dev in created:
-                if dev.serial:
-                    device_map[dev.serial.strip().lower()] = dev
+                devices |= dev
+
+        serial_map = {}
+        module_map = {}
+        for dev in devices:
+            serial_key = self._normalize_device_key(dev.serial)
+            module_key = self._normalize_device_key(dev.module_id)
+            if serial_key and serial_key in key_set and serial_key not in serial_map:
+                serial_map[serial_key] = dev
+            if module_key and module_key in key_set and module_key not in module_map:
+                module_map[module_key] = dev
+
+        device_map = {}
+        for key in key_set:
+            # Always prefer serial-key match for topic key routing.
+            device_map[key] = serial_map.get(key) or module_map.get(key)
+
+        missing = [k for k in key_set if not device_map.get(k)]
+        if missing:
+            for key in missing:
+                dev = self._find_or_create_device_by_key(key)
+                device_map[key] = dev
         return device_map
 
     @api.model
@@ -168,7 +232,7 @@ class IoTMQTTMessage(models.Model):
         device_map = self._preload_devices(serials)
         for msg in selected:
             try:
-                key = (msg.device_serial or "").strip().lower()
+                key = self._normalize_device_key(msg.device_serial)
                 msg._process_one(preloaded_device=device_map.get(key))
             except Exception as exc:
                 msg.with_context(**no_track_ctx).write(
@@ -178,3 +242,14 @@ class IoTMQTTMessage(models.Model):
                         "processed_at": fields.Datetime.now(),
                     }
                 )
+
+    @api.model
+    def _cron_purge_old_messages(self):
+        icp = self.env["ir.config_parameter"].sudo()
+        retention_days_raw = icp.get_param("iot_control_center.mqtt_message_retention_days", "7")
+        try:
+            retention_days = max(int(retention_days_raw or 7), 1)
+        except Exception:
+            retention_days = 7
+        cutoff = fields.Datetime.now() - timedelta(days=retention_days)
+        self.env.cr.execute("DELETE FROM iot_mqtt_message WHERE received_at < %s", [cutoff])
