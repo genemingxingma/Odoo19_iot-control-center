@@ -565,8 +565,9 @@ class IoTDevice(models.Model):
             rec.firmware_upgrade_completed_at = at
 
     def mark_schedule_dirty(self, auto_sync=False):
-        for rec in self:
-            rec.schedule_dirty = True
+        if self:
+            target = self.with_context(**self._system_no_track_context())
+            self._run_with_serialization_retry(lambda: target.write({"schedule_dirty": True}))
         if auto_sync and self:
             self._sync_schedule_payload(raise_on_error=False)
 

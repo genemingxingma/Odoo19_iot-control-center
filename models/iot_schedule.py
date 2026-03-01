@@ -54,7 +54,9 @@ class IoTSchedule(models.Model):
 
     def _mark_related_devices_dirty(self):
         devices = self.mapped("device_id") | self.mapped("group_id.device_ids")
-        devices.mark_schedule_dirty(auto_sync=True)
+        # Avoid blocking schedule save under high-frequency telemetry writes.
+        # Dirty mark is enough; cron will retry push asynchronously.
+        devices.mark_schedule_dirty(auto_sync=False)
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -70,7 +72,7 @@ class IoTSchedule(models.Model):
     def unlink(self):
         devices = self.mapped("device_id") | self.mapped("group_id.device_ids")
         res = super().unlink()
-        devices.mark_schedule_dirty(auto_sync=True)
+        devices.mark_schedule_dirty(auto_sync=False)
         return res
 
     @api.constrains("hour", "minute")

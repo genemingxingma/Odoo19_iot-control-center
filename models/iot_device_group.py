@@ -36,7 +36,7 @@ class IoTDeviceGroup(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         records = super().create(vals_list)
-        records.mapped("device_ids").mark_schedule_dirty(auto_sync=True)
+        records.mapped("device_ids").mark_schedule_dirty(auto_sync=False)
         return records
 
     def write(self, vals):
@@ -44,11 +44,11 @@ class IoTDeviceGroup(models.Model):
         res = super().write(vals)
         if "device_ids" in vals:
             devices = before | self.mapped("device_ids")
-            devices.mark_schedule_dirty(auto_sync=True)
+            devices.mark_schedule_dirty(auto_sync=False)
         return res
 
     def unlink(self):
         devices = self.mapped("device_ids")
         res = super().unlink()
-        devices.mark_schedule_dirty(auto_sync=True)
+        devices.mark_schedule_dirty(auto_sync=False)
         return res
