@@ -103,7 +103,6 @@ class IoTDevice(models.Model):
             except psycopg2.errors.SerializationFailure:
                 if attempt >= retries - 1:
                     raise
-                self.env.cr.rollback()
                 time.sleep(sleep_sec * (attempt + 1))
         return None
 
