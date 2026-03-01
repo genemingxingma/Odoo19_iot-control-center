@@ -11,6 +11,7 @@ static const unsigned long WIFI_FAST_BLINK_MS = 120;
 static const unsigned long MQTT_SLOW_BLINK_MS = 500;
 static const unsigned long OTA_ULTRA_FAST_BLINK_MS = 45;
 static const unsigned long CONFIG_REQUIRE_CLIENT_MS = 30000;
+static const uint16_t MQTT_PACKET_BUFFER_BYTES = 1536;
 
 const char* DEFAULT_WIFI_SSID = "iMyTest_IoT";
 const char* DEFAULT_WIFI_PASSWORD = "iMyTest_IoT";
@@ -19,14 +20,14 @@ const uint16_t DEFAULT_MQTT_PORT = 1883;
 const char* DEFAULT_MQTT_USERNAME = "imytest";
 const char* DEFAULT_MQTT_PASSWORD = "imytest";
 const char* DEFAULT_TOPIC_ROOT = "iot/relay";
-const char* DEFAULT_DEVICE_SERIAL = "relay-001";
+const char* DEFAULT_DEVICE_SERIAL = "";
 const char* DEFAULT_BOARD_PROFILE = "";
 const char* DEFAULT_FIRMWARE_UPGRADE_URL = "iot.imytest.com";
 
 const char* PROFILE_RELAY = "IoT-Relay";
 const char* PROFILE_OUTLET = "IoT-Outlet";
 
-const char* FIRMWARE_VERSION = "1.8.5";
+const char* FIRMWARE_VERSION = "1.8.8";
 
 const char* NTP_SERVER_1 = "pool.ntp.org";
 const char* NTP_SERVER_2 = "time.cloudflare.com";
@@ -377,6 +378,16 @@ void loadConfig() {
     cfgFirmwareUpgradeUrl = String(doc["firmware_upgrade_url"] | "");
   }
 
+  cfgDeviceSerial.trim();
+  bool cfgChanged = false;
+  // Force unique identity: always use moduleId as serial/client_id.
+  if (!cfgDeviceSerial.equalsIgnoreCase(moduleId)) {
+    cfgDeviceSerial = moduleId;
+    cfgChanged = true;
+  }
+  if (cfgChanged) {
+    saveConfig();
+  }
   applyBoardProfile();
 }
 
@@ -598,6 +609,7 @@ void startConfigPortal() {
     page += "<label>MQTT Port</label><input name='mqtt_port' value='" + String(cfgMqttPort) + "'>";
     page += "<label>MQTT Username</label><input name='mqtt_username' value='" + htmlEscape(cfgMqttUsername) + "'>";
     page += "<label>MQTT Password</label><input name='mqtt_password' value='" + htmlEscape(cfgMqttPassword) + "'>";
+    page += "<label>Device ID (Fixed)</label><input value='" + htmlEscape(moduleId) + "' readonly>";
     page += "<label>Firmware Upgrade URL</label><input name='firmware_upgrade_url' value='" + htmlEscape(cfgFirmwareUpgradeUrl) + "'>";
     page += "<p style='margin-top:6px;font-size:12px;color:#666'>URL format: https://xxx.xx.xx</p>";
     page += "<button type='submit'>Save And Reboot</button></form>";
@@ -657,7 +669,7 @@ void startConfigPortal() {
     cfgMqttUsername = DEFAULT_MQTT_USERNAME;
     cfgMqttPassword = DEFAULT_MQTT_PASSWORD;
     cfgTopicRoot = DEFAULT_TOPIC_ROOT;
-    cfgDeviceSerial = DEFAULT_DEVICE_SERIAL;
+    cfgDeviceSerial = moduleId;
     cfgFirmwareUpgradeUrl = DEFAULT_FIRMWARE_UPGRADE_URL;
     applyBoardProfile();
     saveConfig();
@@ -670,10 +682,16 @@ void startConfigPortal() {
 }
 
 void refreshRuntimeConfig() {
+  // Keep runtime identity fixed to moduleId to avoid MQTT client/topic collisions.
+  if (!cfgDeviceSerial.equalsIgnoreCase(moduleId)) {
+    cfgDeviceSerial = moduleId;
+    saveConfig();
+  }
   topicCommand = cfgTopicRoot + "/" + cfgDeviceSerial + "/command";
   topicStatus = cfgTopicRoot + "/" + cfgDeviceSerial + "/status";
   topicTelemetry = cfgTopicRoot + "/" + cfgDeviceSerial + "/telemetry";
   mqttClient.setServer(cfgMqttHost.c_str(), cfgMqttPort);
+  mqttClient.setKeepAlive(60);
 }
 
 void handleCommand(char* topic, byte* payload, unsigned int length) {
@@ -866,7 +884,7 @@ void startRuntime() {
   setRelay(false, false);
   loadState();
   refreshRuntimeConfig();
-  mqttClient.setBufferSize(768);
+  mqttClient.setBufferSize(MQTT_PACKET_BUFFER_BYTES);
   configTime(0, 0, NTP_SERVER_1, NTP_SERVER_2);
   runtimeStarted = true;
 }
