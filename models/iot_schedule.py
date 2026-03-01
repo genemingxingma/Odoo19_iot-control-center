@@ -1,3 +1,5 @@
+import math
+
 import pytz
 
 from odoo import api, fields, models
@@ -19,6 +21,12 @@ class IoTSchedule(models.Model):
     timezone = fields.Selection(selection=lambda self: [(tz, tz) for tz in pytz.all_timezones], default="UTC", required=True)
     hour = fields.Integer(default=8, required=True)
     minute = fields.Integer(default=0, required=True)
+    time_float = fields.Float(
+        string="Time",
+        compute="_compute_time_float",
+        inverse="_inverse_time_float",
+        store=False,
+    )
 
     monday = fields.Boolean(default=True)
     tuesday = fields.Boolean(default=True)
@@ -51,6 +59,35 @@ class IoTSchedule(models.Model):
     def _compute_company_id(self):
         for rec in self:
             rec.company_id = rec.device_id.company_id or rec.group_id.company_id
+
+    @api.depends("hour", "minute")
+    def _compute_time_float(self):
+        for rec in self:
+            h = rec.hour if isinstance(rec.hour, int) else 0
+            m = rec.minute if isinstance(rec.minute, int) else 0
+            rec.time_float = float(h) + (float(m) / 60.0)
+
+    def _inverse_time_float(self):
+        for rec in self:
+            v = rec.time_float
+            if v is None:
+                raise ValidationError("Time is required.")
+            try:
+                fv = float(v)
+            except Exception:
+                raise ValidationError("Invalid time format. Please use HH:MM.")
+            if math.isnan(fv) or math.isinf(fv):
+                raise ValidationError("Invalid time format. Please use HH:MM.")
+            if fv < 0.0 or fv >= 24.0:
+                raise ValidationError("Time must be between 00:00 and 23:59.")
+
+            total_minutes = int(round(fv * 60.0))
+            if total_minutes >= 24 * 60:
+                total_minutes = (24 * 60) - 1
+            if total_minutes < 0:
+                total_minutes = 0
+            rec.hour = total_minutes // 60
+            rec.minute = total_minutes % 60
 
     def _mark_related_devices_dirty(self):
         devices = self.mapped("device_id") | self.mapped("group_id.device_ids")

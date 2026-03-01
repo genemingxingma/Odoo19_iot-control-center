@@ -10,8 +10,7 @@
                 <field name="group_id"/>
                 <field name="command"/>
                 <field name="timezone"/>
-                <field name="hour"/>
-                <field name="minute"/>
+                <field name="time_float" widget="float_time"/>
                 <field name="active"/>
             </list>
         </field>
@@ -33,8 +32,7 @@
                         </group>
                         <group>
                             <field name="timezone"/>
-                            <field name="hour"/>
-                            <field name="minute"/>
+                            <field name="time_float" widget="float_time"/>
                         </group>
                     </group>
                     <group string="Execution Days">
