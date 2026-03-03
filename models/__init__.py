@@ -8,6 +8,7 @@ from . import iot_firmware_upgrade_log
 from . import iot_mqtt_message
 from . import iot_control_board
 from . import th_gateway
+from . import th_sensor_group
 from . import th_sensor
 from . import th_reading
 from . import th_alert

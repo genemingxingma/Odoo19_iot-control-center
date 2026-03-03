@@ -8,6 +8,7 @@
                 <field name="name"/>
                 <field name="node_id"/>
                 <field name="probe_code"/>
+                <field name="group_id"/>
                 <field name="company_id"/>
                 <field name="location_id"/>
                 <field name="location_detail"/>
@@ -36,6 +37,7 @@
                             <field name="node_id" readonly="1"/>
                             <field name="probe_code" readonly="1"/>
                             <field name="company_id" groups="base.group_multi_company" readonly="1"/>
+                            <field name="group_id"/>
                             <field name="location_id"/>
                             <field name="location_detail"/>
                             <field name="active"/>
@@ -54,6 +56,11 @@
                         <field name="temperature_high"/>
                         <field name="humidity_low"/>
                         <field name="humidity_high"/>
+                        <field name="threshold_source" readonly="1"/>
+                        <field name="effective_temperature_low" readonly="1"/>
+                        <field name="effective_temperature_high" readonly="1"/>
+                        <field name="effective_humidity_low" readonly="1"/>
+                        <field name="effective_humidity_high" readonly="1"/>
                     </group>
                     <group string="Statistics Window">
                         <field name="stats_window_hours"/>

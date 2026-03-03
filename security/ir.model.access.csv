@@ -38,6 +38,9 @@ access_iot_th_gateway_admin,access.iot.th.gateway.admin,model_iot_th_gateway,bas
 access_iot_th_sensor_user,access.iot.th.sensor.user,model_iot_th_sensor,iot_control_center.group_iot_user,1,0,0,0
 access_iot_th_sensor_manager,access.iot.th.sensor.manager,model_iot_th_sensor,iot_control_center.group_iot_manager,1,1,0,0
 access_iot_th_sensor_admin,access.iot.th.sensor.admin,model_iot_th_sensor,base.group_system,1,1,1,1
+access_iot_th_sensor_group_user,access.iot.th.sensor.group.user,model_iot_th_sensor_group,iot_control_center.group_iot_user,1,0,0,0
+access_iot_th_sensor_group_manager,access.iot.th.sensor.group.manager,model_iot_th_sensor_group,iot_control_center.group_iot_manager,1,1,1,1
+access_iot_th_sensor_group_admin,access.iot.th.sensor.group.admin,model_iot_th_sensor_group,base.group_system,1,1,1,1
 access_iot_th_reading_user,access.iot.th.reading.user,model_iot_th_reading,iot_control_center.group_iot_user,1,0,0,0
 access_iot_th_reading_manager,access.iot.th.reading.manager,model_iot_th_reading,iot_control_center.group_iot_manager,1,1,0,0
 access_iot_th_reading_admin,access.iot.th.reading.admin,model_iot_th_reading,base.group_system,1,1,1,1

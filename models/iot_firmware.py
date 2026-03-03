@@ -81,4 +81,5 @@ class IoTFirmware(models.Model):
         if not (base_url.startswith("http://") or base_url.startswith("https://")):
             base_url = f"http://{base_url}"
         base_url = base_url.rstrip("/")
-        return f"{base_url}/f/{self.id}?s={device.serial}&t={device.auth_token}"
+        dbname = self.env.cr.dbname
+        return f"{base_url}/f/{self.id}?s={device.serial}&t={device.auth_token}&db={dbname}"

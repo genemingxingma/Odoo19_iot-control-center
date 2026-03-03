@@ -33,7 +33,7 @@ class IoTDevice(models.Model):
         domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]",
         tracking=True,
     )
-    location_detail = fields.Char(string="Location Detail", tracking=True)
+    location_detail = fields.Char(string="Location Detail", tracking=True, translate=True)
     group_ids = fields.Many2many("iot.device.group", "iot_device_group_rel", "device_id", "group_id", string="Groups")
 
     relay_state = fields.Selection(

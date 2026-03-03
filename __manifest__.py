@@ -23,6 +23,7 @@
         "views/iot_message_views.xml",
         "views/iot_control_board_views.xml",
         "views/th_gateway_views.xml",
+        "views/th_sensor_group_views.xml",
         "views/th_sensor_views.xml",
         "views/th_reading_views.xml",
         "views/th_alert_views.xml",

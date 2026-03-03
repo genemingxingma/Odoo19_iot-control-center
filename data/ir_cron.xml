@@ -20,6 +20,16 @@
         <field name="active">True</field>
     </record>
 
+    <record id="cron_iot_purge_old_mqtt_messages" model="ir.cron">
+        <field name="name">IoT - Purge Old MQTT Messages</field>
+        <field name="model_id" ref="model_iot_mqtt_message"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_purge_old_messages()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active">True</field>
+    </record>
+
     <delete id="cron_iot_run_schedules" model="ir.cron"/>
 
     <record id="cron_iot_update_live_uptime" model="ir.cron">
@@ -29,6 +39,26 @@
         <field name="code">model._cron_update_live_uptime()</field>
         <field name="interval_number">1</field>
         <field name="interval_type">minutes</field>
+        <field name="active">True</field>
+    </record>
+
+    <record id="cron_iot_dedupe_devices" model="ir.cron">
+        <field name="name">IoT - Dedupe Switch Records</field>
+        <field name="model_id" ref="model_iot_device"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_dedupe_devices()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+        <field name="active">True</field>
+    </record>
+
+    <record id="cron_iot_purge_stale_devices" model="ir.cron">
+        <field name="name">IoT - Purge Stale Unbound Devices</field>
+        <field name="model_id" ref="model_iot_device"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_purge_stale_devices()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
         <field name="active">True</field>
     </record>
 

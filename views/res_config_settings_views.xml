@@ -26,6 +26,12 @@
                         <setting string="MQTT Keepalive (sec)">
                             <field name="iot_mqtt_keepalive"/>
                         </setting>
+                        <setting string="MQTT Message Retention (days)">
+                            <field name="iot_mqtt_message_retention_days"/>
+                        </setting>
+                        <setting string="Unbound Device Retention (days)">
+                            <field name="iot_device_retention_days"/>
+                        </setting>
                         <setting string="Online Timeout (sec)">
                             <field name="iot_online_timeout_sec"/>
                         </setting>

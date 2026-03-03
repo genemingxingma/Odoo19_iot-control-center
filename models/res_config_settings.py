@@ -12,6 +12,14 @@ class ResConfigSettings(models.TransientModel):
     iot_mqtt_password = fields.Char(config_parameter="iot_control_center.mqtt_password", default="imytest")
     iot_mqtt_topic_root = fields.Char(config_parameter="iot_control_center.mqtt_topic_root", default="iot/relay")
     iot_mqtt_keepalive = fields.Integer(config_parameter="iot_control_center.mqtt_keepalive", default=60)
+    iot_mqtt_message_retention_days = fields.Integer(
+        config_parameter="iot_control_center.mqtt_message_retention_days",
+        default=7,
+    )
+    iot_device_retention_days = fields.Integer(
+        config_parameter="iot_control_center.device_retention_days",
+        default=30,
+    )
     iot_online_timeout_sec = fields.Integer(config_parameter="iot_control_center.online_timeout_sec", default=300)
     iot_firmware_base_url = fields.Char(
         config_parameter="iot_control_center.firmware_base_url",

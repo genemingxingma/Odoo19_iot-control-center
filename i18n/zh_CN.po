@@ -1400,3 +1400,60 @@ msgstr "绑定成功"
 #: code:addons/iot_control_center/wizard/iot_device_bind_wizard.py:0
 msgid "Switch %s bound successfully. You can bind next one now."
 msgstr "开关 %s 绑定成功，你可以继续绑定下一个。"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__effective_humidity_high
+msgid "Effective Humidity High"
+msgstr "生效湿度上限"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__effective_humidity_low
+msgid "Effective Humidity Low"
+msgstr "生效湿度下限"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__effective_temperature_high
+msgid "Effective Temperature High"
+msgstr "生效温度上限"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__effective_temperature_low
+msgid "Effective Temperature Low"
+msgstr "生效温度下限"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_th_sensor__threshold_source__group
+msgid "Group"
+msgstr "分组"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_sensor_group_form
+msgid "Open Sensors"
+msgstr "打开探头"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__group_id
+msgid "Sensor Group"
+msgstr "探头分组"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/th_sensor.py:0
+msgid "Sensor Group company must match the sensor company."
+msgstr "探头分组的公司必须与探头所属公司一致。"
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_th_sensor_group
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_th_sensor_group
+msgid "Sensor Groups"
+msgstr "探头分组"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_sensor_group_form
+msgid "Sensors in This Group"
+msgstr "本分组探头"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__threshold_source
+msgid "Threshold Source"
+msgstr "阈值来源"

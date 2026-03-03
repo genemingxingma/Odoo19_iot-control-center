@@ -11,7 +11,7 @@ class IoTDeviceGroup(models.Model):
     company_id = fields.Many2one("res.company", required=True, default=lambda self: self.env.company, index=True)
     department_id = fields.Many2one("hr.department", domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]")
     location_id = fields.Many2one("stock.location", domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]")
-    location_detail = fields.Char(string="Location Detail")
+    location_detail = fields.Char(string="Location Detail", translate=True)
 
     device_ids = fields.Many2many(
         "iot.device",

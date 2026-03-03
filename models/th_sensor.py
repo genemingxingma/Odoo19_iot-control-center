@@ -20,12 +20,25 @@ class IoTTHSensor(models.Model):
         string="Location",
         domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]",
     )
-    location_detail = fields.Char(string="Location Detail")
+    location_detail = fields.Char(string="Location Detail", translate=True)
+    group_id = fields.Many2one(
+        "iot.th.sensor.group",
+        string="Sensor Group",
+        domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]",
+    )
 
     temperature_low = fields.Float(default=5.0)
     temperature_high = fields.Float(default=35.0)
     humidity_low = fields.Float(default=30.0)
     humidity_high = fields.Float(default=75.0)
+    effective_temperature_low = fields.Float(compute="_compute_effective_thresholds")
+    effective_temperature_high = fields.Float(compute="_compute_effective_thresholds")
+    effective_humidity_low = fields.Float(compute="_compute_effective_thresholds")
+    effective_humidity_high = fields.Float(compute="_compute_effective_thresholds")
+    threshold_source = fields.Selection(
+        [("sensor", "Sensor"), ("group", "Group")],
+        compute="_compute_effective_thresholds",
+    )
 
     last_temperature = fields.Float()
     last_humidity = fields.Float()
@@ -155,6 +168,12 @@ class IoTTHSensor(models.Model):
             rec.min_humidity = min(hums) if hums else 0.0
             rec.max_humidity = max(hums) if hums else 0.0
 
+    @api.constrains("company_id", "group_id")
+    def _check_group_company(self):
+        for rec in self:
+            if rec.group_id and rec.company_id and rec.group_id.company_id and rec.group_id.company_id != rec.company_id:
+                raise UserError("Sensor Group company must match the sensor company.")
+
     def apply_reading(self, temperature, humidity, reported_at, battery_voltage=None):
         alert_model = self.env["iot.th.alert"]
         for rec in self:
@@ -165,16 +184,17 @@ class IoTTHSensor(models.Model):
             rec.last_reported_at = reported_at
             rec.reading_count += 1
 
+            t_low, t_high, h_low, h_high = rec._get_effective_threshold_values()
             checks = []
-            if temperature > rec.temperature_high:
-                checks.append(("temp_high", rec.temperature_high, temperature))
-            elif temperature < rec.temperature_low:
-                checks.append(("temp_low", rec.temperature_low, temperature))
+            if temperature > t_high:
+                checks.append(("temp_high", t_high, temperature))
+            elif temperature < t_low:
+                checks.append(("temp_low", t_low, temperature))
 
-            if humidity > rec.humidity_high:
-                checks.append(("hum_high", rec.humidity_high, humidity))
-            elif humidity < rec.humidity_low:
-                checks.append(("hum_low", rec.humidity_low, humidity))
+            if humidity > h_high:
+                checks.append(("hum_high", h_high, humidity))
+            elif humidity < h_low:
+                checks.append(("hum_low", h_low, humidity))
 
             open_alerts = alert_model.search(
                 [
@@ -198,13 +218,50 @@ class IoTTHSensor(models.Model):
 
             # Close opposite alerts once value returns to normal range.
             close_types = set()
-            if rec.temperature_low <= temperature <= rec.temperature_high:
+            if t_low <= temperature <= t_high:
                 close_types.update(["temp_high", "temp_low"])
 
-            if rec.humidity_low <= humidity <= rec.humidity_high:
+            if h_low <= humidity <= h_high:
                 close_types.update(["hum_high", "hum_low"])
 
             if close_types:
                 to_close = open_alerts.filtered(lambda a: a.alert_type in close_types)
                 if to_close:
                     to_close.write({"state": "closed", "closed_at": fields.Datetime.now()})
+
+    @api.depends(
+        "group_id",
+        "group_id.active",
+        "group_id.temperature_low",
+        "group_id.temperature_high",
+        "group_id.humidity_low",
+        "group_id.humidity_high",
+        "temperature_low",
+        "temperature_high",
+        "humidity_low",
+        "humidity_high",
+    )
+    def _compute_effective_thresholds(self):
+        for rec in self:
+            t_low, t_high, h_low, h_high = rec._get_effective_threshold_values()
+            rec.effective_temperature_low = t_low
+            rec.effective_temperature_high = t_high
+            rec.effective_humidity_low = h_low
+            rec.effective_humidity_high = h_high
+            rec.threshold_source = "group" if rec.group_id and rec.group_id.active else "sensor"
+
+    def _get_effective_threshold_values(self):
+        self.ensure_one()
+        if self.group_id and self.group_id.active:
+            return (
+                self.group_id.temperature_low,
+                self.group_id.temperature_high,
+                self.group_id.humidity_low,
+                self.group_id.humidity_high,
+            )
+        return (
+            self.temperature_low,
+            self.temperature_high,
+            self.humidity_low,
+            self.humidity_high,
+        )
