@@ -45,7 +45,10 @@ class IoTTHGateway(models.Model):
 
     @api.model
     def _cron_ensure_tcp_service(self):
-        ensure_tcp_running(self.env)
+        icp = self.env["ir.config_parameter"].sudo()
+        middleware_enabled = str(icp.get_param("iot_control_center.middleware_enabled", "False")).lower() in ("1", "true", "yes")
+        if not middleware_enabled:
+            ensure_tcp_running(self.env)
 
     def action_open_sensors(self):
         self.ensure_one()

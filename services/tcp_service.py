@@ -386,3 +386,16 @@ def ensure_running(env):
 
     current.start()
     return current
+
+
+def process_ingest_payload(env, payload_text=None, frame_bytes=None, source_ip=None, source_port=None):
+    """Process one gateway payload without binding a TCP listener.
+
+    Used by external middleware to forward decoded/received packets into Odoo.
+    """
+    service = TCPIngestService(env.cr.dbname, _load_config(env))
+    if payload_text is not None:
+        service.process_json_line(payload_text, source_ip=source_ip, source_port=source_port)
+        return
+    if frame_bytes is not None:
+        service.process_binary_frame(frame_bytes, source_ip=source_ip, source_port=source_port)

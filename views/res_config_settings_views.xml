@@ -7,6 +7,23 @@
         <field name="arch" type="xml">
             <xpath expr="//form" position="inside">
                 <app string="IoT Control Center" name="iot_control_center" groups="base.group_system">
+                    <block title="External IoT Middleware">
+                        <setting string="Use External IoT Middleware (MQTT + TH TCP)">
+                            <field name="iot_middleware_enabled"/>
+                            <div class="text-muted">
+                                Enable this to route both MQTT relay traffic and Temperature/Humidity TCP gateway traffic through middleware.
+                            </div>
+                        </setting>
+                        <setting string="Middleware Base URL">
+                            <field name="iot_middleware_base_url" placeholder="http://127.0.0.1:8099"/>
+                        </setting>
+                        <setting string="Middleware Token">
+                            <field name="iot_middleware_token" password="True"/>
+                            <div class="text-muted">
+                                Must exactly match the IOT_BRIDGE_TOKEN value in middleware environment config.
+                            </div>
+                        </setting>
+                    </block>
                     <block title="MQTT Broker">
                         <setting string="MQTT Host">
                             <field name="iot_mqtt_host" placeholder="iot.imytest.com"/>

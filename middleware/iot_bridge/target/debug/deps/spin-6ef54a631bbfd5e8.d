@@ -1,0 +1,12 @@
+/Users/mingxingmac/Documents/Codex/iot_control_center/middleware/iot_bridge/target/debug/deps/spin-6ef54a631bbfd5e8.d: /Users/mingxingmac/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spin-0.9.8/src/lib.rs /Users/mingxingmac/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spin-0.9.8/src/barrier.rs /Users/mingxingmac/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spin-0.9.8/src/lazy.rs /Users/mingxingmac/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spin-0.9.8/src/mutex.rs /Users/mingxingmac/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spin-0.9.8/src/mutex/spin.rs /Users/mingxingmac/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spin-0.9.8/src/once.rs /Users/mingxingmac/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spin-0.9.8/src/relax.rs /Users/mingxingmac/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spin-0.9.8/src/rwlock.rs
+
+/Users/mingxingmac/Documents/Codex/iot_control_center/middleware/iot_bridge/target/debug/deps/libspin-6ef54a631bbfd5e8.rmeta: /Users/mingxingmac/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spin-0.9.8/src/lib.rs /Users/mingxingmac/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spin-0.9.8/src/barrier.rs /Users/mingxingmac/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spin-0.9.8/src/lazy.rs /Users/mingxingmac/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spin-0.9.8/src/mutex.rs /Users/mingxingmac/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spin-0.9.8/src/mutex/spin.rs /Users/mingxingmac/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spin-0.9.8/src/once.rs /Users/mingxingmac/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spin-0.9.8/src/relax.rs /Users/mingxingmac/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spin-0.9.8/src/rwlock.rs
+
+/Users/mingxingmac/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spin-0.9.8/src/lib.rs:
+/Users/mingxingmac/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spin-0.9.8/src/barrier.rs:
+/Users/mingxingmac/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spin-0.9.8/src/lazy.rs:
+/Users/mingxingmac/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spin-0.9.8/src/mutex.rs:
+/Users/mingxingmac/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spin-0.9.8/src/mutex/spin.rs:
+/Users/mingxingmac/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spin-0.9.8/src/once.rs:
+/Users/mingxingmac/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spin-0.9.8/src/relax.rs:
+/Users/mingxingmac/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/spin-0.9.8/src/rwlock.rs:
