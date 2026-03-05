@@ -124,7 +124,13 @@ patch(GraphModel.prototype, {
                     const selected = (fieldDef.selection || []).find((s) => s[0] === val);
                     label = selected ? selected[1] : val;
                 } else if (["date", "datetime"].includes(type)) {
-                    label = val[1];
+                    // Use a stable bucket key to avoid 12h-label collisions
+                    // (e.g., 01:00 AM and 01:00 PM both rendered as "01:00").
+                    if (Array.isArray(val)) {
+                        label = String(val[0] ?? val[1] ?? "");
+                    } else {
+                        label = String(val ?? "");
+                    }
                 } else {
                     label = val;
                 }
