@@ -198,6 +198,7 @@ class IoTDevice(models.Model):
         if location_detail is not None:
             vals["location_detail"] = location_detail
         rec.write(vals)
+        rec.mark_schedule_dirty(auto_sync=True)
         return rec.with_env(self.env)
 
     def action_unbind(self):
@@ -212,6 +213,7 @@ class IoTDevice(models.Model):
                     "schedule_dirty": True,
                 }
             )
+            rec._force_schedule_clear()
 
     def _delay_locked_devices(self):
         now = fields.Datetime.now()
@@ -223,7 +225,7 @@ class IoTDevice(models.Model):
             names = ", ".join(locked.mapped("display_name"))
             raise UserError(_("Delay mode is active. This action is blocked for: %s") % names)
 
-    def _publish_command(self, command, payload=None, raise_on_fail=True, retain=False):
+    def _publish_command(self, command, payload=None, raise_on_fail=True, retain=False, return_details=False):
         icp = self.env["ir.config_parameter"].sudo()
         middleware_enabled = str(icp.get_param("iot_control_center.middleware_enabled", "False")).lower() in ("1", "true", "yes")
         if middleware_enabled:
@@ -236,6 +238,7 @@ class IoTDevice(models.Model):
             return False
         payload = payload or {}
         all_ok = True
+        succeeded = self.browse()
         for rec in self:
             topic = f"{self._mqtt_topic_root()}/{rec.serial}/command"
             body = {"command": command, **payload}
@@ -245,6 +248,7 @@ class IoTDevice(models.Model):
                 if raise_on_fail:
                     raise UserError(_("Failed to publish MQTT command for %s") % rec.display_name)
                 continue
+            succeeded |= rec
             # Metadata write should never block command success.
             # Under concurrent MQTT/status updates, this row can be hot.
             try:
@@ -258,6 +262,65 @@ class IoTDevice(models.Model):
                 )
             except Exception as exc:
                 _logger.warning("Skip command metadata write for %s due to contention: %s", rec.display_name, exc)
+        if return_details:
+            return all_ok, succeeded
+        return all_ok
+
+    def _publish_command_via_middleware(self, command, payload=None, raise_on_fail=True, retain=False, return_details=False):
+        icp = self.env["ir.config_parameter"].sudo()
+        base_url = (icp.get_param("iot_control_center.middleware_base_url") or "").strip().rstrip("/")
+        token = (icp.get_param("iot_control_center.middleware_token") or "").strip()
+        if not base_url:
+            if raise_on_fail:
+                raise UserError(_("Middleware is enabled but Middleware Base URL is empty."))
+            return False
+        payload = payload or {}
+        headers = {"Content-Type": "application/json"}
+        if token:
+            headers["X-IoT-Middleware-Token"] = token
+
+        all_ok = True
+        succeeded = self.browse()
+        for rec in self:
+            endpoint = f"{base_url}/v1/switch/{urlparse.quote(rec.serial, safe='')}/command"
+            body = {"command": command, "payload": payload, "retain": bool(retain)}
+            req = urlrequest.Request(
+                endpoint,
+                data=json.dumps(body, separators=(",", ":")).encode("utf-8"),
+                headers=headers,
+                method="POST",
+            )
+            ok = True
+            try:
+                with urlrequest.urlopen(req, timeout=8) as resp:
+                    code = getattr(resp, "status", 200)
+                    if code < 200 or code >= 300:
+                        ok = False
+            except (urlerror.URLError, urlerror.HTTPError, TimeoutError) as exc:
+                _logger.warning("Middleware command publish failed for %s via %s: %s", rec.serial, endpoint, exc)
+                ok = False
+
+            if not ok:
+                all_ok = False
+                if raise_on_fail:
+                    raise UserError(_("Failed to publish MQTT command for %s") % rec.display_name)
+                continue
+            succeeded |= rec
+
+            try:
+                self._run_with_serialization_retry(
+                    lambda: rec.with_context(**self._system_no_track_context()).write(
+                        {
+                            "last_command_at": fields.Datetime.now(),
+                            "last_command_payload": json.dumps(body, ensure_ascii=False),
+                        }
+                    )
+                )
+            except Exception as exc:
+                _logger.warning("Skip command metadata write for %s due to contention: %s", rec.display_name, exc)
+
+        if return_details:
+            return all_ok, succeeded
         return all_ok
 
     def _publish_command_via_middleware(self, command, payload=None, raise_on_fail=True, retain=False):
@@ -321,8 +384,9 @@ class IoTDevice(models.Model):
 
     def action_turn_on(self):
         self._ensure_not_delay_locked()
-        ok = self._publish_command("relay", {"state": "on"}, raise_on_fail=False)
-        self._apply_state_report_safe("on", reported_at=fields.Datetime.now())
+        ok, succeeded = self._publish_command("relay", {"state": "on"}, raise_on_fail=False, return_details=True)
+        if succeeded:
+            succeeded._apply_state_report_safe("on", reported_at=fields.Datetime.now())
         if ok:
             return {"type": "ir.actions.client", "tag": "reload"}
         return {
@@ -338,8 +402,9 @@ class IoTDevice(models.Model):
 
     def action_turn_off(self):
         self._ensure_not_delay_locked()
-        ok = self._publish_command("relay", {"state": "off"}, raise_on_fail=False)
-        self._apply_state_report_safe("off", reported_at=fields.Datetime.now())
+        ok, succeeded = self._publish_command("relay", {"state": "off"}, raise_on_fail=False, return_details=True)
+        if succeeded:
+            succeeded._apply_state_report_safe("off", reported_at=fields.Datetime.now())
         if ok:
             return {"type": "ir.actions.client", "tag": "reload"}
         return {
@@ -363,6 +428,8 @@ class IoTDevice(models.Model):
             duration_min = max(int(rec.delay_duration_minutes or 0), 1)
             ok = rec._publish_command("delay_toggle", {"duration_sec": duration_min * 60}, raise_on_fail=False)
             all_ok = all_ok and ok
+            if not ok:
+                continue
 
             if rec.delay_active and (not rec.delay_end_at or rec.delay_end_at > now):
                 rec._accumulate_on_minutes_until(now)
@@ -451,6 +518,30 @@ class IoTDevice(models.Model):
                 if raise_on_error:
                     raise
                 _logger.warning("Auto schedule sync failed for %s: %s", rec.display_name, exc)
+
+    def _force_schedule_clear(self, raise_on_error=False):
+        for rec in self:
+            next_version = rec.schedule_version + 1
+            try:
+                ok = rec._publish_command(
+                    "schedule_clear",
+                    {"version": next_version},
+                    raise_on_fail=raise_on_error,
+                    retain=True,
+                )
+                if not ok:
+                    rec.schedule_dirty = True
+                    if raise_on_error:
+                        raise UserError(_("Failed to publish MQTT command for %s") % rec.display_name)
+                    continue
+                rec.schedule_version = next_version
+                rec.schedule_last_push_at = fields.Datetime.now()
+                rec.schedule_dirty = False
+            except Exception as exc:
+                rec.schedule_dirty = True
+                if raise_on_error:
+                    raise
+                _logger.warning("Schedule clear failed for %s: %s", rec.display_name, exc)
 
     def action_sync_schedule(self):
         self._sync_schedule_payload(raise_on_error=True)
@@ -662,7 +753,9 @@ class IoTDevice(models.Model):
         dirty_devices = self.with_context(**self._system_no_track_context()).search(
             [
                 ("schedule_dirty", "=", True),
+                "|",
                 ("company_id", "!=", False),
+                ("schedule_version", ">", 0),
                 ("last_seen", ">=", recent_cutoff),
             ],
             limit=200,

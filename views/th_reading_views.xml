@@ -50,6 +50,11 @@
                 <field name="node_id"/>
                 <field name="sensor_id"/>
                 <field name="sensor_code"/>
+                <separator/>
+                <filter name="iot_last_5_days" string="Last 5 Days"
+                        domain="[('reported_at', '>=', (context_today() - datetime.timedelta(days=5)).strftime('%Y-%m-%d 00:00:00'))]"/>
+                <filter name="iot_hourly_avg" string="Hourly Average" domain="[]" context="{'iot_time_mode': 'hour'}"/>
+                <filter name="iot_node_frequency" string="Node Frequency" domain="[]" context="{'iot_time_mode': 'raw'}"/>
             </search>
         </field>
     </record>
@@ -60,7 +65,7 @@
         <field name="view_mode">graph,list,pivot</field>
         <field name="search_view_id" ref="view_iot_th_reading_search"/>
         <field name="domain">[('company_id', '!=', False)]</field>
-        <field name="context">{'graph_mode': 'line', 'graph_measure': 'temperature', 'graph_stacked': False, 'graph_cumulated': False}</field>
+        <field name="context">{'graph_mode': 'line', 'graph_measure': 'temperature', 'graph_stacked': False, 'graph_cumulated': False, 'iot_time_mode': 'hour', 'search_default_iot_hourly_avg': 1, 'search_default_iot_last_5_days': 1}</field>
     </record>
 
     <menuitem id="menu_iot_th_reading" name="Readings &amp; Analysis" parent="menu_iot_environment_root" action="action_iot_th_reading" sequence="30" groups="base.group_erp_manager"/>

@@ -73,16 +73,105 @@ patch(GraphModel.prototype, {
             return super._loadDataPoints(metaData);
         }
         const { domain, fields, groupBy, resModel } = metaData;
+        const timeMode = (this.searchParams?.context?.iot_time_mode || metaData?.context?.iot_time_mode || "hour").toLowerCase();
+        const targetInterval = "hour";
+        const effectiveGroupBy = (groupBy || []).map((gb) => {
+            const isStringGroupBy = typeof gb === "string";
+            const rawSpec = isStringGroupBy ? gb : (gb?.spec || "");
+            const rawFieldName = isStringGroupBy
+                ? gb.split(":")[0]
+                : (gb?.fieldName || (rawSpec ? rawSpec.split(":")[0] : ""));
+            const fieldName = rawFieldName || "";
+            const spec = rawSpec || fieldName;
+            const isReportedAt =
+                fieldName === "reported_at" ||
+                fieldName.startsWith("reported_at:") ||
+                spec === "reported_at" ||
+                spec.startsWith("reported_at:");
+            if (isReportedAt) {
+                return { fieldName: "reported_at", spec: `reported_at:${targetInterval}` };
+            }
+            if (isStringGroupBy) {
+                return { fieldName, spec };
+            }
+            return { ...gb, fieldName, spec };
+        });
         const selectedMeasures = Array.isArray(metaData.iotMeasures) && metaData.iotMeasures.length
             ? metaData.iotMeasures
             : [metaData.measure || "temperature"];
         const useTemperature = selectedMeasures.includes("temperature");
         const useHumidity = selectedMeasures.includes("humidity");
         const numbering = {};
+        if (timeMode === "raw") {
+            const descendingRecords = await this.orm.searchRead(
+                resModel,
+                domain,
+                ["id", "reported_at", "temperature", "humidity", "sensor_id", "node_id", "sensor_code"],
+                {
+                    context: { ...this.searchParams.context },
+                    order: "reported_at desc,id desc",
+                    limit: 10000,
+                }
+            );
+            const records = [...(descendingRecords || [])].reverse();
+            const dataPoints = [];
+            for (const record of records || []) {
+                const labels = [];
+                const rawValues = [];
+                for (const gb of effectiveGroupBy) {
+                    const fieldName = gb.fieldName;
+                    const fieldDef = fields[fieldName] || {};
+                    const type = fieldDef.type;
+                    let value;
+                    if (fieldName === "reported_at") {
+                        value = record.reported_at;
+                    } else {
+                        value = record[fieldName];
+                    }
+                    rawValues.push({ [gb.spec]: value });
+                    let label;
+                    if (["date", "datetime"].includes(type)) {
+                        label = String(value || "");
+                    } else if (["many2many", "many2one"].includes(type) && Array.isArray(value)) {
+                        label = value[1] || "";
+                    } else if (value === false || value === null || value === undefined) {
+                        label = this._getDefaultFilterLabel(gb);
+                    } else {
+                        label = String(value);
+                    }
+                    labels.push(label);
+                }
+                const common = {
+                    count: 1,
+                    domain: [["id", "=", record.id]],
+                };
+                if (useTemperature && record.temperature !== false && record.temperature !== null && record.temperature !== undefined) {
+                    dataPoints.push({
+                        ...common,
+                        value: Number(record.temperature),
+                        labels: [...labels, "Temperature"],
+                        identifier: JSON.stringify([...rawValues, { metric: "temperature", id: record.id }]),
+                        cumulatedStart: 0,
+                    });
+                }
+                if (useHumidity && record.humidity !== false && record.humidity !== null && record.humidity !== undefined) {
+                    dataPoints.push({
+                        ...common,
+                        value: Number(record.humidity),
+                        labels: [...labels, "Humidity"],
+                        identifier: JSON.stringify([...rawValues, { metric: "humidity", id: record.id }]),
+                        cumulatedStart: 0,
+                    });
+                }
+            }
+            metaData.measure = useTemperature ? "temperature" : "humidity";
+            metaData.allIntegers = false;
+            return [dataPoints, new Set()];
+        }
         const groups = await this.orm.formattedReadGroup(
             resModel,
             domain,
-            groupBy.map((gb) => gb.spec),
+            effectiveGroupBy.map((gb) => gb.spec),
             ["__count", "temperature:avg", "humidity:avg"],
             {
                 // Do not backfill missing temporal buckets with synthetic zeros.
@@ -96,7 +185,7 @@ patch(GraphModel.prototype, {
             }
             const labels = [];
             const rawValues = [];
-            for (const gb of groupBy) {
+            for (const gb of effectiveGroupBy) {
                 let label;
                 const val = group[gb.spec];
                 rawValues.push({ [gb.spec]: val });

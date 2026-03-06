@@ -102,8 +102,12 @@ class IoTSchedule(models.Model):
         return records
 
     def write(self, vals):
+        old_devices = self.env["iot.device"].browse()
+        if "device_id" in vals or "group_id" in vals:
+            old_devices = self.mapped("device_id") | self.mapped("group_id.device_ids")
         res = super().write(vals)
-        self._mark_related_devices_dirty()
+        devices = old_devices | self.mapped("device_id") | self.mapped("group_id.device_ids")
+        devices.mark_schedule_dirty(auto_sync=False)
         return res
 
     def unlink(self):
