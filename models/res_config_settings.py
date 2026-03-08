@@ -1,4 +1,7 @@
 import logging
+import os
+import subprocess
+from pathlib import Path
 
 from odoo import SUPERUSER_ID, api, fields, models
 
@@ -35,6 +38,57 @@ class ResConfigSettings(models.TransientModel):
     iot_middleware_enabled = fields.Boolean(config_parameter="iot_control_center.middleware_enabled", default=False)
     iot_middleware_base_url = fields.Char(config_parameter="iot_control_center.middleware_base_url", default="http://127.0.0.1:8099")
     iot_middleware_token = fields.Char(config_parameter="iot_control_center.middleware_token", default="imytest-middleware-token")
+    iot_openwrt_ssh_private_key_path = fields.Char(
+        config_parameter="iot_control_center.openwrt_ssh_private_key_path",
+        readonly=True,
+    )
+    iot_openwrt_ssh_public_key = fields.Text(
+        config_parameter="iot_control_center.openwrt_ssh_public_key",
+        readonly=True,
+    )
+    iot_openwrt_online_timeout_sec = fields.Integer(
+        config_parameter="iot_control_center.openwrt_online_timeout_sec",
+        default=300,
+    )
+
+    def action_generate_openwrt_ssh_key(self):
+        self.ensure_one()
+        data_dir = self.env["ir.config_parameter"].sudo().get_param("data_dir") or "/tmp"
+        key_dir = Path(data_dir) / "iot_openwrt_ssh"
+        key_dir.mkdir(parents=True, exist_ok=True)
+        private_key = key_dir / "id_ed25519"
+        public_key = key_dir / "id_ed25519.pub"
+        if not private_key.exists():
+            subprocess.run(
+                [
+                    "ssh-keygen",
+                    "-t",
+                    "ed25519",
+                    "-N",
+                    "",
+                    "-C",
+                    "iot_control_center_openwrt",
+                    "-f",
+                    str(private_key),
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            os.chmod(private_key, 0o600)
+        public_text = public_key.read_text(encoding="utf-8").strip() if public_key.exists() else ""
+        self.env["ir.config_parameter"].sudo().set_param("iot_control_center.openwrt_ssh_private_key_path", str(private_key))
+        self.env["ir.config_parameter"].sudo().set_param("iot_control_center.openwrt_ssh_public_key", public_text)
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": "OpenWrt SSH Key",
+                "message": "OpenWrt SSH key generated or reused successfully.",
+                "type": "success",
+                "sticky": False,
+            },
+        }
 
     def _run_iot_services_after_commit(self):
         dbname = self.env.cr.dbname

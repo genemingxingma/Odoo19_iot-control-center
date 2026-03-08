@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_iot_openwrt_firmware_list" model="ir.ui.view">
+        <field name="name">iot.openwrt.firmware.list</field>
+        <field name="model">iot.openwrt.firmware</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="model_pattern"/>
+                <field name="version"/>
+                <field name="filename"/>
+                <field name="checksum_sha256"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_iot_openwrt_firmware_form" model="ir.ui.view">
+        <field name="name">iot.openwrt.firmware.form</field>
+        <field name="model">iot.openwrt.firmware</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="company_id"/>
+                            <field name="model_pattern"/>
+                            <field name="version"/>
+                            <field name="filename"/>
+                            <field name="checksum_sha256" readonly="1"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="file" filename="filename"/>
+                            <field name="notes"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_iot_openwrt_firmware" model="ir.actions.act_window">
+        <field name="name">OpenWrt Firmware</field>
+        <field name="res_model">iot.openwrt.firmware</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

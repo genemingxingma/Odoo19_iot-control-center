@@ -47,3 +47,15 @@ access_iot_th_reading_admin,access.iot.th.reading.admin,model_iot_th_reading,bas
 access_iot_th_alert_user,access.iot.th.alert.user,model_iot_th_alert,iot_control_center.group_iot_user,1,0,0,0
 access_iot_th_alert_manager,access.iot.th.alert.manager,model_iot_th_alert,iot_control_center.group_iot_manager,1,1,0,0
 access_iot_th_alert_admin,access.iot.th.alert.admin,model_iot_th_alert,base.group_system,1,1,1,1
+access_iot_openwrt_ap_user,access.iot.openwrt.ap.user,model_iot_openwrt_ap,iot_control_center.group_iot_user,1,0,0,0
+access_iot_openwrt_ap_manager,access.iot.openwrt.ap.manager,model_iot_openwrt_ap,iot_control_center.group_iot_manager,1,1,1,1
+access_iot_openwrt_ap_admin,access.iot.openwrt.ap.admin,model_iot_openwrt_ap,base.group_system,1,1,1,1
+access_iot_openwrt_template_user,access.iot.openwrt.template.user,model_iot_openwrt_template,iot_control_center.group_iot_user,1,0,0,0
+access_iot_openwrt_template_manager,access.iot.openwrt.template.manager,model_iot_openwrt_template,iot_control_center.group_iot_manager,1,1,1,1
+access_iot_openwrt_template_admin,access.iot.openwrt.template.admin,model_iot_openwrt_template,base.group_system,1,1,1,1
+access_iot_openwrt_firmware_user,access.iot.openwrt.firmware.user,model_iot_openwrt_firmware,iot_control_center.group_iot_user,1,0,0,0
+access_iot_openwrt_firmware_manager,access.iot.openwrt.firmware.manager,model_iot_openwrt_firmware,iot_control_center.group_iot_manager,1,1,1,1
+access_iot_openwrt_firmware_admin,access.iot.openwrt.firmware.admin,model_iot_openwrt_firmware,base.group_system,1,1,1,1
+access_iot_openwrt_job_user,access.iot.openwrt.job.user,model_iot_openwrt_job,iot_control_center.group_iot_user,1,0,0,0
+access_iot_openwrt_job_manager,access.iot.openwrt.job.manager,model_iot_openwrt_job,iot_control_center.group_iot_manager,1,1,0,0
+access_iot_openwrt_job_admin,access.iot.openwrt.job.admin,model_iot_openwrt_job,base.group_system,1,1,1,1

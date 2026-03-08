@@ -323,59 +323,6 @@ class IoTDevice(models.Model):
             return all_ok, succeeded
         return all_ok
 
-    def _publish_command_via_middleware(self, command, payload=None, raise_on_fail=True, retain=False):
-        icp = self.env["ir.config_parameter"].sudo()
-        base_url = (icp.get_param("iot_control_center.middleware_base_url") or "").strip().rstrip("/")
-        token = (icp.get_param("iot_control_center.middleware_token") or "").strip()
-        if not base_url:
-            if raise_on_fail:
-                raise UserError(_("Middleware is enabled but Middleware Base URL is empty."))
-            return False
-        payload = payload or {}
-        headers = {"Content-Type": "application/json"}
-        if token:
-            headers["X-IoT-Middleware-Token"] = token
-
-        all_ok = True
-        for rec in self:
-            endpoint = f"{base_url}/v1/switch/{urlparse.quote(rec.serial, safe='')}/command"
-            body = {"command": command, "payload": payload, "retain": bool(retain)}
-            req = urlrequest.Request(
-                endpoint,
-                data=json.dumps(body, separators=(",", ":")).encode("utf-8"),
-                headers=headers,
-                method="POST",
-            )
-            ok = True
-            try:
-                with urlrequest.urlopen(req, timeout=8) as resp:
-                    code = getattr(resp, "status", 200)
-                    if code < 200 or code >= 300:
-                        ok = False
-            except (urlerror.URLError, urlerror.HTTPError, TimeoutError) as exc:
-                _logger.warning("Middleware command publish failed for %s via %s: %s", rec.serial, endpoint, exc)
-                ok = False
-
-            if not ok:
-                all_ok = False
-                if raise_on_fail:
-                    raise UserError(_("Failed to publish MQTT command for %s") % rec.display_name)
-                continue
-
-            try:
-                self._run_with_serialization_retry(
-                    lambda: rec.with_context(**self._system_no_track_context()).write(
-                        {
-                            "last_command_at": fields.Datetime.now(),
-                            "last_command_payload": json.dumps(body, ensure_ascii=False),
-                        }
-                    )
-                )
-            except Exception as exc:
-                _logger.warning("Skip command metadata write for %s due to contention: %s", rec.display_name, exc)
-
-        return all_ok
-
     def _apply_state_report_safe(self, state, reported_at=None):
         try:
             self._run_with_serialization_retry(lambda: self.apply_state_report(state, reported_at=reported_at))

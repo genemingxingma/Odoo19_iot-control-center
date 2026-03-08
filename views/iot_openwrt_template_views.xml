@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_iot_openwrt_template_list" model="ir.ui.view">
+        <field name="name">iot.openwrt.template.list</field>
+        <field name="model">iot.openwrt.template</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="company_id"/>
+                <field name="country_code"/>
+                <field name="wifi24_ssid"/>
+                <field name="wifi5_ssid"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_iot_openwrt_template_form" model="ir.ui.view">
+        <field name="name">iot.openwrt.template.form</field>
+        <field name="model">iot.openwrt.template</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="company_id"/>
+                            <field name="country_code"/>
+                            <field name="system_hostname"/>
+                            <field name="timezone_name"/>
+                            <field name="active"/>
+                        </group>
+                        <group>
+                            <field name="notes"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="2.4G">
+                            <group>
+                                <field name="wifi24_enabled"/>
+                                <field name="wifi24_ssid"/>
+                                <field name="wifi24_encryption"/>
+                                <field name="wifi24_key" password="True"/>
+                                <field name="wifi24_hidden"/>
+                                <field name="wifi24_channel"/>
+                            </group>
+                        </page>
+                        <page string="5G">
+                            <group>
+                                <field name="wifi5_enabled"/>
+                                <field name="wifi5_ssid"/>
+                                <field name="wifi5_encryption"/>
+                                <field name="wifi5_key" password="True"/>
+                                <field name="wifi5_hidden"/>
+                                <field name="wifi5_channel"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_iot_openwrt_template" model="ir.actions.act_window">
+        <field name="name">OpenWrt Templates</field>
+        <field name="res_model">iot.openwrt.template</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

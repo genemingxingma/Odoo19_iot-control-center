@@ -11,6 +11,7 @@ class IoTControlBoard(models.Model):
         [
             ("relay", "Relay"),
             ("th", "Temperature/Humidity"),
+            ("openwrt", "OpenWrt AC"),
             ("other", "Other"),
         ],
         required=True,
@@ -74,6 +75,7 @@ class IoTControlBoard(models.Model):
         Gateway = self.env["iot.th.gateway"].sudo()
         Sensor = self.env["iot.th.sensor"].sudo()
         Alert = self.env["iot.th.alert"].sudo()
+        OpenwrtAP = self.env["iot.openwrt.ap"].sudo()
 
         for rec in self:
             if rec.key == "relay":
@@ -86,6 +88,11 @@ class IoTControlBoard(models.Model):
                 rec.metric_1_value = Sensor.search_count([("company_id", "!=", False)])
                 rec.metric_2_label = "Open Alerts"
                 rec.metric_2_value = Alert.search_count([("state", "=", "open")])
+            elif rec.key == "openwrt":
+                rec.metric_1_label = "APs"
+                rec.metric_1_value = OpenwrtAP.search_count([("company_id", "!=", False)])
+                rec.metric_2_label = "Online"
+                rec.metric_2_value = OpenwrtAP.search_count([("company_id", "!=", False), ("last_seen", "!=", False)])
             else:
                 rec.metric_1_label = "Items"
                 rec.metric_1_value = Gateway.search_count([])
@@ -107,6 +114,13 @@ class IoTControlBoard(models.Model):
                 "Readings & Analysis",
                 "iot.th.reading",
                 default_view_mode="graph,list,pivot",
+            )
+        if self.key == "openwrt":
+            return self._safe_window_action(
+                "iot_control_center.action_iot_openwrt_ap",
+                "OpenWrt APs",
+                "iot.openwrt.ap",
+                default_view_mode="list,form",
             )
         if self.action_id and self.action_id.type == "ir.actions.act_window":
             action = self.action_id.sudo().read()[0]

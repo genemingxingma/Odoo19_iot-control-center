@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_iot_openwrt_job_list" model="ir.ui.view">
+        <field name="name">iot.openwrt.job.list</field>
+        <field name="model">iot.openwrt.job</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="requested_at"/>
+                <field name="ap_id"/>
+                <field name="job_type"/>
+                <field name="state"/>
+                <field name="completed_at"/>
+                <field name="note"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_iot_openwrt_job_form" model="ir.ui.view">
+        <field name="name">iot.openwrt.job.form</field>
+        <field name="model">iot.openwrt.job</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name" readonly="1"/>
+                            <field name="ap_id" readonly="1"/>
+                            <field name="job_type" readonly="1"/>
+                            <field name="state" readonly="1"/>
+                            <field name="requested_at" readonly="1"/>
+                            <field name="completed_at" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="note" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Request">
+                            <field name="request_payload" readonly="1"/>
+                        </page>
+                        <page string="Response">
+                            <field name="response_payload" readonly="1"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_iot_openwrt_job" model="ir.actions.act_window">
+        <field name="name">OpenWrt Jobs</field>
+        <field name="res_model">iot.openwrt.job</field>
+        <field name="view_mode">list,form</field>
+    </record>
+</odoo>

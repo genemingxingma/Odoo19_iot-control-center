@@ -19,4 +19,14 @@
         <field name="color">green</field>
         <field name="action_id" ref="iot_control_center.action_iot_th_sensor"/>
     </record>
+
+    <record id="card_openwrt_control" model="iot.control.board">
+        <field name="name">OpenWrt AC</field>
+        <field name="key">openwrt</field>
+        <field name="description">Manage OpenWrt AP inventory, wireless templates, and firmware upgrades.</field>
+        <field name="sequence">30</field>
+        <field name="icon_class">fa fa-wifi</field>
+        <field name="color">orange</field>
+        <field name="action_id" ref="iot_control_center.action_iot_openwrt_ap"/>
+    </record>
 </odoo>

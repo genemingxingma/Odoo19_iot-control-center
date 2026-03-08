@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_iot_openwrt_ap_list" model="ir.ui.view">
+        <field name="name">iot.openwrt.ap.list</field>
+        <field name="model">iot.openwrt.ap</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="host"/>
+                <field name="ssh_port"/>
+                <field name="company_id"/>
+                <field name="model"/>
+                <field name="openwrt_version"/>
+                <field name="template_id"/>
+                <field name="status"/>
+                <field name="last_seen"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_iot_openwrt_ap_form" model="ir.ui.view">
+        <field name="name">iot.openwrt.ap.form</field>
+        <field name="model">iot.openwrt.ap</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_probe" type="object" string="Probe" class="btn-primary"/>
+                    <button name="action_apply_template" type="object" string="Apply Template"/>
+                    <button name="action_reboot" type="object" string="Reboot"/>
+                    <button name="action_upgrade_firmware" type="object" string="Upgrade Firmware"/>
+                    <button name="action_open_jobs" type="object" string="Jobs"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="host"/>
+                            <field name="ssh_port"/>
+                            <field name="ssh_user"/>
+                            <field name="status" readonly="1"/>
+                            <field name="online" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="company_id"/>
+                            <field name="department_id"/>
+                            <field name="location_id"/>
+                            <field name="location_detail"/>
+                            <field name="template_id"/>
+                            <field name="upgrade_firmware_id"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Facts">
+                            <field name="board_name" readonly="1"/>
+                            <field name="model" readonly="1"/>
+                            <field name="target" readonly="1"/>
+                            <field name="openwrt_version" readonly="1"/>
+                            <field name="current_hostname" readonly="1"/>
+                        </group>
+                        <group string="Timestamps">
+                            <field name="last_seen" readonly="1"/>
+                            <field name="last_probe_at" readonly="1"/>
+                            <field name="last_apply_at" readonly="1"/>
+                            <field name="last_upgrade_at" readonly="1"/>
+                            <field name="job_count" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="last_error" readonly="1"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_iot_openwrt_ap" model="ir.actions.act_window">
+        <field name="name">OpenWrt APs</field>
+        <field name="res_model">iot.openwrt.ap</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_iot_openwrt_cards" name="OpenWrt AC" parent="menu_iot_mode_cards" action="action_iot_openwrt_ap" sequence="30" groups="base.group_erp_manager"/>
+    <menuitem id="menu_iot_openwrt_root" name="OpenWrt AC" parent="menu_iot_mode_detailed" sequence="80" groups="base.group_erp_manager"/>
+    <menuitem id="menu_iot_openwrt_ap" name="APs" parent="menu_iot_openwrt_root" action="action_iot_openwrt_ap" sequence="10" groups="base.group_erp_manager"/>
+    <menuitem id="menu_iot_openwrt_template" name="Templates" parent="menu_iot_openwrt_root" action="action_iot_openwrt_template" sequence="20" groups="base.group_erp_manager"/>
+    <menuitem id="menu_iot_openwrt_firmware" name="Firmware" parent="menu_iot_openwrt_root" action="action_iot_openwrt_firmware" sequence="30" groups="base.group_erp_manager"/>
+    <menuitem id="menu_iot_openwrt_job" name="Jobs" parent="menu_iot_openwrt_root" action="action_iot_openwrt_job" sequence="40" groups="base.group_erp_manager"/>
+</odoo>
