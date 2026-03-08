@@ -28,14 +28,19 @@
                         <setting string="OpenWrt Online Timeout (sec)">
                             <field name="iot_openwrt_online_timeout_sec"/>
                         </setting>
+                        <setting string="Generate OpenWrt SSH Key">
+                            <div class="content-group">
+                                <button name="action_generate_openwrt_ssh_key" type="object" string="Generate / Refresh SSH Key" class="btn btn-primary"/>
+                            </div>
+                            <div class="text-muted">
+                                Generate one SSH key pair for OpenWrt AP management. Add the public key manually to each AP's authorized_keys file.
+                            </div>
+                        </setting>
                         <setting string="OpenWrt SSH Private Key Path">
                             <field name="iot_openwrt_ssh_private_key_path" readonly="1"/>
                         </setting>
                         <setting string="OpenWrt SSH Public Key">
                             <field name="iot_openwrt_ssh_public_key" readonly="1"/>
-                            <div class="mt8">
-                                <button name="action_generate_openwrt_ssh_key" type="object" string="Generate / Refresh SSH Key" class="btn btn-primary"/>
-                            </div>
                             <div class="text-muted">
                                 Add this public key manually to each OpenWrt AP's authorized_keys file, then bind the AP in IoT Control Center.
                             </div>
