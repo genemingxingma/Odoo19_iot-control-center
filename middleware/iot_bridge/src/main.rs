@@ -969,16 +969,41 @@ fn normalize_band_label(raw: &str) -> String {
     }
 }
 
-fn rate_to_mbps(value: Option<&Value>) -> f64 {
-    let raw = match value {
-        Some(Value::Number(num)) => num.as_f64().unwrap_or(0.0),
-        Some(Value::Object(obj)) => obj.get("rate").and_then(Value::as_f64).unwrap_or(0.0),
-        _ => 0.0,
-    };
+fn read_nested_u64(value: &Value, parent_key: &str, child_key: &str) -> u64 {
+    value
+        .get(parent_key)
+        .and_then(Value::as_object)
+        .and_then(|obj| obj.get(child_key))
+        .and_then(Value::as_u64)
+        .unwrap_or(0)
+}
+
+fn read_nested_rate_mbps(value: &Value, parent_key: &str, child_key: &str) -> f64 {
+    let raw = value
+        .get(parent_key)
+        .and_then(Value::as_object)
+        .and_then(|obj| obj.get(child_key))
+        .and_then(Value::as_f64)
+        .unwrap_or(0.0);
     if raw > 1000.0 {
-        raw / 1000.0
+        raw / 1_000_000.0
     } else {
         raw
+    }
+}
+
+fn safe_hostapd_iface_name(value: &str) -> Option<String> {
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+    if trimmed
+        .chars()
+        .all(|ch| ch.is_ascii_alphanumeric() || ch == '_' || ch == '-')
+    {
+        Some(trimmed.to_string())
+    } else {
+        None
     }
 }
 
@@ -994,12 +1019,16 @@ async fn collect_openwrt_clients(
 ) -> anyhow::Result<Vec<Value>> {
     let mut clients = Vec::new();
     for iface in hostapd_ifaces {
+        let Some(iface_name) = safe_hostapd_iface_name(iface) else {
+            warn!("openwrt client probe skipped unsafe iface name {}", iface);
+            continue;
+        };
         let raw = match run_ssh_command(
             host,
             port,
             username,
             key_path,
-            &format!("ubus call hostapd.{} get_clients", shell_escape(iface)),
+            &format!("ubus call hostapd.{} get_clients", iface_name),
         )
         .await
         {
@@ -1033,8 +1062,8 @@ async fn collect_openwrt_clients(
                 .map(|item| item.1.clone())
                 .filter(|value| !value.is_empty())
                 .unwrap_or_default();
-            let tx_bytes = station.get("tx_bytes").and_then(Value::as_u64).unwrap_or(0);
-            let rx_bytes = station.get("rx_bytes").and_then(Value::as_u64).unwrap_or(0);
+            let client_upload_bytes = read_nested_u64(station, "bytes", "rx");
+            let client_download_bytes = read_nested_u64(station, "bytes", "tx");
             let signal_dbm = station
                 .get("signal")
                 .and_then(Value::as_i64)
@@ -1052,10 +1081,10 @@ async fn collect_openwrt_clients(
                 "ip": ip,
                 "hostname": hostname,
                 "signal_dbm": signal_dbm,
-                "upload_rate_mbps": rate_to_mbps(station.get("tx_rate")),
-                "download_rate_mbps": rate_to_mbps(station.get("rx_rate")),
-                "upload_bytes_total": tx_bytes,
-                "download_bytes_total": rx_bytes,
+                "upload_rate_mbps": read_nested_rate_mbps(station, "rate", "rx"),
+                "download_rate_mbps": read_nested_rate_mbps(station, "rate", "tx"),
+                "upload_bytes_total": client_upload_bytes,
+                "download_bytes_total": client_download_bytes,
                 "connected_seconds": connected_seconds
             }));
         }

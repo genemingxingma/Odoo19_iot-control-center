@@ -1,5 +1,6 @@
 import json
 import uuid
+from html import escape
 from urllib import error as urlerror
 from urllib import request as urlrequest
 
@@ -11,6 +12,17 @@ class IoTOpenwrtAP(models.Model):
     _name = "iot.openwrt.ap"
     _description = "OpenWrt Access Point"
     _inherit = ["mail.thread"]
+
+    _LIVE_TELEMETRY_FIELDS = {
+        "client_count_total",
+        "client_count_24g",
+        "client_count_5g",
+        "upload_rate_mbps",
+        "download_rate_mbps",
+        "upload_bytes_total",
+        "download_bytes_total",
+        "live_clients_html",
+    }
 
     name = fields.Char(required=True, tracking=True)
     active = fields.Boolean(default=True)
@@ -40,14 +52,14 @@ class IoTOpenwrtAP(models.Model):
     target = fields.Char(readonly=True, tracking=True)
     openwrt_version = fields.Char(readonly=True, tracking=True)
     current_hostname = fields.Char(readonly=True, tracking=True)
-    client_ids = fields.One2many("iot.openwrt.client", "ap_id")
-    client_count_total = fields.Integer(readonly=True)
-    client_count_24g = fields.Integer(string="2.4G Clients", readonly=True)
-    client_count_5g = fields.Integer(string="5G Clients", readonly=True)
-    upload_rate_mbps = fields.Float(string="Upload Rate (Mbps)", readonly=True, digits=(16, 2))
-    download_rate_mbps = fields.Float(string="Download Rate (Mbps)", readonly=True, digits=(16, 2))
-    upload_bytes_total = fields.Float(string="Uploaded Bytes", readonly=True, digits=(16, 0))
-    download_bytes_total = fields.Float(string="Downloaded Bytes", readonly=True, digits=(16, 0))
+    client_count_total = fields.Integer(readonly=True, compute="_compute_live_telemetry", store=False)
+    client_count_24g = fields.Integer(string="2.4G Clients", readonly=True, compute="_compute_live_telemetry", store=False)
+    client_count_5g = fields.Integer(string="5G Clients", readonly=True, compute="_compute_live_telemetry", store=False)
+    upload_rate_mbps = fields.Float(string="Upload Rate (Mbps)", readonly=True, digits=(16, 2), compute="_compute_live_telemetry", store=False)
+    download_rate_mbps = fields.Float(string="Download Rate (Mbps)", readonly=True, digits=(16, 2), compute="_compute_live_telemetry", store=False)
+    upload_bytes_total = fields.Float(string="Uploaded Bytes", readonly=True, digits=(16, 0), compute="_compute_live_telemetry", store=False)
+    download_bytes_total = fields.Float(string="Downloaded Bytes", readonly=True, digits=(16, 0), compute="_compute_live_telemetry", store=False)
+    live_clients_html = fields.Html(string="Connected Clients", readonly=True, sanitize=False, compute="_compute_live_telemetry", store=False)
 
     status = fields.Selection(
         [
@@ -87,6 +99,19 @@ class IoTOpenwrtAP(models.Model):
     def _compute_job_count(self):
         for rec in self:
             rec.job_count = len(rec.job_ids)
+
+    def _compute_live_telemetry(self):
+        cache = self.env.context.get("iot_openwrt_live_cache") if isinstance(self.env.context.get("iot_openwrt_live_cache"), dict) else {}
+        for rec in self:
+            data = cache.get(rec.id) or {}
+            rec.client_count_total = int(data.get("client_count_total") or 0)
+            rec.client_count_24g = int(data.get("client_count_24g") or 0)
+            rec.client_count_5g = int(data.get("client_count_5g") or 0)
+            rec.upload_rate_mbps = float(data.get("upload_rate_mbps") or 0.0)
+            rec.download_rate_mbps = float(data.get("download_rate_mbps") or 0.0)
+            rec.upload_bytes_total = float(data.get("upload_bytes_total") or 0.0)
+            rec.download_bytes_total = float(data.get("download_bytes_total") or 0.0)
+            rec.live_clients_html = data.get("live_clients_html") or self._empty_clients_html()
 
     def _middleware_base_url(self):
         base_url = (self.env["ir.config_parameter"].sudo().get_param("iot_control_center.middleware_base_url") or "").strip().rstrip("/")
@@ -151,47 +176,169 @@ class IoTOpenwrtAP(models.Model):
             }
         )
 
-    def _replace_clients(self, response):
-        self.ensure_one()
-        client_model = self.env["iot.openwrt.client"].sudo()
-        now = fields.Datetime.now()
-        clients = response.get("clients") or []
-        client_model.search([("ap_id", "=", self.id)]).unlink()
-        vals_list = []
-        for item in clients:
-            mac_address = (item.get("mac") or "").strip().upper()
-            if not mac_address:
-                continue
-            vals_list.append(
-                {
-                    "ap_id": self.id,
-                    "hostname": item.get("hostname") or False,
-                    "ip_address": item.get("ip") or False,
-                    "mac_address": mac_address,
-                    "band": item.get("band") or "other",
-                    "signal_dbm": item.get("signal_dbm") if item.get("signal_dbm") is not None else False,
-                    "upload_rate_mbps": item.get("upload_rate_mbps") or 0.0,
-                    "download_rate_mbps": item.get("download_rate_mbps") or 0.0,
-                    "upload_bytes_total": item.get("upload_bytes_total") or 0.0,
-                    "download_bytes_total": item.get("download_bytes_total") or 0.0,
-                    "connected_seconds": item.get("connected_seconds") or 0,
-                    "last_seen": now,
-                }
-            )
-        if vals_list:
-            client_model.create(vals_list)
+    def _extract_live_telemetry(self, response):
         summary = response.get("summary") or {}
-        self.write(
-            {
-                "client_count_total": int(summary.get("client_count_total") or len(vals_list)),
-                "client_count_24g": int(summary.get("client_count_24g") or 0),
-                "client_count_5g": int(summary.get("client_count_5g") or 0),
-                "upload_rate_mbps": float(summary.get("upload_rate_mbps") or 0.0),
-                "download_rate_mbps": float(summary.get("download_rate_mbps") or 0.0),
-                "upload_bytes_total": float(summary.get("upload_bytes_total") or 0.0),
-                "download_bytes_total": float(summary.get("download_bytes_total") or 0.0),
-            }
+        clients = response.get("clients") or []
+        return {
+            "client_count_total": int(summary.get("client_count_total") or len(clients)),
+            "client_count_24g": int(summary.get("client_count_24g") or 0),
+            "client_count_5g": int(summary.get("client_count_5g") or 0),
+            "upload_rate_mbps": float(summary.get("upload_rate_mbps") or 0.0),
+            "download_rate_mbps": float(summary.get("download_rate_mbps") or 0.0),
+            "upload_bytes_total": float(summary.get("upload_bytes_total") or 0.0),
+            "download_bytes_total": float(summary.get("download_bytes_total") or 0.0),
+            "live_clients_html": self._build_clients_html(clients),
+        }
+
+    def _get_live_telemetry_map(self, force=False):
+        cache = self.env.context.get("iot_openwrt_live_cache") if not force else None
+        if isinstance(cache, dict):
+            return cache
+        data_map = {}
+        for rec in self:
+            try:
+                response = rec._call_middleware("/v1/openwrt/probe", rec._base_payload())
+                facts = response.get("facts") or {}
+                release = facts.get("release") or {}
+                now = fields.Datetime.now()
+                rec.sudo().write(
+                    {
+                        "board_name": facts.get("board_name") or False,
+                        "model": facts.get("model") or False,
+                        "target": facts.get("target") or False,
+                        "openwrt_version": release.get("description") or release.get("version") or False,
+                        "current_hostname": facts.get("hostname") or False,
+                        "status": "online",
+                        "last_seen": now,
+                        "last_probe_at": now,
+                        "last_error": False,
+                    }
+                )
+                data_map[rec.id] = rec._extract_live_telemetry(response)
+            except Exception as exc:
+                now = fields.Datetime.now()
+                rec.sudo().write({"status": "error", "last_error": str(exc), "last_probe_at": now})
+                data_map[rec.id] = {
+                    "client_count_total": 0,
+                    "client_count_24g": 0,
+                    "client_count_5g": 0,
+                    "upload_rate_mbps": 0.0,
+                    "download_rate_mbps": 0.0,
+                    "upload_bytes_total": 0.0,
+                    "download_bytes_total": 0.0,
+                    "live_clients_html": self._error_clients_html(str(exc)),
+                }
+        return data_map
+
+    def _inject_live_telemetry_into_rows(self, rows, field_names):
+        if not rows:
+            return rows
+        requested = set(field_names or [])
+        if field_names is None:
+            requested = self._LIVE_TELEMETRY_FIELDS
+        if not (requested & self._LIVE_TELEMETRY_FIELDS):
+            return rows
+        record_ids = [row.get("id") for row in rows if row.get("id")]
+        data_map = self.browse(record_ids)._get_live_telemetry_map()
+        for row in rows:
+            data = data_map.get(row.get("id")) or {}
+            for field_name in requested & self._LIVE_TELEMETRY_FIELDS:
+                row[field_name] = data.get(field_name)
+        return rows
+
+    def _read_format(self, fnames=None, load='_classic_read'):
+        rows = super()._read_format(fnames=fnames, load=load)
+        return self._inject_live_telemetry_into_rows(rows, fnames)
+
+    @api.model
+    def search_read(self, domain=None, fields=None, offset=0, limit=None, order=None):
+        rows = super().search_read(domain=domain, fields=fields, offset=offset, limit=limit, order=order)
+        return self._inject_live_telemetry_into_rows(rows, fields)
+
+    @api.model
+    def web_search_read(self, domain=None, specification=None, offset=0, limit=None, order=None, count_limit=None):
+        result = super().web_search_read(
+            domain=domain,
+            specification=specification,
+            offset=offset,
+            limit=limit,
+            order=order,
+            count_limit=count_limit,
         )
+        requested = set((specification or {}).keys())
+        self._inject_live_telemetry_into_rows(result.get("records") or [], requested)
+        return result
+
+    def _build_clients_html(self, clients):
+        rows = []
+        for item in clients:
+            rows.append(
+                "<tr>"
+                f"<td>{escape(item.get('hostname') or '')}</td>"
+                f"<td>{escape(item.get('ip') or '')}</td>"
+                f"<td>{escape((item.get('mac') or '').upper())}</td>"
+                f"<td>{escape(item.get('band') or '')}</td>"
+                f"<td>{self._fmt_int(item.get('signal_dbm'))}</td>"
+                f"<td>{self._fmt_rate(item.get('upload_rate_mbps'))}</td>"
+                f"<td>{self._fmt_rate(item.get('download_rate_mbps'))}</td>"
+                f"<td>{self._fmt_bytes(item.get('upload_bytes_total'))}</td>"
+                f"<td>{self._fmt_bytes(item.get('download_bytes_total'))}</td>"
+                f"<td>{self._fmt_duration(item.get('connected_seconds'))}</td>"
+                "</tr>"
+            )
+        if not rows:
+            return self._empty_clients_html()
+        return (
+            '<div class="o_iot_openwrt_clients_table">'
+            '<table class="table table-sm table-hover">'
+            "<thead><tr>"
+            f"<th>{escape(_('Hostname'))}</th>"
+            f"<th>{escape(_('IP'))}</th>"
+            f"<th>{escape(_('MAC'))}</th>"
+            f"<th>{escape(_('Band'))}</th>"
+            f"<th>{escape(_('Signal'))}</th>"
+            f"<th>{escape(_('Upload Rate'))}</th>"
+            f"<th>{escape(_('Download Rate'))}</th>"
+            f"<th>{escape(_('Uploaded'))}</th>"
+            f"<th>{escape(_('Downloaded'))}</th>"
+            f"<th>{escape(_('Connected'))}</th>"
+            "</tr></thead>"
+            f"<tbody>{''.join(rows)}</tbody>"
+            "</table></div>"
+        )
+
+    def _empty_clients_html(self):
+        return '<div class="text-muted">%s</div>' % escape(_("No connected clients."))
+
+    def _error_clients_html(self, message):
+        return '<div class="text-danger">%s</div>' % escape(message or _("Probe failed."))
+
+    def _fmt_rate(self, value):
+        return "%.2f Mbps" % float(value or 0.0)
+
+    def _fmt_bytes(self, value):
+        value = float(value or 0.0)
+        units = ["B", "KB", "MB", "GB", "TB"]
+        unit = units[0]
+        for next_unit in units:
+            unit = next_unit
+            if value < 1024.0 or next_unit == units[-1]:
+                break
+            value /= 1024.0
+        return "%.2f %s" % (value, unit)
+
+    def _fmt_duration(self, seconds):
+        seconds = int(seconds or 0)
+        hours, remainder = divmod(seconds, 3600)
+        minutes, secs = divmod(remainder, 60)
+        if hours:
+            return "%02d:%02d:%02d" % (hours, minutes, secs)
+        return "%02d:%02d" % (minutes, secs)
+
+    def _fmt_int(self, value):
+        if value in (None, False):
+            return ""
+        return str(int(value))
 
     def action_probe(self):
         for rec in self:
@@ -214,7 +361,6 @@ class IoTOpenwrtAP(models.Model):
                         "last_error": False,
                     }
                 )
-                rec._replace_clients(response)
                 rec._write_job_result(job, response, success=True)
             except Exception as exc:
                 rec.write({"status": "error", "last_error": str(exc), "last_probe_at": fields.Datetime.now()})
