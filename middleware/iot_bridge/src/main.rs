@@ -1,5 +1,4 @@
 use std::net::SocketAddr;
-use std::path::PathBuf;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
@@ -15,8 +14,7 @@ use reqwest::Client;
 use rumqttc::{AsyncClient, Event, EventLoop, Incoming, MqttOptions, QoS};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
-use tokio::fs;
-use tokio::io::AsyncReadExt;
+use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::process::Command;
 use tracing::{error, info, warn};
@@ -468,7 +466,6 @@ async fn openwrt_upgrade(
             .filter(|value| !value.trim().is_empty())
             .ok_or_else(|| openwrt_bad_request("firmware_url or firmware_id is required"))?
     };
-    let temp_path = std::env::temp_dir().join(format!("iot_openwrt_{}", filename));
     let mut request_builder = Client::builder()
         .timeout(Duration::from_secs(120))
         .build()
@@ -503,16 +500,13 @@ async fn openwrt_upgrade(
             )));
         }
     }
-    fs::write(&temp_path, &bytes)
-        .await
-        .map_err(openwrt_internal_err)?;
     let remote_path = format!("/tmp/{}", filename);
-    scp_to_remote(
+    upload_to_remote(
         &req.host,
         req.port,
         &req.username,
         &key_path,
-        &temp_path,
+        &bytes,
         &remote_path,
     )
     .await
@@ -539,7 +533,6 @@ async fn openwrt_upgrade(
     )
     .await
     .map_err(openwrt_internal_err)?;
-    let _ = fs::remove_file(&temp_path).await;
     Ok(Json(OpenwrtActionResponse {
         ok: true,
         message: "firmware uploaded and sysupgrade started".to_string(),
@@ -844,31 +837,48 @@ async fn run_ssh_command(
     Ok(String::from_utf8_lossy(&output.stdout).to_string())
 }
 
-async fn scp_to_remote(
+async fn upload_to_remote(
     host: &str,
     port: u16,
     username: &str,
     key_path: &str,
-    local_path: &PathBuf,
+    content: &[u8],
     remote_path: &str,
 ) -> anyhow::Result<()> {
-    let output = Command::new("scp")
+    let mut child = Command::new("ssh")
         .arg("-i")
         .arg(key_path)
         .arg("-o")
         .arg("BatchMode=yes")
         .arg("-o")
         .arg("StrictHostKeyChecking=no")
-        .arg("-P")
+        .arg("-p")
         .arg(port.to_string())
-        .arg(local_path)
-        .arg(format!("{}@{}:{}", username, host, remote_path))
-        .output()
+        .arg(format!("{}@{}", username, host))
+        .arg(format!(
+            "cat > {} && chmod 600 {}",
+            shell_escape(remote_path),
+            shell_escape(remote_path)
+        ))
+        .stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::piped())
+        .spawn()
+        .context("failed to spawn ssh upload command")?;
+    if let Some(mut stdin) = child.stdin.take() {
+        stdin
+            .write_all(content)
+            .await
+            .context("failed to stream firmware bytes to ssh")?;
+        stdin.shutdown().await.ok();
+    }
+    let output = child
+        .wait_with_output()
         .await
-        .context("failed to spawn scp command")?;
+        .context("failed to wait for ssh upload command")?;
     if !output.status.success() {
         return Err(anyhow::anyhow!(
-            "scp failed: {}",
+            "firmware upload failed: {}",
             String::from_utf8_lossy(&output.stderr).trim()
         ));
     }
