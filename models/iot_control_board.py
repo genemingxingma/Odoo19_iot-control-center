@@ -90,9 +90,14 @@ class IoTControlBoard(models.Model):
                 rec.metric_2_value = Alert.search_count([("state", "=", "open")])
             elif rec.key == "openwrt":
                 rec.metric_1_label = "APs"
-                rec.metric_1_value = OpenwrtAP.search_count([("company_id", "!=", False)])
+                rec.metric_1_value = OpenwrtAP.search_count([("active", "=", True)])
                 rec.metric_2_label = "Online"
-                rec.metric_2_value = OpenwrtAP.search_count([("company_id", "!=", False), ("last_seen", "!=", False)])
+                rec.metric_2_value = OpenwrtAP.search_count(
+                    [
+                        ("active", "=", True),
+                        ("status", "=", "online"),
+                    ]
+                )
             else:
                 rec.metric_1_label = "Items"
                 rec.metric_1_value = Gateway.search_count([])

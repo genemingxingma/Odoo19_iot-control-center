@@ -126,6 +126,19 @@ struct OpenwrtUpgradeRequest {
     filename: String,
 }
 
+#[derive(Debug, Deserialize)]
+struct OpenwrtLocateRequest {
+    host: String,
+    port: u16,
+    username: String,
+    #[serde(default)]
+    key_path: Option<String>,
+    #[serde(default = "default_true")]
+    enable: bool,
+    #[serde(default = "default_locate_duration_sec")]
+    duration_sec: u32,
+}
+
 #[derive(Debug, Serialize)]
 struct OpenwrtActionResponse {
     ok: bool,
@@ -189,6 +202,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/v1/switch/:serial/command", post(switch_command))
         .route("/v1/openwrt/probe", post(openwrt_probe))
         .route("/v1/openwrt/apply_template", post(openwrt_apply_template))
+        .route("/v1/openwrt/locate", post(openwrt_locate))
         .route("/v1/openwrt/reboot", post(openwrt_reboot))
         .route("/v1/openwrt/upgrade", post(openwrt_upgrade))
         .with_state(state);
@@ -330,6 +344,33 @@ async fn openwrt_reboot(
     Ok(Json(OpenwrtActionResponse {
         ok: true,
         message: "reboot requested".to_string(),
+        facts: None,
+    }))
+}
+
+async fn openwrt_locate(
+    State(_state): State<AppState>,
+    headers: HeaderMap,
+    Json(req): Json<OpenwrtLocateRequest>,
+) -> Result<Json<OpenwrtActionResponse>, (StatusCode, Json<OpenwrtActionResponse>)> {
+    ensure_api_token(&headers)?;
+    let cfg = Config::from_env().map_err(openwrt_internal_err)?;
+    let key_path =
+        resolve_key_path(req.key_path, cfg.openwrt_ssh_key_path).map_err(openwrt_bad_request)?;
+    let script =
+        build_locate_script(req.enable, req.duration_sec.max(30)).map_err(openwrt_bad_request)?;
+    let output = run_ssh_command(
+        &req.host,
+        req.port,
+        &req.username,
+        &key_path,
+        &format!("sh -s <<'IOT_OPENWRT_EOF'\n{}\nIOT_OPENWRT_EOF", script),
+    )
+    .await
+    .map_err(openwrt_internal_err)?;
+    Ok(Json(OpenwrtActionResponse {
+        ok: true,
+        message: output.trim().to_string(),
         facts: None,
     }))
 }
@@ -740,6 +781,14 @@ fn sanitize_filename(filename: &str) -> String {
         .collect()
 }
 
+fn default_true() -> bool {
+    true
+}
+
+fn default_locate_duration_sec() -> u32 {
+    300
+}
+
 fn json_string(value: &Value, key: &str) -> Option<String> {
     value
         .get(key)
@@ -808,6 +857,111 @@ fn build_apply_template_script(template: &Value) -> anyhow::Result<String> {
     lines.push("uci commit system || true".to_string());
     lines.push("wifi reload || wifi".to_string());
     Ok(lines.join("\n"))
+}
+
+fn build_locate_script(enable: bool, duration_sec: u32) -> anyhow::Result<String> {
+    if !enable {
+        return Ok(
+            r#"#!/bin/sh
+STATE_DIR=/tmp/iot_cc_locate
+PID_FILE="$STATE_DIR/blink.pid"
+STATE_FILE="$STATE_DIR/state"
+restore_leds() {
+  [ -f "$STATE_FILE" ] || return 0
+  while IFS='|' read -r led_name trigger brightness; do
+    led="/sys/class/leds/$led_name"
+    [ -d "$led" ] || continue
+    [ -n "$trigger" ] && echo "$trigger" > "$led/trigger" 2>/dev/null || true
+    [ -n "$brightness" ] && echo "$brightness" > "$led/brightness" 2>/dev/null || true
+  done < "$STATE_FILE"
+}
+if [ -f "$PID_FILE" ]; then
+  kill "$(cat "$PID_FILE")" 2>/dev/null || true
+  rm -f "$PID_FILE"
+fi
+restore_leds
+rm -f "$STATE_FILE" "$STATE_DIR/restore.sh"
+echo stopped
+"#
+            .to_string(),
+        );
+    }
+
+    Ok(format!(
+        r#"#!/bin/sh
+STATE_DIR=/tmp/iot_cc_locate
+PID_FILE="$STATE_DIR/blink.pid"
+STATE_FILE="$STATE_DIR/state"
+RESTORE_SCRIPT="$STATE_DIR/restore.sh"
+mkdir -p "$STATE_DIR"
+restore_leds() {{
+  [ -f "$STATE_FILE" ] || return 0
+  while IFS='|' read -r led_name trigger brightness; do
+    led="/sys/class/leds/$led_name"
+    [ -d "$led" ] || continue
+    [ -n "$trigger" ] && echo "$trigger" > "$led/trigger" 2>/dev/null || true
+    [ -n "$brightness" ] && echo "$brightness" > "$led/brightness" 2>/dev/null || true
+  done < "$STATE_FILE"
+}}
+if [ -f "$PID_FILE" ]; then
+  kill "$(cat "$PID_FILE")" 2>/dev/null || true
+  rm -f "$PID_FILE"
+fi
+restore_leds
+: > "$STATE_FILE"
+count=0
+for led in /sys/class/leds/*; do
+  [ -d "$led" ] || continue
+  led_name="$(basename "$led")"
+  trigger="$(sed -n 's/.*\[\([^]]*\)\].*/\1/p' "$led/trigger" 2>/dev/null)"
+  brightness="$(cat "$led/brightness" 2>/dev/null || echo 0)"
+  echo "$led_name|$trigger|$brightness" >> "$STATE_FILE"
+  count=$((count + 1))
+done
+[ "$count" -gt 0 ] || {{ echo no-leds; exit 4; }}
+cat > "$RESTORE_SCRIPT" <<'EOF'
+#!/bin/sh
+STATE_DIR=/tmp/iot_cc_locate
+PID_FILE="$STATE_DIR/blink.pid"
+STATE_FILE="$STATE_DIR/state"
+if [ -f "$PID_FILE" ]; then
+  kill "$(cat "$PID_FILE")" 2>/dev/null || true
+  rm -f "$PID_FILE"
+fi
+if [ -f "$STATE_FILE" ]; then
+  while IFS='|' read -r led_name trigger brightness; do
+    led="/sys/class/leds/$led_name"
+    [ -d "$led" ] || continue
+    [ -n "$trigger" ] && echo "$trigger" > "$led/trigger" 2>/dev/null || true
+    [ -n "$brightness" ] && echo "$brightness" > "$led/brightness" 2>/dev/null || true
+  done < "$STATE_FILE"
+fi
+rm -f "$STATE_FILE" "$0"
+EOF
+chmod +x "$RESTORE_SCRIPT"
+(
+  while true; do
+    for led in /sys/class/leds/*; do
+      [ -d "$led" ] || continue
+      max="$(cat "$led/max_brightness" 2>/dev/null || echo 1)"
+      echo none > "$led/trigger" 2>/dev/null || true
+      echo "$max" > "$led/brightness" 2>/dev/null || true
+    done
+    sleep 0.2
+    for led in /sys/class/leds/*; do
+      [ -d "$led" ] || continue
+      echo none > "$led/trigger" 2>/dev/null || true
+      echo 0 > "$led/brightness" 2>/dev/null || true
+    done
+    sleep 0.2
+  done
+) >/dev/null 2>&1 &
+echo $! > "$PID_FILE"
+(nohup sh -c "sleep {duration}; '$RESTORE_SCRIPT'" >/dev/null 2>&1 &)
+echo started:{duration}s
+"#,
+        duration = duration_sec
+    ))
 }
 
 fn append_wifi_apply_lines(

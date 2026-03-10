@@ -55,6 +55,9 @@ class IoTOpenwrtAP(models.Model):
     last_probe_at = fields.Datetime(readonly=True, tracking=True)
     last_apply_at = fields.Datetime(readonly=True, tracking=True)
     last_upgrade_at = fields.Datetime(readonly=True, tracking=True)
+    last_locate_at = fields.Datetime(readonly=True, tracking=True)
+    locate_until = fields.Datetime(readonly=True, tracking=True)
+    locate_active = fields.Boolean(readonly=True, tracking=True)
     last_error = fields.Text(readonly=True)
     online = fields.Boolean(compute="_compute_online", store=False)
 
@@ -202,6 +205,56 @@ class IoTOpenwrtAP(models.Model):
                 rec._write_job_result(job, response, success=True)
             except Exception as exc:
                 rec.write({"status": "error", "last_error": str(exc)})
+                rec._write_job_result(job, {"ok": False}, success=False, note=str(exc))
+                raise
+        return True
+
+    def action_start_locate(self):
+        duration_sec = 300
+        for rec in self:
+            payload = rec._base_payload()
+            payload.update({"enable": True, "duration_sec": duration_sec})
+            job = rec._create_job("locate_start", payload)
+            try:
+                response = rec._call_middleware("/v1/openwrt/locate", payload)
+                now = fields.Datetime.now()
+                rec.write(
+                    {
+                        "status": "online",
+                        "last_seen": now,
+                        "last_locate_at": now,
+                        "locate_until": fields.Datetime.add(now, seconds=duration_sec),
+                        "locate_active": True,
+                        "last_error": False,
+                    }
+                )
+                rec._write_job_result(job, response, success=True)
+            except Exception as exc:
+                rec.write({"status": "error", "last_error": str(exc), "last_locate_at": fields.Datetime.now()})
+                rec._write_job_result(job, {"ok": False}, success=False, note=str(exc))
+                raise
+        return True
+
+    def action_stop_locate(self):
+        for rec in self:
+            payload = rec._base_payload()
+            payload.update({"enable": False})
+            job = rec._create_job("locate_stop", payload)
+            try:
+                response = rec._call_middleware("/v1/openwrt/locate", payload)
+                rec.write(
+                    {
+                        "status": "online",
+                        "last_seen": fields.Datetime.now(),
+                        "last_locate_at": fields.Datetime.now(),
+                        "locate_until": False,
+                        "locate_active": False,
+                        "last_error": False,
+                    }
+                )
+                rec._write_job_result(job, response, success=True)
+            except Exception as exc:
+                rec.write({"status": "error", "last_error": str(exc), "last_locate_at": fields.Datetime.now()})
                 rec._write_job_result(job, {"ok": False}, success=False, note=str(exc))
                 raise
         return True

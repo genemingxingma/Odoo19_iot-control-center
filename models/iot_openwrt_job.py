@@ -13,6 +13,8 @@ class IoTOpenwrtJob(models.Model):
         [
             ("probe", "Probe"),
             ("apply_template", "Apply Template"),
+            ("locate_start", "Start Locate"),
+            ("locate_stop", "Stop Locate"),
             ("reboot", "Reboot"),
             ("upgrade", "Upgrade"),
         ],

@@ -42,7 +42,7 @@ class ResConfigSettings(models.TransientModel):
         config_parameter="iot_control_center.openwrt_ssh_private_key_path",
         readonly=True,
     )
-    iot_openwrt_ssh_public_key = fields.Text(
+    iot_openwrt_ssh_public_key = fields.Char(
         config_parameter="iot_control_center.openwrt_ssh_public_key",
         readonly=True,
     )
