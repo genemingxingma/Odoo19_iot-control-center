@@ -8,8 +8,8 @@
                 <field name="name"/>
                 <field name="company_id"/>
                 <field name="country_code"/>
-                <field name="wifi24_ssid"/>
-                <field name="wifi5_ssid"/>
+                <field name="wifi24_ssid_count"/>
+                <field name="wifi5_ssid_count"/>
                 <field name="active"/>
             </list>
         </field>
@@ -38,22 +38,34 @@
                         <page string="2.4G">
                             <group>
                                 <field name="wifi24_enabled"/>
-                                <field name="wifi24_ssid"/>
-                                <field name="wifi24_encryption"/>
-                                <field name="wifi24_key" password="True"/>
-                                <field name="wifi24_hidden"/>
                                 <field name="wifi24_channel"/>
                             </group>
+                            <field name="ssid_entry_ids" domain="[('band', '=', '2g')]" context="{'default_band': '2g'}">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="enabled"/>
+                                    <field name="ssid"/>
+                                    <field name="encryption"/>
+                                    <field name="key" password="True"/>
+                                    <field name="hidden"/>
+                                </list>
+                            </field>
                         </page>
                         <page string="5G">
                             <group>
                                 <field name="wifi5_enabled"/>
-                                <field name="wifi5_ssid"/>
-                                <field name="wifi5_encryption"/>
-                                <field name="wifi5_key" password="True"/>
-                                <field name="wifi5_hidden"/>
                                 <field name="wifi5_channel"/>
                             </group>
+                            <field name="ssid_entry_ids" domain="[('band', '=', '5g')]" context="{'default_band': '5g'}">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="enabled"/>
+                                    <field name="ssid"/>
+                                    <field name="encryption"/>
+                                    <field name="key" password="True"/>
+                                    <field name="hidden"/>
+                                </list>
+                            </field>
                         </page>
                     </notebook>
                 </sheet>

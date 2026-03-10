@@ -81,3 +81,29 @@ class IoTInternalIngestController(http.Controller):
         except Exception as exc:
             _logger.exception("Internal TH binary ingest failed: %s", exc)
             return request.make_json_response({"ok": False, "error": str(exc)}, status=500)
+
+    @http.route("/iot_control_center/internal/openwrt_inventory", type="http", auth="none", methods=["POST"], csrf=False)
+    def openwrt_inventory(self, **kwargs):
+        try:
+            if not self._check_token():
+                return request.make_json_response({"ok": False, "error": "unauthorized"}, status=401)
+            payload = request.env["iot.openwrt.ap"].sudo().get_heartbeat_inventory()
+            payload["ok"] = True
+            return request.make_json_response(payload)
+        except Exception as exc:
+            _logger.exception("Internal OpenWrt inventory failed: %s", exc)
+            return request.make_json_response({"ok": False, "error": str(exc)}, status=500)
+
+    @http.route("/iot_control_center/internal/openwrt_heartbeat", type="http", auth="none", methods=["POST"], csrf=False)
+    def openwrt_heartbeat(self, **kwargs):
+        try:
+            if not self._check_token():
+                return request.make_json_response({"ok": False, "error": "unauthorized"}, status=401)
+            data = self._parse_json()
+            applied = request.env["iot.openwrt.ap"].sudo().apply_heartbeat_result(data)
+            if not applied:
+                return request.make_json_response({"ok": False, "error": "ap not found"}, status=404)
+            return request.make_json_response({"ok": True})
+        except Exception as exc:
+            _logger.exception("Internal OpenWrt heartbeat failed: %s", exc)
+            return request.make_json_response({"ok": False, "error": str(exc)}, status=500)

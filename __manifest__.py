@@ -44,6 +44,7 @@
     "assets": {
         "web.assets_backend": [
             "iot_control_center/static/src/css/control_board.css",
+            "iot_control_center/static/src/js/openwrt_ap_list_live_refresh.js",
         ],
         "web.assets_backend_lazy": [
             "iot_control_center/static/src/xml/delay_countdown_field.xml",

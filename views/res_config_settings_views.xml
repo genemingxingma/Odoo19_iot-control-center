@@ -28,6 +28,24 @@
                         <setting string="OpenWrt Online Timeout (sec)">
                             <field name="iot_openwrt_online_timeout_sec"/>
                         </setting>
+                        <setting string="Heartbeat Interval (sec)">
+                            <field name="iot_openwrt_heartbeat_interval_sec"/>
+                            <div class="text-muted">
+                                Middleware checks AP reachability on this interval.
+                            </div>
+                        </setting>
+                        <setting string="Full Probe Every N Heartbeats">
+                            <field name="iot_openwrt_full_probe_every"/>
+                            <div class="text-muted">
+                                A full OpenWrt probe runs every N heartbeat cycles to refresh version and hardware facts.
+                            </div>
+                        </setting>
+                        <setting string="Offline Failure Threshold">
+                            <field name="iot_openwrt_offline_failure_threshold"/>
+                            <div class="text-muted">
+                                After this many consecutive heartbeat failures, the AP is marked offline.
+                            </div>
+                        </setting>
                         <setting string="Generate OpenWrt SSH Key">
                             <div class="content-group">
                                 <button name="action_generate_openwrt_ssh_key" type="object" string="Generate / Refresh SSH Key" class="btn btn-primary"/>

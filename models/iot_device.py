@@ -229,7 +229,13 @@ class IoTDevice(models.Model):
         icp = self.env["ir.config_parameter"].sudo()
         middleware_enabled = str(icp.get_param("iot_control_center.middleware_enabled", "False")).lower() in ("1", "true", "yes")
         if middleware_enabled:
-            return self._publish_command_via_middleware(command, payload=payload, raise_on_fail=raise_on_fail, retain=retain)
+            return self._publish_command_via_middleware(
+                command,
+                payload=payload,
+                raise_on_fail=raise_on_fail,
+                retain=retain,
+                return_details=return_details,
+            )
 
         mqtt_host = self.env["ir.config_parameter"].sudo().get_param("iot_control_center.mqtt_host")
         if not mqtt_host or str(mqtt_host).strip().lower() in ("false", ""):
@@ -335,7 +341,7 @@ class IoTDevice(models.Model):
         if succeeded:
             succeeded._apply_state_report_safe("on", reported_at=fields.Datetime.now())
         if ok:
-            return {"type": "ir.actions.client", "tag": "reload"}
+            return {"type": "ir.actions.client", "tag": "soft_reload"}
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",
@@ -353,7 +359,7 @@ class IoTDevice(models.Model):
         if succeeded:
             succeeded._apply_state_report_safe("off", reported_at=fields.Datetime.now())
         if ok:
-            return {"type": "ir.actions.client", "tag": "reload"}
+            return {"type": "ir.actions.client", "tag": "soft_reload"}
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",
@@ -393,7 +399,7 @@ class IoTDevice(models.Model):
                 rec.delay_end_at = now + timedelta(minutes=duration_min)
 
         if all_ok:
-            return {"type": "ir.actions.client", "tag": "reload"}
+            return {"type": "ir.actions.client", "tag": "soft_reload"}
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",

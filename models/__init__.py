@@ -13,6 +13,7 @@ from . import th_sensor
 from . import th_reading
 from . import th_alert
 from . import res_config_settings
+from . import iot_openwrt_template_ssid
 from . import iot_openwrt_template
 from . import iot_openwrt_firmware
 from . import iot_openwrt_job

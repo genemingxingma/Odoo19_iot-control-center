@@ -80,12 +80,14 @@ class IoTOpenwrtAP(models.Model):
         tracking=True,
     )
     last_seen = fields.Datetime(readonly=True, tracking=True)
+    last_heartbeat_at = fields.Datetime(readonly=True)
     last_probe_at = fields.Datetime(readonly=True, tracking=True)
     last_apply_at = fields.Datetime(readonly=True, tracking=True)
     last_upgrade_at = fields.Datetime(readonly=True, tracking=True)
     last_locate_at = fields.Datetime(readonly=True, tracking=True)
     locate_until = fields.Datetime(readonly=True, tracking=True)
     locate_active = fields.Boolean(readonly=True, tracking=True)
+    heartbeat_fail_count = fields.Integer(readonly=True, default=0)
     last_error = fields.Text(readonly=True)
     online = fields.Boolean(compute="_compute_online", store=False)
 
@@ -101,7 +103,11 @@ class IoTOpenwrtAP(models.Model):
         timeout = int(self.env["ir.config_parameter"].sudo().get_param("iot_control_center.openwrt_online_timeout_sec", 300))
         now = fields.Datetime.now()
         for rec in self:
-            rec.online = bool(rec.last_seen and (now - rec.last_seen).total_seconds() <= timeout)
+            rec.online = bool(
+                rec.status == "online"
+                and rec.last_seen
+                and (now - rec.last_seen).total_seconds() <= timeout
+            )
 
     @api.depends("job_ids")
     def _compute_job_count(self):
@@ -167,6 +173,26 @@ class IoTOpenwrtAP(models.Model):
             "key_path": self._middleware_private_key_path() or None,
         }
 
+    @api.model
+    def refresh_live_stats(self, ids):
+        records = self.browse(ids).exists()
+        if not records:
+            return {"ok": True, "refreshed": 0}
+        payload = {
+            "items": [
+                {
+                    "id": rec.id,
+                    "host": (rec.host or "").strip(),
+                    "port": int(rec.ssh_port or 22),
+                    "username": (rec.ssh_user or "").strip() or "root",
+                    "key_path": self._middleware_private_key_path() or None,
+                    "auth_token": rec.auth_token,
+                }
+                for rec in records
+            ]
+        }
+        return self._call_middleware("/v1/openwrt/refresh_bulk", payload)
+
     def _create_job(self, job_type, payload):
         self.ensure_one()
         return self.env["iot.openwrt.job"].create(
@@ -177,6 +203,15 @@ class IoTOpenwrtAP(models.Model):
                 "request_payload": json.dumps(payload, ensure_ascii=False, indent=2),
             }
         )
+
+    @api.model
+    def _system_no_track_context(self):
+        return {
+            "mail_create_nolog": True,
+            "mail_create_nosubscribe": True,
+            "mail_notrack": True,
+            "tracking_disable": True,
+        }
 
     def _write_job_result(self, job, response, success=True, note=None):
         job.write(
@@ -210,49 +245,160 @@ class IoTOpenwrtAP(models.Model):
             "live_clients_html": self._build_clients_html(clients),
         }
 
+    def _empty_live_telemetry(self, error_message=None):
+        return {
+            "client_count_total": 0,
+            "client_count_24g": 0,
+            "client_count_5g": 0,
+            "upload_rate_mbps": 0.0,
+            "download_rate_mbps": 0.0,
+            "upload_bytes_total": 0.0,
+            "download_bytes_total": 0.0,
+            "upload_rate_display": self._fmt_rate(0.0),
+            "download_rate_display": self._fmt_rate(0.0),
+            "upload_total_display": self._fmt_total(0.0),
+            "download_total_display": self._fmt_total(0.0),
+            "live_clients_html": self._error_clients_html(error_message) if error_message else self._empty_clients_html(),
+        }
+
     def _get_live_telemetry_map(self, force=False):
         cache = self.env.context.get("iot_openwrt_live_cache") if not force else None
         if isinstance(cache, dict):
             return cache
-        data_map = {}
-        for rec in self:
-            try:
-                response = rec._call_middleware("/v1/openwrt/probe", rec._base_payload())
-                facts = response.get("facts") or {}
+        data_map = {rec.id: self._empty_live_telemetry() for rec in self}
+        payload = {
+            "items": [
+                {
+                    "id": rec.id,
+                    "host": (rec.host or "").strip(),
+                    "port": int(rec.ssh_port or 22),
+                    "username": (rec.ssh_user or "").strip() or "root",
+                }
+                for rec in self
+            ]
+        }
+        try:
+            response = self._call_middleware("/v1/openwrt/cache_bulk", payload)
+            cache_rows = response.get("items") or []
+            for item in cache_rows:
+                rec_id = int(item.get("id") or 0)
+                summary = item.get("summary") or {}
+                clients = item.get("clients") or []
+                upload_rate = float(summary.get("upload_rate_mbps") or 0.0)
+                download_rate = float(summary.get("download_rate_mbps") or 0.0)
+                upload_total = float(summary.get("upload_bytes_total") or 0.0)
+                download_total = float(summary.get("download_bytes_total") or 0.0)
+                data_map[rec_id] = {
+                    "client_count_total": int(summary.get("client_count_total") or len(clients)),
+                    "client_count_24g": int(summary.get("client_count_24g") or 0),
+                    "client_count_5g": int(summary.get("client_count_5g") or 0),
+                    "upload_rate_mbps": upload_rate,
+                    "download_rate_mbps": download_rate,
+                    "upload_bytes_total": upload_total,
+                    "download_bytes_total": download_total,
+                    "upload_rate_display": self._fmt_rate(upload_rate),
+                    "download_rate_display": self._fmt_rate(download_rate),
+                    "upload_total_display": self._fmt_total(upload_total),
+                    "download_total_display": self._fmt_total(download_total),
+                    "live_clients_html": self._build_clients_html(clients),
+                }
+        except Exception as exc:
+            for rec in self:
+                data_map[rec.id] = self._empty_live_telemetry(str(exc))
+        return data_map
+
+    def _heartbeat_failure_threshold(self):
+        self.ensure_one()
+        return max(
+            int(
+                self.env["ir.config_parameter"]
+                .sudo()
+                .get_param("iot_control_center.openwrt_offline_failure_threshold", 2)
+            ),
+            1,
+        )
+
+    @api.model
+    def get_heartbeat_inventory(self):
+        key_path = (self.env["ir.config_parameter"].sudo().get_param("iot_control_center.openwrt_ssh_private_key_path") or "").strip()
+        items = []
+        for rec in self.sudo().search([("active", "=", True)]):
+            items.append(
+                {
+                    "id": rec.id,
+                    "host": (rec.host or "").strip(),
+                    "port": int(rec.ssh_port or 22),
+                    "username": (rec.ssh_user or "").strip() or "root",
+                    "key_path": key_path or None,
+                    "auth_token": rec.auth_token,
+                }
+            )
+        icp = self.env["ir.config_parameter"].sudo()
+        return {
+            "items": items,
+            "heartbeat_interval_sec": max(int(icp.get_param("iot_control_center.openwrt_heartbeat_interval_sec", 300)), 60),
+            "full_probe_every": max(int(icp.get_param("iot_control_center.openwrt_full_probe_every", 6)), 1),
+            "offline_failure_threshold": max(int(icp.get_param("iot_control_center.openwrt_offline_failure_threshold", 2)), 1),
+        }
+
+    @api.model
+    def apply_heartbeat_result(self, payload):
+        ap_id = int(payload.get("id") or 0)
+        auth_token = (payload.get("auth_token") or "").strip()
+        rec = self.sudo().search([("id", "=", ap_id), ("auth_token", "=", auth_token)], limit=1)
+        if not rec:
+            return False
+        now = fields.Datetime.now()
+        ok = bool(payload.get("ok"))
+        mode = (payload.get("mode") or "heartbeat").strip() or "heartbeat"
+        values = {"last_heartbeat_at": now}
+        if ok:
+            values.update(
+                {
+                    "status": "online",
+                    "last_seen": now,
+                    "heartbeat_fail_count": 0,
+                    "last_error": False,
+                }
+            )
+            if mode == "probe":
+                facts = payload.get("facts") or {}
                 release = facts.get("release") or {}
-                now = fields.Datetime.now()
-                rec.sudo().write(
+                values.update(
                     {
                         "board_name": facts.get("board_name") or False,
                         "model": facts.get("model") or False,
                         "target": facts.get("target") or False,
                         "openwrt_version": release.get("description") or release.get("version") or False,
                         "current_hostname": facts.get("hostname") or False,
-                        "status": "online",
-                        "last_seen": now,
                         "last_probe_at": now,
-                        "last_error": False,
                     }
                 )
-                data_map[rec.id] = rec._extract_live_telemetry(response)
-            except Exception as exc:
-                now = fields.Datetime.now()
-                rec.sudo().write({"status": "error", "last_error": str(exc), "last_probe_at": now})
-                data_map[rec.id] = {
-                    "client_count_total": 0,
-                    "client_count_24g": 0,
-                    "client_count_5g": 0,
-                    "upload_rate_mbps": 0.0,
-                    "download_rate_mbps": 0.0,
-                    "upload_bytes_total": 0.0,
-                    "download_bytes_total": 0.0,
-                    "upload_rate_display": self._fmt_rate(0.0),
-                    "download_rate_display": self._fmt_rate(0.0),
-                    "upload_total_display": self._fmt_total(0.0),
-                    "download_total_display": self._fmt_total(0.0),
-                    "live_clients_html": self._error_clients_html(str(exc)),
+        else:
+            fail_count = int(rec.heartbeat_fail_count or 0) + 1
+            timeout = int(
+                self.env["ir.config_parameter"]
+                .sudo()
+                .get_param("iot_control_center.openwrt_online_timeout_sec", 300)
+            )
+            recent_success = bool(
+                rec.last_seen and (now - rec.last_seen).total_seconds() <= timeout
+            )
+            values.update(
+                {
+                    "heartbeat_fail_count": fail_count,
+                    "last_error": (payload.get("error") or "")[:2000] or False,
+                    "status": (
+                        "offline"
+                        if fail_count >= rec._heartbeat_failure_threshold()
+                        else ("online" if recent_success else "unknown")
+                    ),
                 }
-        return data_map
+            )
+            if mode == "probe":
+                values["last_probe_at"] = now
+        rec.with_context(**self._system_no_track_context()).write(values)
+        return True
 
     def _inject_live_telemetry_into_rows(self, rows, field_names):
         if not rows:
@@ -372,7 +518,7 @@ class IoTOpenwrtAP(models.Model):
                 response = rec._call_middleware("/v1/openwrt/probe", payload)
                 facts = response.get("facts") or {}
                 release = facts.get("release") or {}
-                rec.write(
+                rec.with_context(**self._system_no_track_context()).write(
                     {
                         "board_name": facts.get("board_name") or False,
                         "model": facts.get("model") or False,
@@ -381,13 +527,17 @@ class IoTOpenwrtAP(models.Model):
                         "current_hostname": facts.get("hostname") or False,
                         "status": "online",
                         "last_seen": fields.Datetime.now(),
+                        "last_heartbeat_at": fields.Datetime.now(),
                         "last_probe_at": fields.Datetime.now(),
+                        "heartbeat_fail_count": 0,
                         "last_error": False,
                     }
                 )
                 rec._write_job_result(job, response, success=True)
             except Exception as exc:
-                rec.write({"status": "error", "last_error": str(exc), "last_probe_at": fields.Datetime.now()})
+                rec.with_context(**self._system_no_track_context()).write(
+                    {"status": "error", "last_error": str(exc), "last_probe_at": fields.Datetime.now()}
+                )
                 rec._write_job_result(job, {"ok": False}, success=False, note=str(exc))
                 raise
         return True
@@ -401,10 +551,12 @@ class IoTOpenwrtAP(models.Model):
             job = rec._create_job("apply_template", payload)
             try:
                 response = rec._call_middleware("/v1/openwrt/apply_template", payload)
-                rec.write(
+                rec.with_context(**self._system_no_track_context()).write(
                     {
                         "status": "online",
                         "last_seen": fields.Datetime.now(),
+                        "last_heartbeat_at": fields.Datetime.now(),
+                        "heartbeat_fail_count": 0,
                         "last_apply_at": fields.Datetime.now(),
                         "last_error": False,
                     }
@@ -422,7 +574,15 @@ class IoTOpenwrtAP(models.Model):
             job = rec._create_job("reboot", payload)
             try:
                 response = rec._call_middleware("/v1/openwrt/reboot", payload)
-                rec.write({"last_seen": fields.Datetime.now(), "status": "online", "last_error": False})
+                rec.with_context(**self._system_no_track_context()).write(
+                    {
+                        "last_seen": fields.Datetime.now(),
+                        "last_heartbeat_at": fields.Datetime.now(),
+                        "heartbeat_fail_count": 0,
+                        "status": "online",
+                        "last_error": False,
+                    }
+                )
                 rec._write_job_result(job, response, success=True)
             except Exception as exc:
                 rec.write({"status": "error", "last_error": str(exc)})
@@ -439,10 +599,12 @@ class IoTOpenwrtAP(models.Model):
             try:
                 response = rec._call_middleware("/v1/openwrt/locate", payload)
                 now = fields.Datetime.now()
-                rec.write(
+                rec.with_context(**self._system_no_track_context()).write(
                     {
                         "status": "online",
                         "last_seen": now,
+                        "last_heartbeat_at": now,
+                        "heartbeat_fail_count": 0,
                         "last_locate_at": now,
                         "locate_until": fields.Datetime.add(now, seconds=duration_sec),
                         "locate_active": True,
@@ -463,10 +625,12 @@ class IoTOpenwrtAP(models.Model):
             job = rec._create_job("locate_stop", payload)
             try:
                 response = rec._call_middleware("/v1/openwrt/locate", payload)
-                rec.write(
+                rec.with_context(**self._system_no_track_context()).write(
                     {
                         "status": "online",
                         "last_seen": fields.Datetime.now(),
+                        "last_heartbeat_at": fields.Datetime.now(),
+                        "heartbeat_fail_count": 0,
                         "last_locate_at": fields.Datetime.now(),
                         "locate_until": False,
                         "locate_active": False,
@@ -494,20 +658,32 @@ class IoTOpenwrtAP(models.Model):
             job = rec._create_job("upgrade", payload)
             try:
                 response = rec._call_middleware("/v1/openwrt/upgrade", payload)
-                rec.write(
+                upgrade_time = fields.Datetime.now()
+                rec.with_context(**self._system_no_track_context()).write(
                     {
-                        "last_seen": fields.Datetime.now(),
-                        "status": "online",
-                        "last_upgrade_at": fields.Datetime.now(),
+                        "status": "unknown",
+                        "last_upgrade_at": upgrade_time,
                         "last_error": False,
                     }
                 )
                 rec._write_job_result(job, response, success=True)
+                rec._probe_after_upgrade(delay_seconds=45)
             except Exception as exc:
                 rec.write({"status": "error", "last_error": str(exc)})
                 rec._write_job_result(job, {"ok": False}, success=False, note=str(exc))
                 raise
         return True
+
+    def _probe_after_upgrade(self, delay_seconds=25):
+        self.ensure_one()
+        import time
+
+        time.sleep(max(int(delay_seconds or 0), 0))
+        try:
+            self.action_probe()
+        except Exception:
+            # Keep upgrade success state even if immediate reprobe misses the reboot window.
+            pass
 
     def action_open_jobs(self):
         self.ensure_one()

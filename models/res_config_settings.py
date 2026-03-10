@@ -4,6 +4,7 @@ import subprocess
 from pathlib import Path
 
 from odoo import SUPERUSER_ID, api, fields, models
+from odoo.tools import config as odoo_config
 
 from ..services.tcp_service import ensure_running as ensure_tcp_running
 
@@ -50,10 +51,26 @@ class ResConfigSettings(models.TransientModel):
         config_parameter="iot_control_center.openwrt_online_timeout_sec",
         default=300,
     )
+    iot_openwrt_heartbeat_interval_sec = fields.Integer(
+        config_parameter="iot_control_center.openwrt_heartbeat_interval_sec",
+        default=300,
+    )
+    iot_openwrt_full_probe_every = fields.Integer(
+        config_parameter="iot_control_center.openwrt_full_probe_every",
+        default=6,
+    )
+    iot_openwrt_offline_failure_threshold = fields.Integer(
+        config_parameter="iot_control_center.openwrt_offline_failure_threshold",
+        default=2,
+    )
 
     def action_generate_openwrt_ssh_key(self):
         self.ensure_one()
-        data_dir = self.env["ir.config_parameter"].sudo().get_param("data_dir") or "/tmp"
+        data_dir = (
+            odoo_config.get("data_dir")
+            or self.env["ir.config_parameter"].sudo().get_param("data_dir")
+            or "/var/lib/odoo/.local/share/Odoo"
+        )
         key_dir = Path(data_dir) / "iot_openwrt_ssh"
         key_dir.mkdir(parents=True, exist_ok=True)
         private_key = key_dir / "id_ed25519"

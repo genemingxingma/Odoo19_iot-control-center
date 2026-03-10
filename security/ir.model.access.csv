@@ -53,6 +53,9 @@ access_iot_openwrt_ap_admin,access.iot.openwrt.ap.admin,model_iot_openwrt_ap,bas
 access_iot_openwrt_template_user,access.iot.openwrt.template.user,model_iot_openwrt_template,iot_control_center.group_iot_user,1,0,0,0
 access_iot_openwrt_template_manager,access.iot.openwrt.template.manager,model_iot_openwrt_template,iot_control_center.group_iot_manager,1,1,1,1
 access_iot_openwrt_template_admin,access.iot.openwrt.template.admin,model_iot_openwrt_template,base.group_system,1,1,1,1
+access_iot_openwrt_template_ssid_user,access.iot.openwrt.template.ssid.user,model_iot_openwrt_template_ssid,iot_control_center.group_iot_user,1,0,0,0
+access_iot_openwrt_template_ssid_manager,access.iot.openwrt.template.ssid.manager,model_iot_openwrt_template_ssid,iot_control_center.group_iot_manager,1,1,1,1
+access_iot_openwrt_template_ssid_admin,access.iot.openwrt.template.ssid.admin,model_iot_openwrt_template_ssid,base.group_system,1,1,1,1
 access_iot_openwrt_firmware_user,access.iot.openwrt.firmware.user,model_iot_openwrt_firmware,iot_control_center.group_iot_user,1,0,0,0
 access_iot_openwrt_firmware_manager,access.iot.openwrt.firmware.manager,model_iot_openwrt_firmware,iot_control_center.group_iot_manager,1,1,1,1
 access_iot_openwrt_firmware_admin,access.iot.openwrt.firmware.admin,model_iot_openwrt_firmware,base.group_system,1,1,1,1
