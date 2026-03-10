@@ -21,6 +21,10 @@ class IoTOpenwrtAP(models.Model):
         "download_rate_mbps",
         "upload_bytes_total",
         "download_bytes_total",
+        "upload_rate_display",
+        "download_rate_display",
+        "upload_total_display",
+        "download_total_display",
         "live_clients_html",
     }
 
@@ -59,6 +63,10 @@ class IoTOpenwrtAP(models.Model):
     download_rate_mbps = fields.Float(string="Download Rate (Mbps)", readonly=True, digits=(16, 2), compute="_compute_live_telemetry", store=False)
     upload_bytes_total = fields.Float(string="Uploaded Bytes", readonly=True, digits=(16, 0), compute="_compute_live_telemetry", store=False)
     download_bytes_total = fields.Float(string="Downloaded Bytes", readonly=True, digits=(16, 0), compute="_compute_live_telemetry", store=False)
+    upload_rate_display = fields.Char(string="Upload", readonly=True, compute="_compute_live_telemetry", store=False)
+    download_rate_display = fields.Char(string="Download", readonly=True, compute="_compute_live_telemetry", store=False)
+    upload_total_display = fields.Char(string="Uploaded", readonly=True, compute="_compute_live_telemetry", store=False)
+    download_total_display = fields.Char(string="Downloaded", readonly=True, compute="_compute_live_telemetry", store=False)
     live_clients_html = fields.Html(string="Connected Clients", readonly=True, sanitize=False, compute="_compute_live_telemetry", store=False)
 
     status = fields.Selection(
@@ -111,6 +119,10 @@ class IoTOpenwrtAP(models.Model):
             rec.download_rate_mbps = float(data.get("download_rate_mbps") or 0.0)
             rec.upload_bytes_total = float(data.get("upload_bytes_total") or 0.0)
             rec.download_bytes_total = float(data.get("download_bytes_total") or 0.0)
+            rec.upload_rate_display = data.get("upload_rate_display") or self._fmt_rate(0.0)
+            rec.download_rate_display = data.get("download_rate_display") or self._fmt_rate(0.0)
+            rec.upload_total_display = data.get("upload_total_display") or self._fmt_total(0.0)
+            rec.download_total_display = data.get("download_total_display") or self._fmt_total(0.0)
             rec.live_clients_html = data.get("live_clients_html") or self._empty_clients_html()
 
     def _middleware_base_url(self):
@@ -179,14 +191,22 @@ class IoTOpenwrtAP(models.Model):
     def _extract_live_telemetry(self, response):
         summary = response.get("summary") or {}
         clients = response.get("clients") or []
+        upload_rate = float(summary.get("upload_rate_mbps") or 0.0)
+        download_rate = float(summary.get("download_rate_mbps") or 0.0)
+        upload_total = float(summary.get("upload_bytes_total") or 0.0)
+        download_total = float(summary.get("download_bytes_total") or 0.0)
         return {
             "client_count_total": int(summary.get("client_count_total") or len(clients)),
             "client_count_24g": int(summary.get("client_count_24g") or 0),
             "client_count_5g": int(summary.get("client_count_5g") or 0),
-            "upload_rate_mbps": float(summary.get("upload_rate_mbps") or 0.0),
-            "download_rate_mbps": float(summary.get("download_rate_mbps") or 0.0),
-            "upload_bytes_total": float(summary.get("upload_bytes_total") or 0.0),
-            "download_bytes_total": float(summary.get("download_bytes_total") or 0.0),
+            "upload_rate_mbps": upload_rate,
+            "download_rate_mbps": download_rate,
+            "upload_bytes_total": upload_total,
+            "download_bytes_total": download_total,
+            "upload_rate_display": self._fmt_rate(upload_rate),
+            "download_rate_display": self._fmt_rate(download_rate),
+            "upload_total_display": self._fmt_total(upload_total),
+            "download_total_display": self._fmt_total(download_total),
             "live_clients_html": self._build_clients_html(clients),
         }
 
@@ -226,6 +246,10 @@ class IoTOpenwrtAP(models.Model):
                     "download_rate_mbps": 0.0,
                     "upload_bytes_total": 0.0,
                     "download_bytes_total": 0.0,
+                    "upload_rate_display": self._fmt_rate(0.0),
+                    "download_rate_display": self._fmt_rate(0.0),
+                    "upload_total_display": self._fmt_total(0.0),
+                    "download_total_display": self._fmt_total(0.0),
                     "live_clients_html": self._error_clients_html(str(exc)),
                 }
         return data_map
@@ -314,18 +338,18 @@ class IoTOpenwrtAP(models.Model):
         return '<div class="text-danger">%s</div>' % escape(message or _("Probe failed."))
 
     def _fmt_rate(self, value):
-        return "%.2f Mbps" % float(value or 0.0)
+        return "%.1f Mbps" % float(value or 0.0)
+
+    def _fmt_total(self, value):
+        value = float(value or 0.0)
+        tb = 1024.0 ** 4
+        gb = 1024.0 ** 3
+        if value >= tb:
+            return "%.1f TB" % (value / tb)
+        return "%.1f GB" % (value / gb if gb else 0.0)
 
     def _fmt_bytes(self, value):
-        value = float(value or 0.0)
-        units = ["B", "KB", "MB", "GB", "TB"]
-        unit = units[0]
-        for next_unit in units:
-            unit = next_unit
-            if value < 1024.0 or next_unit == units[-1]:
-                break
-            value /= 1024.0
-        return "%.2f %s" % (value, unit)
+        return self._fmt_total(value)
 
     def _fmt_duration(self, seconds):
         seconds = int(seconds or 0)

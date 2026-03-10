@@ -11,10 +11,10 @@
                 <field name="model"/>
                 <field name="client_count_24g"/>
                 <field name="client_count_5g"/>
-                <field name="upload_rate_mbps"/>
-                <field name="download_rate_mbps"/>
-                <field name="upload_bytes_total"/>
-                <field name="download_bytes_total"/>
+                <field name="upload_rate_display"/>
+                <field name="download_rate_display"/>
+                <field name="upload_total_display"/>
+                <field name="download_total_display"/>
                 <field name="openwrt_version"/>
                 <field name="template_id"/>
                 <field name="status"/>
@@ -68,10 +68,10 @@
                             <field name="client_count_total" readonly="1"/>
                             <field name="client_count_24g" readonly="1"/>
                             <field name="client_count_5g" readonly="1"/>
-                            <field name="upload_rate_mbps" readonly="1"/>
-                            <field name="download_rate_mbps" readonly="1"/>
-                            <field name="upload_bytes_total" readonly="1"/>
-                            <field name="download_bytes_total" readonly="1"/>
+                            <field name="upload_rate_display" readonly="1"/>
+                            <field name="download_rate_display" readonly="1"/>
+                            <field name="upload_total_display" readonly="1"/>
+                            <field name="download_total_display" readonly="1"/>
                         </group>
                     </group>
                     <group>
