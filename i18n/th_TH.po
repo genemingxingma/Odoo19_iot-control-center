@@ -1457,3 +1457,179 @@ msgstr "เซ็นเซอร์ในกลุ่มนี้"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__threshold_source
 msgid "Threshold Source"
 msgstr "แหล่งค่าขีดจำกัด"
+
+#. module: iot_control_center
+msgid "OpenWrt AC"
+msgstr "OpenWrt AC"
+
+#. module: iot_control_center
+msgid "OpenWrt APs"
+msgstr "จุดเชื่อมต่อ OpenWrt"
+
+#. module: iot_control_center
+msgid "OpenWrt Jobs"
+msgstr "งาน OpenWrt"
+
+#. module: iot_control_center
+msgid "OpenWrt Templates"
+msgstr "แม่แบบ OpenWrt"
+
+#. module: iot_control_center
+msgid "OpenWrt Firmware"
+msgstr "เฟิร์มแวร์ OpenWrt"
+
+#. module: iot_control_center
+msgid "OpenWrt Access Point"
+msgstr "จุดเชื่อมต่อ OpenWrt"
+
+#. module: iot_control_center
+msgid "OpenWrt AP Job"
+msgstr "งาน AP OpenWrt"
+
+#. module: iot_control_center
+msgid "OpenWrt Configuration Template"
+msgstr "แม่แบบการตั้งค่า OpenWrt"
+
+#. module: iot_control_center
+msgid "OpenWrt Firmware Package"
+msgstr "แพ็กเกจเฟิร์มแวร์ OpenWrt"
+
+#. module: iot_control_center
+msgid "APs"
+msgstr "จุดเชื่อมต่อ"
+
+#. module: iot_control_center
+msgid "Probe"
+msgstr "ตรวจสอบ"
+
+#. module: iot_control_center
+msgid "Apply Template"
+msgstr "ใช้แม่แบบ"
+
+#. module: iot_control_center
+msgid "Start Locate"
+msgstr "เริ่มระบุตำแหน่ง"
+
+#. module: iot_control_center
+msgid "Stop Locate"
+msgstr "หยุดระบุตำแหน่ง"
+
+#. module: iot_control_center
+msgid "Jobs"
+msgstr "งาน"
+
+#. module: iot_control_center
+msgid "Upgrade Firmware"
+msgstr "อัปเกรดเฟิร์มแวร์"
+
+#. module: iot_control_center
+msgid "Locate Active"
+msgstr "กำลังระบุตำแหน่ง"
+
+#. module: iot_control_center
+msgid "Last Locate At"
+msgstr "เวลาระบุตำแหน่งล่าสุด"
+
+#. module: iot_control_center
+msgid "Locate Until"
+msgstr "ระบุตำแหน่งจนถึง"
+
+#. module: iot_control_center
+msgid "OpenWrt SSH Key"
+msgstr "คีย์ SSH ของ OpenWrt"
+
+#. module: iot_control_center
+msgid "OpenWrt SSH key generated or reused successfully."
+msgstr "สร้างหรือใช้คีย์ SSH ของ OpenWrt สำเร็จแล้ว"
+
+#. module: iot_control_center
+msgid "OpenWrt Online Timeout (sec)"
+msgstr "หมดเวลาออนไลน์ OpenWrt (วินาที)"
+
+#. module: iot_control_center
+msgid "Generate OpenWrt SSH Key"
+msgstr "สร้างคีย์ SSH ของ OpenWrt"
+
+#. module: iot_control_center
+msgid "Generate / Refresh SSH Key"
+msgstr "สร้าง / รีเฟรชคีย์ SSH"
+
+#. module: iot_control_center
+msgid "Generate one SSH key pair for OpenWrt AP management. Add the public key manually to each AP's authorized_keys file."
+msgstr "สร้างคู่คีย์ SSH สำหรับจัดการ OpenWrt AP แล้วเพิ่ม public key ลงในไฟล์ authorized_keys ของแต่ละ AP ด้วยตนเอง"
+
+#. module: iot_control_center
+msgid "OpenWrt SSH Private Key Path"
+msgstr "พาธคีย์ส่วนตัว SSH ของ OpenWrt"
+
+#. module: iot_control_center
+msgid "OpenWrt SSH Public Key"
+msgstr "คีย์สาธารณะ SSH ของ OpenWrt"
+
+#. module: iot_control_center
+msgid "Add this public key manually to each OpenWrt AP's authorized_keys file, then bind the AP in IoT Control Center."
+msgstr "เพิ่ม public key นี้ลงในไฟล์ authorized_keys ของ OpenWrt AP แต่ละตัวด้วยตนเอง แล้วจึงผูก AP ใน IoT Control Center"
+
+#. module: iot_control_center
+msgid "2.4G Enabled"
+msgstr "เปิดใช้งาน 2.4G"
+
+#. module: iot_control_center
+msgid "2.4G SSID"
+msgstr "SSID 2.4G"
+
+#. module: iot_control_center
+msgid "2.4G Encryption"
+msgstr "การเข้ารหัส 2.4G"
+
+#. module: iot_control_center
+msgid "2.4G Password"
+msgstr "รหัสผ่าน 2.4G"
+
+#. module: iot_control_center
+msgid "2.4G Hidden SSID"
+msgstr "ซ่อน SSID 2.4G"
+
+#. module: iot_control_center
+msgid "2.4G Channel"
+msgstr "ช่องสัญญาณ 2.4G"
+
+#. module: iot_control_center
+msgid "5G Enabled"
+msgstr "เปิดใช้งาน 5G"
+
+#. module: iot_control_center
+msgid "5G SSID"
+msgstr "SSID 5G"
+
+#. module: iot_control_center
+msgid "5G Encryption"
+msgstr "การเข้ารหัส 5G"
+
+#. module: iot_control_center
+msgid "5G Password"
+msgstr "รหัสผ่าน 5G"
+
+#. module: iot_control_center
+msgid "5G Hidden SSID"
+msgstr "ซ่อน SSID 5G"
+
+#. module: iot_control_center
+msgid "5G Channel"
+msgstr "ช่องสัญญาณ 5G"
+
+#. module: iot_control_center
+msgid "WPA2-PSK"
+msgstr "WPA2-PSK"
+
+#. module: iot_control_center
+msgid "WPA2/WPA3 Mixed"
+msgstr "WPA2/WPA3 แบบผสม"
+
+#. module: iot_control_center
+msgid "WPA3-SAE"
+msgstr "WPA3-SAE"
+
+#. module: iot_control_center
+msgid "Firmware applies to AP model names containing this text, case-insensitive."
+msgstr "เฟิร์มแวร์นี้ใช้กับชื่อรุ่น AP ที่มีข้อความนี้อยู่ โดยไม่แยกตัวพิมพ์เล็กใหญ่"

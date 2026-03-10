@@ -1361,3 +1361,179 @@ msgstr "Bind by ID"
 #: model:ir.ui.menu,name:iot_control_center.menu_iot_th_sensor_bind
 msgid "Bind Node by ID"
 msgstr "Bind Node by ID"
+
+#. module: iot_control_center
+msgid "OpenWrt AC"
+msgstr "OpenWrt AC"
+
+#. module: iot_control_center
+msgid "OpenWrt APs"
+msgstr "OpenWrt APs"
+
+#. module: iot_control_center
+msgid "OpenWrt Jobs"
+msgstr "OpenWrt Jobs"
+
+#. module: iot_control_center
+msgid "OpenWrt Templates"
+msgstr "OpenWrt Templates"
+
+#. module: iot_control_center
+msgid "OpenWrt Firmware"
+msgstr "OpenWrt Firmware"
+
+#. module: iot_control_center
+msgid "OpenWrt Access Point"
+msgstr "OpenWrt Access Point"
+
+#. module: iot_control_center
+msgid "OpenWrt AP Job"
+msgstr "OpenWrt AP Job"
+
+#. module: iot_control_center
+msgid "OpenWrt Configuration Template"
+msgstr "OpenWrt Configuration Template"
+
+#. module: iot_control_center
+msgid "OpenWrt Firmware Package"
+msgstr "OpenWrt Firmware Package"
+
+#. module: iot_control_center
+msgid "APs"
+msgstr "APs"
+
+#. module: iot_control_center
+msgid "Probe"
+msgstr "Probe"
+
+#. module: iot_control_center
+msgid "Apply Template"
+msgstr "Apply Template"
+
+#. module: iot_control_center
+msgid "Start Locate"
+msgstr "Start Locate"
+
+#. module: iot_control_center
+msgid "Stop Locate"
+msgstr "Stop Locate"
+
+#. module: iot_control_center
+msgid "Jobs"
+msgstr "Jobs"
+
+#. module: iot_control_center
+msgid "Upgrade Firmware"
+msgstr "Upgrade Firmware"
+
+#. module: iot_control_center
+msgid "Locate Active"
+msgstr "Locate Active"
+
+#. module: iot_control_center
+msgid "Last Locate At"
+msgstr "Last Locate At"
+
+#. module: iot_control_center
+msgid "Locate Until"
+msgstr "Locate Until"
+
+#. module: iot_control_center
+msgid "OpenWrt SSH Key"
+msgstr "OpenWrt SSH Key"
+
+#. module: iot_control_center
+msgid "OpenWrt SSH key generated or reused successfully."
+msgstr "OpenWrt SSH key generated or reused successfully."
+
+#. module: iot_control_center
+msgid "OpenWrt Online Timeout (sec)"
+msgstr "OpenWrt Online Timeout (sec)"
+
+#. module: iot_control_center
+msgid "Generate OpenWrt SSH Key"
+msgstr "Generate OpenWrt SSH Key"
+
+#. module: iot_control_center
+msgid "Generate / Refresh SSH Key"
+msgstr "Generate / Refresh SSH Key"
+
+#. module: iot_control_center
+msgid "Generate one SSH key pair for OpenWrt AP management. Add the public key manually to each AP's authorized_keys file."
+msgstr "Generate one SSH key pair for OpenWrt AP management. Add the public key manually to each AP's authorized_keys file."
+
+#. module: iot_control_center
+msgid "OpenWrt SSH Private Key Path"
+msgstr "OpenWrt SSH Private Key Path"
+
+#. module: iot_control_center
+msgid "OpenWrt SSH Public Key"
+msgstr "OpenWrt SSH Public Key"
+
+#. module: iot_control_center
+msgid "Add this public key manually to each OpenWrt AP's authorized_keys file, then bind the AP in IoT Control Center."
+msgstr "Add this public key manually to each OpenWrt AP's authorized_keys file, then bind the AP in IoT Control Center."
+
+#. module: iot_control_center
+msgid "2.4G Enabled"
+msgstr "2.4G Enabled"
+
+#. module: iot_control_center
+msgid "2.4G SSID"
+msgstr "2.4G SSID"
+
+#. module: iot_control_center
+msgid "2.4G Encryption"
+msgstr "2.4G Encryption"
+
+#. module: iot_control_center
+msgid "2.4G Password"
+msgstr "2.4G Password"
+
+#. module: iot_control_center
+msgid "2.4G Hidden SSID"
+msgstr "2.4G Hidden SSID"
+
+#. module: iot_control_center
+msgid "2.4G Channel"
+msgstr "2.4G Channel"
+
+#. module: iot_control_center
+msgid "5G Enabled"
+msgstr "5G Enabled"
+
+#. module: iot_control_center
+msgid "5G SSID"
+msgstr "5G SSID"
+
+#. module: iot_control_center
+msgid "5G Encryption"
+msgstr "5G Encryption"
+
+#. module: iot_control_center
+msgid "5G Password"
+msgstr "5G Password"
+
+#. module: iot_control_center
+msgid "5G Hidden SSID"
+msgstr "5G Hidden SSID"
+
+#. module: iot_control_center
+msgid "5G Channel"
+msgstr "5G Channel"
+
+#. module: iot_control_center
+msgid "WPA2-PSK"
+msgstr "WPA2-PSK"
+
+#. module: iot_control_center
+msgid "WPA2/WPA3 Mixed"
+msgstr "WPA2/WPA3 Mixed"
+
+#. module: iot_control_center
+msgid "WPA3-SAE"
+msgstr "WPA3-SAE"
+
+#. module: iot_control_center
+msgid "Firmware applies to AP model names containing this text, case-insensitive."
+msgstr "Firmware applies to AP model names containing this text, case-insensitive."

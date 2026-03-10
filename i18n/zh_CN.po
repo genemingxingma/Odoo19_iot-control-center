@@ -1457,3 +1457,179 @@ msgstr "本分组探头"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__threshold_source
 msgid "Threshold Source"
 msgstr "阈值来源"
+
+#. module: iot_control_center
+msgid "OpenWrt AC"
+msgstr "OpenWrt AC"
+
+#. module: iot_control_center
+msgid "OpenWrt APs"
+msgstr "OpenWrt 接入点"
+
+#. module: iot_control_center
+msgid "OpenWrt Jobs"
+msgstr "OpenWrt 任务"
+
+#. module: iot_control_center
+msgid "OpenWrt Templates"
+msgstr "OpenWrt 模板"
+
+#. module: iot_control_center
+msgid "OpenWrt Firmware"
+msgstr "OpenWrt 固件"
+
+#. module: iot_control_center
+msgid "OpenWrt Access Point"
+msgstr "OpenWrt 接入点"
+
+#. module: iot_control_center
+msgid "OpenWrt AP Job"
+msgstr "OpenWrt 接入点任务"
+
+#. module: iot_control_center
+msgid "OpenWrt Configuration Template"
+msgstr "OpenWrt 配置模板"
+
+#. module: iot_control_center
+msgid "OpenWrt Firmware Package"
+msgstr "OpenWrt 固件包"
+
+#. module: iot_control_center
+msgid "APs"
+msgstr "接入点"
+
+#. module: iot_control_center
+msgid "Probe"
+msgstr "探测"
+
+#. module: iot_control_center
+msgid "Apply Template"
+msgstr "应用模板"
+
+#. module: iot_control_center
+msgid "Start Locate"
+msgstr "开始定位"
+
+#. module: iot_control_center
+msgid "Stop Locate"
+msgstr "停止定位"
+
+#. module: iot_control_center
+msgid "Jobs"
+msgstr "任务"
+
+#. module: iot_control_center
+msgid "Upgrade Firmware"
+msgstr "升级固件"
+
+#. module: iot_control_center
+msgid "Locate Active"
+msgstr "定位中"
+
+#. module: iot_control_center
+msgid "Last Locate At"
+msgstr "最后定位时间"
+
+#. module: iot_control_center
+msgid "Locate Until"
+msgstr "定位结束时间"
+
+#. module: iot_control_center
+msgid "OpenWrt SSH Key"
+msgstr "OpenWrt SSH 密钥"
+
+#. module: iot_control_center
+msgid "OpenWrt SSH key generated or reused successfully."
+msgstr "OpenWrt SSH 密钥已生成或复用成功。"
+
+#. module: iot_control_center
+msgid "OpenWrt Online Timeout (sec)"
+msgstr "OpenWrt 在线超时（秒）"
+
+#. module: iot_control_center
+msgid "Generate OpenWrt SSH Key"
+msgstr "生成 OpenWrt SSH 密钥"
+
+#. module: iot_control_center
+msgid "Generate / Refresh SSH Key"
+msgstr "生成 / 刷新 SSH 密钥"
+
+#. module: iot_control_center
+msgid "Generate one SSH key pair for OpenWrt AP management. Add the public key manually to each AP's authorized_keys file."
+msgstr "为 OpenWrt AP 管理生成一对 SSH 密钥。请将公钥手动添加到每台 AP 的 authorized_keys 文件中。"
+
+#. module: iot_control_center
+msgid "OpenWrt SSH Private Key Path"
+msgstr "OpenWrt SSH 私钥路径"
+
+#. module: iot_control_center
+msgid "OpenWrt SSH Public Key"
+msgstr "OpenWrt SSH 公钥"
+
+#. module: iot_control_center
+msgid "Add this public key manually to each OpenWrt AP's authorized_keys file, then bind the AP in IoT Control Center."
+msgstr "请将此公钥手动添加到每台 OpenWrt AP 的 authorized_keys 文件中，然后在 IoT Control Center 中绑定该 AP。"
+
+#. module: iot_control_center
+msgid "2.4G Enabled"
+msgstr "启用 2.4G"
+
+#. module: iot_control_center
+msgid "2.4G SSID"
+msgstr "2.4G SSID"
+
+#. module: iot_control_center
+msgid "2.4G Encryption"
+msgstr "2.4G 加密"
+
+#. module: iot_control_center
+msgid "2.4G Password"
+msgstr "2.4G 密码"
+
+#. module: iot_control_center
+msgid "2.4G Hidden SSID"
+msgstr "隐藏 2.4G SSID"
+
+#. module: iot_control_center
+msgid "2.4G Channel"
+msgstr "2.4G 信道"
+
+#. module: iot_control_center
+msgid "5G Enabled"
+msgstr "启用 5G"
+
+#. module: iot_control_center
+msgid "5G SSID"
+msgstr "5G SSID"
+
+#. module: iot_control_center
+msgid "5G Encryption"
+msgstr "5G 加密"
+
+#. module: iot_control_center
+msgid "5G Password"
+msgstr "5G 密码"
+
+#. module: iot_control_center
+msgid "5G Hidden SSID"
+msgstr "隐藏 5G SSID"
+
+#. module: iot_control_center
+msgid "5G Channel"
+msgstr "5G 信道"
+
+#. module: iot_control_center
+msgid "WPA2-PSK"
+msgstr "WPA2-PSK"
+
+#. module: iot_control_center
+msgid "WPA2/WPA3 Mixed"
+msgstr "WPA2/WPA3 混合"
+
+#. module: iot_control_center
+msgid "WPA3-SAE"
+msgstr "WPA3-SAE"
+
+#. module: iot_control_center
+msgid "Firmware applies to AP model names containing this text, case-insensitive."
+msgstr "该固件适用于型号名称中包含此文本的 AP，匹配时不区分大小写。"

@@ -1349,3 +1349,179 @@ msgstr ""
 #: code:addons/iot_control_center/models/iot_firmware.py:0
 msgid "web.base.url is not configured."
 msgstr ""
+
+#. module: iot_control_center
+msgid "OpenWrt AC"
+msgstr ""
+
+#. module: iot_control_center
+msgid "OpenWrt APs"
+msgstr ""
+
+#. module: iot_control_center
+msgid "OpenWrt Jobs"
+msgstr ""
+
+#. module: iot_control_center
+msgid "OpenWrt Templates"
+msgstr ""
+
+#. module: iot_control_center
+msgid "OpenWrt Firmware"
+msgstr ""
+
+#. module: iot_control_center
+msgid "OpenWrt Access Point"
+msgstr ""
+
+#. module: iot_control_center
+msgid "OpenWrt AP Job"
+msgstr ""
+
+#. module: iot_control_center
+msgid "OpenWrt Configuration Template"
+msgstr ""
+
+#. module: iot_control_center
+msgid "OpenWrt Firmware Package"
+msgstr ""
+
+#. module: iot_control_center
+msgid "APs"
+msgstr ""
+
+#. module: iot_control_center
+msgid "Probe"
+msgstr ""
+
+#. module: iot_control_center
+msgid "Apply Template"
+msgstr ""
+
+#. module: iot_control_center
+msgid "Start Locate"
+msgstr ""
+
+#. module: iot_control_center
+msgid "Stop Locate"
+msgstr ""
+
+#. module: iot_control_center
+msgid "Jobs"
+msgstr ""
+
+#. module: iot_control_center
+msgid "Upgrade Firmware"
+msgstr ""
+
+#. module: iot_control_center
+msgid "Locate Active"
+msgstr ""
+
+#. module: iot_control_center
+msgid "Last Locate At"
+msgstr ""
+
+#. module: iot_control_center
+msgid "Locate Until"
+msgstr ""
+
+#. module: iot_control_center
+msgid "OpenWrt SSH Key"
+msgstr ""
+
+#. module: iot_control_center
+msgid "OpenWrt SSH key generated or reused successfully."
+msgstr ""
+
+#. module: iot_control_center
+msgid "OpenWrt Online Timeout (sec)"
+msgstr ""
+
+#. module: iot_control_center
+msgid "Generate OpenWrt SSH Key"
+msgstr ""
+
+#. module: iot_control_center
+msgid "Generate / Refresh SSH Key"
+msgstr ""
+
+#. module: iot_control_center
+msgid "Generate one SSH key pair for OpenWrt AP management. Add the public key manually to each AP's authorized_keys file."
+msgstr ""
+
+#. module: iot_control_center
+msgid "OpenWrt SSH Private Key Path"
+msgstr ""
+
+#. module: iot_control_center
+msgid "OpenWrt SSH Public Key"
+msgstr ""
+
+#. module: iot_control_center
+msgid "Add this public key manually to each OpenWrt AP's authorized_keys file, then bind the AP in IoT Control Center."
+msgstr ""
+
+#. module: iot_control_center
+msgid "2.4G Enabled"
+msgstr ""
+
+#. module: iot_control_center
+msgid "2.4G SSID"
+msgstr ""
+
+#. module: iot_control_center
+msgid "2.4G Encryption"
+msgstr ""
+
+#. module: iot_control_center
+msgid "2.4G Password"
+msgstr ""
+
+#. module: iot_control_center
+msgid "2.4G Hidden SSID"
+msgstr ""
+
+#. module: iot_control_center
+msgid "2.4G Channel"
+msgstr ""
+
+#. module: iot_control_center
+msgid "5G Enabled"
+msgstr ""
+
+#. module: iot_control_center
+msgid "5G SSID"
+msgstr ""
+
+#. module: iot_control_center
+msgid "5G Encryption"
+msgstr ""
+
+#. module: iot_control_center
+msgid "5G Password"
+msgstr ""
+
+#. module: iot_control_center
+msgid "5G Hidden SSID"
+msgstr ""
+
+#. module: iot_control_center
+msgid "5G Channel"
+msgstr ""
+
+#. module: iot_control_center
+msgid "WPA2-PSK"
+msgstr ""
+
+#. module: iot_control_center
+msgid "WPA2/WPA3 Mixed"
+msgstr ""
+
+#. module: iot_control_center
+msgid "WPA3-SAE"
+msgstr ""
+
+#. module: iot_control_center
+msgid "Firmware applies to AP model names containing this text, case-insensitive."
+msgstr ""
