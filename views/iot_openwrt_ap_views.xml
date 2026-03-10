@@ -10,6 +10,12 @@
                 <field name="ssh_port"/>
                 <field name="company_id"/>
                 <field name="model"/>
+                <field name="client_count_24g"/>
+                <field name="client_count_5g"/>
+                <field name="upload_rate_mbps"/>
+                <field name="download_rate_mbps"/>
+                <field name="upload_bytes_total"/>
+                <field name="download_bytes_total"/>
                 <field name="openwrt_version"/>
                 <field name="template_id"/>
                 <field name="status"/>
@@ -60,6 +66,17 @@
                             <field name="openwrt_version" readonly="1"/>
                             <field name="current_hostname" readonly="1"/>
                         </group>
+                        <group string="Client Summary">
+                            <field name="client_count_total" readonly="1"/>
+                            <field name="client_count_24g" readonly="1"/>
+                            <field name="client_count_5g" readonly="1"/>
+                            <field name="upload_rate_mbps" readonly="1"/>
+                            <field name="download_rate_mbps" readonly="1"/>
+                            <field name="upload_bytes_total" readonly="1"/>
+                            <field name="download_bytes_total" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
                         <group string="Timestamps">
                             <field name="last_seen" readonly="1"/>
                             <field name="last_probe_at" readonly="1"/>
@@ -73,6 +90,25 @@
                     <group>
                         <field name="last_error" readonly="1"/>
                     </group>
+                    <notebook>
+                        <page string="Connected Clients">
+                            <field name="client_ids" readonly="1">
+                                <list create="0" delete="0">
+                                    <field name="hostname"/>
+                                    <field name="ip_address"/>
+                                    <field name="mac_address"/>
+                                    <field name="band"/>
+                                    <field name="signal_dbm"/>
+                                    <field name="upload_rate_mbps"/>
+                                    <field name="download_rate_mbps"/>
+                                    <field name="upload_bytes_total"/>
+                                    <field name="download_bytes_total"/>
+                                    <field name="connected_seconds"/>
+                                    <field name="last_seen"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
                 </sheet>
                 <chatter/>
             </form>

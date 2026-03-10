@@ -40,6 +40,14 @@ class IoTOpenwrtAP(models.Model):
     target = fields.Char(readonly=True, tracking=True)
     openwrt_version = fields.Char(readonly=True, tracking=True)
     current_hostname = fields.Char(readonly=True, tracking=True)
+    client_ids = fields.One2many("iot.openwrt.client", "ap_id")
+    client_count_total = fields.Integer(readonly=True)
+    client_count_24g = fields.Integer(string="2.4G Clients", readonly=True)
+    client_count_5g = fields.Integer(string="5G Clients", readonly=True)
+    upload_rate_mbps = fields.Float(string="Upload Rate (Mbps)", readonly=True, digits=(16, 2))
+    download_rate_mbps = fields.Float(string="Download Rate (Mbps)", readonly=True, digits=(16, 2))
+    upload_bytes_total = fields.Float(string="Uploaded Bytes", readonly=True, digits=(16, 0))
+    download_bytes_total = fields.Float(string="Downloaded Bytes", readonly=True, digits=(16, 0))
 
     status = fields.Selection(
         [
@@ -143,6 +151,48 @@ class IoTOpenwrtAP(models.Model):
             }
         )
 
+    def _replace_clients(self, response):
+        self.ensure_one()
+        client_model = self.env["iot.openwrt.client"].sudo()
+        now = fields.Datetime.now()
+        clients = response.get("clients") or []
+        client_model.search([("ap_id", "=", self.id)]).unlink()
+        vals_list = []
+        for item in clients:
+            mac_address = (item.get("mac") or "").strip().upper()
+            if not mac_address:
+                continue
+            vals_list.append(
+                {
+                    "ap_id": self.id,
+                    "hostname": item.get("hostname") or False,
+                    "ip_address": item.get("ip") or False,
+                    "mac_address": mac_address,
+                    "band": item.get("band") or "other",
+                    "signal_dbm": item.get("signal_dbm") if item.get("signal_dbm") is not None else False,
+                    "upload_rate_mbps": item.get("upload_rate_mbps") or 0.0,
+                    "download_rate_mbps": item.get("download_rate_mbps") or 0.0,
+                    "upload_bytes_total": item.get("upload_bytes_total") or 0.0,
+                    "download_bytes_total": item.get("download_bytes_total") or 0.0,
+                    "connected_seconds": item.get("connected_seconds") or 0,
+                    "last_seen": now,
+                }
+            )
+        if vals_list:
+            client_model.create(vals_list)
+        summary = response.get("summary") or {}
+        self.write(
+            {
+                "client_count_total": int(summary.get("client_count_total") or len(vals_list)),
+                "client_count_24g": int(summary.get("client_count_24g") or 0),
+                "client_count_5g": int(summary.get("client_count_5g") or 0),
+                "upload_rate_mbps": float(summary.get("upload_rate_mbps") or 0.0),
+                "download_rate_mbps": float(summary.get("download_rate_mbps") or 0.0),
+                "upload_bytes_total": float(summary.get("upload_bytes_total") or 0.0),
+                "download_bytes_total": float(summary.get("download_bytes_total") or 0.0),
+            }
+        )
+
     def action_probe(self):
         for rec in self:
             payload = rec._base_payload()
@@ -164,6 +214,7 @@ class IoTOpenwrtAP(models.Model):
                         "last_error": False,
                     }
                 )
+                rec._replace_clients(response)
                 rec._write_job_result(job, response, success=True)
             except Exception as exc:
                 rec.write({"status": "error", "last_error": str(exc), "last_probe_at": fields.Datetime.now()})
@@ -260,9 +311,6 @@ class IoTOpenwrtAP(models.Model):
         return True
 
     def action_upgrade_firmware(self):
-        base_url = (self.env["ir.config_parameter"].sudo().get_param("web.base.url") or "").strip().rstrip("/")
-        if not base_url:
-            raise UserError(_("web.base.url is empty."))
         for rec in self:
             firmware = rec.upgrade_firmware_id
             if not firmware:
@@ -270,8 +318,9 @@ class IoTOpenwrtAP(models.Model):
             if rec.model and firmware.model_pattern and firmware.model_pattern.lower() not in rec.model.lower():
                 raise UserError(_("Selected firmware does not match the AP model."))
             payload = rec._base_payload()
-            payload["firmware_url"] = f"{base_url}/iot_control_center/openwrt/firmware/{firmware.id}/download"
+            payload["firmware_id"] = firmware.id
             payload["filename"] = firmware.filename
+            payload["checksum_sha256"] = firmware.checksum_sha256 or ""
             job = rec._create_job("upgrade", payload)
             try:
                 response = rec._call_middleware("/v1/openwrt/upgrade", payload)

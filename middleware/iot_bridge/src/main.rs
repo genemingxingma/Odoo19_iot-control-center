@@ -1,5 +1,6 @@
 use std::net::SocketAddr;
 use std::path::PathBuf;
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -9,6 +10,7 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::routing::post;
 use axum::{Json, Router};
 use base64::Engine as _;
+use sha2::{Digest, Sha256};
 use reqwest::Client;
 use rumqttc::{AsyncClient, Event, EventLoop, Incoming, MqttOptions, QoS};
 use serde::{Deserialize, Serialize};
@@ -122,8 +124,13 @@ struct OpenwrtUpgradeRequest {
     username: String,
     #[serde(default)]
     key_path: Option<String>,
-    firmware_url: String,
+    #[serde(default)]
+    firmware_url: Option<String>,
+    #[serde(default)]
+    firmware_id: Option<i64>,
     filename: String,
+    #[serde(default)]
+    checksum_sha256: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -145,6 +152,10 @@ struct OpenwrtActionResponse {
     message: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     facts: Option<Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    clients: Option<Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    summary: Option<Value>,
 }
 
 #[tokio::main]
@@ -265,15 +276,10 @@ async fn openwrt_probe(
     let cfg = Config::from_env().map_err(openwrt_internal_err)?;
     let key_path =
         resolve_key_path(req.key_path, cfg.openwrt_ssh_key_path).map_err(openwrt_bad_request)?;
-    let board_raw = run_ssh_command(
-        &req.host,
-        req.port,
-        &req.username,
-        &key_path,
-        "ubus call system board",
-    )
-    .await
-    .map_err(openwrt_internal_err)?;
+    let board_raw =
+        run_ssh_command(&req.host, req.port, &req.username, &key_path, "ubus call system board")
+            .await
+            .map_err(openwrt_internal_err)?;
     let hostname = run_ssh_command(
         &req.host,
         req.port,
@@ -283,6 +289,42 @@ async fn openwrt_probe(
     )
     .await
     .map_err(openwrt_internal_err)?;
+    let wireless_status_raw = run_ssh_command(
+        &req.host,
+        req.port,
+        &req.username,
+        &key_path,
+        "ubus call network.wireless status",
+    )
+    .await
+    .unwrap_or_else(|_| "{}".to_string());
+    let hostapd_list_raw = run_ssh_command(
+        &req.host,
+        req.port,
+        &req.username,
+        &key_path,
+        "ubus list 'hostapd.*' 2>/dev/null | sed -n 's/^hostapd\\.//p'",
+    )
+    .await
+    .unwrap_or_default();
+    let ip_neigh_raw = run_ssh_command(
+        &req.host,
+        req.port,
+        &req.username,
+        &key_path,
+        "ip neigh show 2>/dev/null || true",
+    )
+    .await
+    .unwrap_or_default();
+    let dhcp_leases_raw = run_ssh_command(
+        &req.host,
+        req.port,
+        &req.username,
+        &key_path,
+        "cat /tmp/dhcp.leases 2>/dev/null || true",
+    )
+    .await
+    .unwrap_or_default();
     let mut facts: Value = serde_json::from_str(&board_raw).map_err(openwrt_internal_err)?;
     if let Some(obj) = facts.as_object_mut() {
         obj.insert(
@@ -290,10 +332,33 @@ async fn openwrt_probe(
             Value::String(hostname.trim().to_string()),
         );
     }
+    let iface_bands = parse_wireless_interface_bands(&wireless_status_raw);
+    let ip_map = parse_ip_neigh(&ip_neigh_raw);
+    let lease_map = parse_dhcp_leases(&dhcp_leases_raw);
+    let hostapd_ifaces: Vec<String> = hostapd_list_raw
+        .lines()
+        .map(|line| line.trim().to_string())
+        .filter(|line| !line.is_empty())
+        .collect();
+    let clients = collect_openwrt_clients(
+        &req.host,
+        req.port,
+        &req.username,
+        &key_path,
+        &hostapd_ifaces,
+        &iface_bands,
+        &ip_map,
+        &lease_map,
+    )
+    .await
+    .map_err(openwrt_internal_err)?;
+    let summary = summarize_clients(&clients);
     Ok(Json(OpenwrtActionResponse {
         ok: true,
         message: "probe completed".to_string(),
         facts: Some(facts),
+        clients: Some(Value::Array(clients)),
+        summary: Some(summary),
     }))
 }
 
@@ -320,6 +385,8 @@ async fn openwrt_apply_template(
         ok: true,
         message: "template applied".to_string(),
         facts: None,
+        clients: None,
+        summary: None,
     }))
 }
 
@@ -345,6 +412,8 @@ async fn openwrt_reboot(
         ok: true,
         message: "reboot requested".to_string(),
         facts: None,
+        clients: None,
+        summary: None,
     }))
 }
 
@@ -372,6 +441,8 @@ async fn openwrt_locate(
         ok: true,
         message: output.trim().to_string(),
         facts: None,
+        clients: None,
+        summary: None,
     }))
 }
 
@@ -385,12 +456,24 @@ async fn openwrt_upgrade(
     let key_path =
         resolve_key_path(req.key_path, cfg.openwrt_ssh_key_path).map_err(openwrt_bad_request)?;
     let filename = sanitize_filename(&req.filename);
+    let firmware_url = if let Some(firmware_id) = req.firmware_id {
+        format!(
+            "{}/iot_control_center/openwrt/firmware/{}/download",
+            cfg.odoo_base_url.trim_end_matches('/'),
+            firmware_id
+        )
+    } else {
+        req.firmware_url
+            .clone()
+            .filter(|value| !value.trim().is_empty())
+            .ok_or_else(|| openwrt_bad_request("firmware_url or firmware_id is required"))?
+    };
     let temp_path = std::env::temp_dir().join(format!("iot_openwrt_{}", filename));
     let mut request_builder = Client::builder()
         .timeout(Duration::from_secs(120))
         .build()
         .map_err(openwrt_internal_err)?
-        .get(&req.firmware_url);
+        .get(&firmware_url);
     if !cfg.middleware_token.is_empty() {
         request_builder =
             request_builder.header("X-IoT-Middleware-Token", cfg.middleware_token.clone());
@@ -404,6 +487,22 @@ async fn openwrt_upgrade(
         .bytes()
         .await
         .map_err(openwrt_internal_err)?;
+    if let Some(expected_hash) = req
+        .checksum_sha256
+        .as_ref()
+        .map(|value| value.trim().to_ascii_lowercase())
+        .filter(|value| !value.is_empty())
+    {
+        let mut hasher = Sha256::new();
+        hasher.update(&bytes);
+        let actual_hash = format!("{:x}", hasher.finalize());
+        if actual_hash != expected_hash {
+            return Err(openwrt_internal_err(format!(
+                "firmware checksum mismatch: expected {}, got {}",
+                expected_hash, actual_hash
+            )));
+        }
+    }
     fs::write(&temp_path, &bytes)
         .await
         .map_err(openwrt_internal_err)?;
@@ -415,6 +514,15 @@ async fn openwrt_upgrade(
         &key_path,
         &temp_path,
         &remote_path,
+    )
+    .await
+    .map_err(openwrt_internal_err)?;
+    run_ssh_command(
+        &req.host,
+        req.port,
+        &req.username,
+        &key_path,
+        &format!("sysupgrade -T {}", shell_escape(&remote_path)),
     )
     .await
     .map_err(openwrt_internal_err)?;
@@ -436,6 +544,8 @@ async fn openwrt_upgrade(
         ok: true,
         message: "firmware uploaded and sysupgrade started".to_string(),
         facts: None,
+        clients: None,
+        summary: None,
     }))
 }
 
@@ -643,6 +753,8 @@ fn openwrt_internal_err<E: std::fmt::Display>(err: E) -> (StatusCode, Json<Openw
             ok: false,
             message: err.to_string(),
             facts: None,
+            clients: None,
+            summary: None,
         }),
     )
 }
@@ -654,6 +766,8 @@ fn openwrt_bad_request<E: std::fmt::Display>(err: E) -> (StatusCode, Json<Openwr
             ok: false,
             message: err.to_string(),
             facts: None,
+            clients: None,
+            summary: None,
         }),
     )
 }
@@ -675,6 +789,8 @@ fn ensure_api_token(headers: &HeaderMap) -> Result<(), (StatusCode, Json<Openwrt
                 ok: false,
                 message: "unauthorized".to_string(),
                 facts: None,
+                clients: None,
+                summary: None,
             }),
         ))
     }
@@ -761,6 +877,249 @@ async fn scp_to_remote(
 
 fn shell_escape(value: &str) -> String {
     format!("'{}'", value.replace('\'', "'\"'\"'"))
+}
+
+fn parse_wireless_interface_bands(raw: &str) -> HashMap<String, String> {
+    let mut bands = HashMap::new();
+    let parsed: Value = serde_json::from_str(raw).unwrap_or(Value::Null);
+    let root = match parsed.as_object() {
+        Some(obj) => obj,
+        None => return bands,
+    };
+    for radio in root.values() {
+        let band = radio
+            .get("config")
+            .and_then(|v| v.get("band"))
+            .and_then(Value::as_str)
+            .map(normalize_band_label)
+            .or_else(|| {
+                radio.get("config")
+                    .and_then(|v| v.get("channel"))
+                    .and_then(Value::as_u64)
+                    .map(|channel| if channel <= 14 { "2.4g".to_string() } else { "5g".to_string() })
+            })
+            .unwrap_or_else(|| "other".to_string());
+        if let Some(interfaces) = radio.get("interfaces").and_then(Value::as_array) {
+            for iface in interfaces {
+                if let Some(name) = iface.get("ifname").and_then(Value::as_str) {
+                    bands.insert(name.trim().to_string(), band.clone());
+                }
+                if let Some(name) = iface.get("section").and_then(Value::as_str) {
+                    bands.insert(name.trim().to_string(), band.clone());
+                }
+                if let Some(name) = iface
+                    .get("config")
+                    .and_then(|v| v.get("ifname"))
+                    .and_then(Value::as_str)
+                {
+                    bands.insert(name.trim().to_string(), band.clone());
+                }
+            }
+        }
+    }
+    bands
+}
+
+fn parse_ip_neigh(raw: &str) -> HashMap<String, String> {
+    let mut ip_map = HashMap::new();
+    for line in raw.lines() {
+        let parts: Vec<&str> = line.split_whitespace().collect();
+        if parts.len() < 5 {
+            continue;
+        }
+        let ip = parts[0].trim().to_string();
+        let mut mac = None;
+        for window in parts.windows(2) {
+            if window[0] == "lladdr" {
+                mac = Some(window[1].trim().to_ascii_uppercase());
+                break;
+            }
+        }
+        if let Some(mac_value) = mac {
+            ip_map.insert(mac_value, ip);
+        }
+    }
+    ip_map
+}
+
+fn parse_dhcp_leases(raw: &str) -> HashMap<String, (String, String)> {
+    let mut leases = HashMap::new();
+    for line in raw.lines() {
+        let parts: Vec<&str> = line.split_whitespace().collect();
+        if parts.len() < 4 {
+            continue;
+        }
+        let mac = parts[1].trim().to_ascii_uppercase();
+        let ip = parts[2].trim().to_string();
+        let hostname = if parts[3] == "*" {
+            String::new()
+        } else {
+            parts[3].trim().to_string()
+        };
+        leases.insert(mac, (ip, hostname));
+    }
+    leases
+}
+
+fn normalize_band_label(raw: &str) -> String {
+    match raw.trim().to_ascii_lowercase().as_str() {
+        "2g" | "2.4g" | "2ghz" => "2.4g".to_string(),
+        "5g" | "5ghz" => "5g".to_string(),
+        _ => "other".to_string(),
+    }
+}
+
+fn rate_to_mbps(value: Option<&Value>) -> f64 {
+    let raw = match value {
+        Some(Value::Number(num)) => num.as_f64().unwrap_or(0.0),
+        Some(Value::Object(obj)) => obj.get("rate").and_then(Value::as_f64).unwrap_or(0.0),
+        _ => 0.0,
+    };
+    if raw > 1000.0 {
+        raw / 1000.0
+    } else {
+        raw
+    }
+}
+
+async fn collect_openwrt_clients(
+    host: &str,
+    port: u16,
+    username: &str,
+    key_path: &str,
+    hostapd_ifaces: &[String],
+    iface_bands: &HashMap<String, String>,
+    ip_map: &HashMap<String, String>,
+    lease_map: &HashMap<String, (String, String)>,
+) -> anyhow::Result<Vec<Value>> {
+    let mut clients = Vec::new();
+    for iface in hostapd_ifaces {
+        let raw = match run_ssh_command(
+            host,
+            port,
+            username,
+            key_path,
+            &format!("ubus call hostapd.{} get_clients", shell_escape(iface)),
+        )
+        .await
+        {
+            Ok(output) => output,
+            Err(err) => {
+                warn!("openwrt client probe skipped iface {}: {err}", iface);
+                continue;
+            }
+        };
+        let payload: Value = serde_json::from_str(&raw)?;
+        let stations = payload
+            .get("clients")
+            .and_then(Value::as_object)
+            .or_else(|| payload.as_object());
+        let Some(stations) = stations else {
+            continue;
+        };
+        let band = iface_bands
+            .get(iface)
+            .cloned()
+            .unwrap_or_else(|| "other".to_string());
+        for (mac, station) in stations {
+            let mac_upper = mac.trim().to_ascii_uppercase();
+            let lease = lease_map.get(&mac_upper);
+            let ip = ip_map
+                .get(&mac_upper)
+                .cloned()
+                .or_else(|| lease.map(|item| item.0.clone()))
+                .unwrap_or_default();
+            let hostname = lease
+                .map(|item| item.1.clone())
+                .filter(|value| !value.is_empty())
+                .unwrap_or_default();
+            let tx_bytes = station.get("tx_bytes").and_then(Value::as_u64).unwrap_or(0);
+            let rx_bytes = station.get("rx_bytes").and_then(Value::as_u64).unwrap_or(0);
+            let signal_dbm = station
+                .get("signal")
+                .and_then(Value::as_i64)
+                .map(|v| v as i32)
+                .unwrap_or(0);
+            let connected_seconds = station
+                .get("connected_time")
+                .and_then(Value::as_u64)
+                .map(|v| v as u32)
+                .unwrap_or(0);
+            clients.push(serde_json::json!({
+                "iface": iface,
+                "band": band,
+                "mac": mac_upper,
+                "ip": ip,
+                "hostname": hostname,
+                "signal_dbm": signal_dbm,
+                "upload_rate_mbps": rate_to_mbps(station.get("tx_rate")),
+                "download_rate_mbps": rate_to_mbps(station.get("rx_rate")),
+                "upload_bytes_total": tx_bytes,
+                "download_bytes_total": rx_bytes,
+                "connected_seconds": connected_seconds
+            }));
+        }
+    }
+    clients.sort_by(|left, right| {
+        left.get("band")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .cmp(right.get("band").and_then(Value::as_str).unwrap_or(""))
+            .then_with(|| {
+                left.get("ip")
+                    .and_then(Value::as_str)
+                    .unwrap_or("")
+                    .cmp(right.get("ip").and_then(Value::as_str).unwrap_or(""))
+            })
+            .then_with(|| {
+                left.get("mac")
+                    .and_then(Value::as_str)
+                    .unwrap_or("")
+                    .cmp(right.get("mac").and_then(Value::as_str).unwrap_or(""))
+            })
+    });
+    Ok(clients)
+}
+
+fn summarize_clients(clients: &[Value]) -> Value {
+    let mut count_24 = 0_u64;
+    let mut count_5 = 0_u64;
+    let mut upload_rate = 0.0_f64;
+    let mut download_rate = 0.0_f64;
+    let mut upload_bytes = 0.0_f64;
+    let mut download_bytes = 0.0_f64;
+    for client in clients {
+        match client.get("band").and_then(Value::as_str).unwrap_or("other") {
+            "2.4g" => count_24 += 1,
+            "5g" => count_5 += 1,
+            _ => {}
+        }
+        upload_rate += client
+            .get("upload_rate_mbps")
+            .and_then(Value::as_f64)
+            .unwrap_or(0.0);
+        download_rate += client
+            .get("download_rate_mbps")
+            .and_then(Value::as_f64)
+            .unwrap_or(0.0);
+        upload_bytes += client
+            .get("upload_bytes_total")
+            .and_then(Value::as_f64)
+            .unwrap_or(0.0);
+        download_bytes += client
+            .get("download_bytes_total")
+            .and_then(Value::as_f64)
+            .unwrap_or(0.0);
+    }
+    serde_json::json!({
+        "client_count_total": clients.len(),
+        "client_count_24g": count_24,
+        "client_count_5g": count_5,
+        "upload_rate_mbps": upload_rate,
+        "download_rate_mbps": download_rate,
+        "upload_bytes_total": upload_bytes,
+        "download_bytes_total": download_bytes
+    })
 }
 
 fn sanitize_filename(filename: &str) -> String {

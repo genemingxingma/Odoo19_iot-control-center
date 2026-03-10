@@ -16,4 +16,5 @@ from . import res_config_settings
 from . import iot_openwrt_template
 from . import iot_openwrt_firmware
 from . import iot_openwrt_job
+from . import iot_openwrt_client
 from . import iot_openwrt_ap

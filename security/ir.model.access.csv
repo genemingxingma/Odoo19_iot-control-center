@@ -59,3 +59,6 @@ access_iot_openwrt_firmware_admin,access.iot.openwrt.firmware.admin,model_iot_op
 access_iot_openwrt_job_user,access.iot.openwrt.job.user,model_iot_openwrt_job,iot_control_center.group_iot_user,1,0,0,0
 access_iot_openwrt_job_manager,access.iot.openwrt.job.manager,model_iot_openwrt_job,iot_control_center.group_iot_manager,1,1,0,0
 access_iot_openwrt_job_admin,access.iot.openwrt.job.admin,model_iot_openwrt_job,base.group_system,1,1,1,1
+access_iot_openwrt_client_user,access.iot.openwrt.client.user,model_iot_openwrt_client,iot_control_center.group_iot_user,1,0,0,0
+access_iot_openwrt_client_manager,access.iot.openwrt.client.manager,model_iot_openwrt_client,iot_control_center.group_iot_manager,1,1,0,0
+access_iot_openwrt_client_admin,access.iot.openwrt.client.admin,model_iot_openwrt_client,base.group_system,1,1,1,1
