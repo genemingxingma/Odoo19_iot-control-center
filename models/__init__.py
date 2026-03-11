@@ -2,6 +2,10 @@ from . import iot_department
 from . import iot_location
 from . import iot_device_group
 from . import iot_device
+from . import iot_attendance_device
+from . import iot_attendance_user
+from . import iot_attendance_punch
+from . import iot_attendance_request
 from . import iot_schedule
 from . import iot_firmware
 from . import iot_firmware_upgrade_log
@@ -19,3 +23,4 @@ from . import iot_openwrt_firmware
 from . import iot_openwrt_job
 from . import iot_openwrt_client
 from . import iot_openwrt_ap
+from . import iot_hr_employee

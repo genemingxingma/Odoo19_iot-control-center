@@ -31,8 +31,22 @@ patch(ListController.prototype, {
                 this.__iotOpenwrtLastRefreshAt = now;
                 Promise.resolve().then(async () => {
                     try {
-                        await this.iotOpenwrtOrm.call("iot.openwrt.ap", "refresh_live_stats", [ids]);
-                        await this.model.root.load();
+                        const response = await this.iotOpenwrtOrm.call(
+                            "iot.openwrt.ap",
+                            "refresh_live_stats",
+                            [ids]
+                        );
+                        const telemetryById = new Map(
+                            (response?.items || []).map((item) => [item.id, item.telemetry || {}])
+                        );
+                        for (const record of this.model.root.records || []) {
+                            const telemetry = telemetryById.get(record.resId);
+                            if (!telemetry) {
+                                continue;
+                            }
+                            Object.assign(record.data, telemetry);
+                        }
+                        this.model.notify();
                     } catch {
                         // Keep cached data if refresh fails.
                     }

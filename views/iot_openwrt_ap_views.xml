@@ -6,8 +6,6 @@
         <field name="arch" type="xml">
             <list>
                 <field name="name"/>
-                <field name="host"/>
-                <field name="company_id"/>
                 <field name="model"/>
                 <field name="client_count_24g"/>
                 <field name="client_count_5g"/>

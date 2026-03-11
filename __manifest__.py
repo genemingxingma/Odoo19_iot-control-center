@@ -8,7 +8,7 @@
     "company": "iMyTest",
     "images": ["static/description/icon.png"],
     "license": "LGPL-3",
-    "depends": ["base", "web", "mail", "hr", "stock"],
+    "depends": ["base", "web", "mail", "hr", "hr_attendance", "stock"],
     "data": [
         "security/iot_security.xml",
         "security/ir.model.access.csv",
@@ -21,6 +21,11 @@
         "views/iot_location_views.xml",
         "views/iot_device_group_views.xml",
         "views/iot_message_views.xml",
+        "views/iot_attendance_menu_views.xml",
+        "views/iot_attendance_user_views.xml",
+        "views/iot_attendance_punch_views.xml",
+        "views/iot_attendance_request_views.xml",
+        "views/iot_attendance_device_views.xml",
         "views/iot_control_board_views.xml",
         "views/th_gateway_views.xml",
         "views/th_sensor_group_views.xml",
@@ -44,7 +49,6 @@
     "assets": {
         "web.assets_backend": [
             "iot_control_center/static/src/css/control_board.css",
-            "iot_control_center/static/src/js/openwrt_ap_list_live_refresh.js",
         ],
         "web.assets_backend_lazy": [
             "iot_control_center/static/src/xml/delay_countdown_field.xml",

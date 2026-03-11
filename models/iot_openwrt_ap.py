@@ -177,7 +177,7 @@ class IoTOpenwrtAP(models.Model):
     def refresh_live_stats(self, ids):
         records = self.browse(ids).exists()
         if not records:
-            return {"ok": True, "refreshed": 0}
+            return {"ok": True, "refreshed": 0, "items": []}
         payload = {
             "items": [
                 {
@@ -191,7 +191,16 @@ class IoTOpenwrtAP(models.Model):
                 for rec in records
             ]
         }
-        return self._call_middleware("/v1/openwrt/refresh_bulk", payload)
+        response = self._call_middleware("/v1/openwrt/refresh_bulk", payload)
+        data_map = records._get_live_telemetry_map(force=True)
+        response["items"] = [
+            {
+                "id": rec.id,
+                "telemetry": data_map.get(rec.id) or self._empty_live_telemetry(),
+            }
+            for rec in records
+        ]
+        return response
 
     def _create_job(self, job_type, payload):
         self.ensure_one()
@@ -266,7 +275,20 @@ class IoTOpenwrtAP(models.Model):
         if isinstance(cache, dict):
             return cache
         data_map = {rec.id: self._empty_live_telemetry() for rec in self}
-        payload = {
+        refresh_payload = {
+            "items": [
+                {
+                    "id": rec.id,
+                    "host": (rec.host or "").strip(),
+                    "port": int(rec.ssh_port or 22),
+                    "username": (rec.ssh_user or "").strip() or "root",
+                    "key_path": self._middleware_private_key_path() or None,
+                    "auth_token": rec.auth_token,
+                }
+                for rec in self
+            ]
+        }
+        cache_payload = {
             "items": [
                 {
                     "id": rec.id,
@@ -278,7 +300,8 @@ class IoTOpenwrtAP(models.Model):
             ]
         }
         try:
-            response = self._call_middleware("/v1/openwrt/cache_bulk", payload)
+            self._call_middleware("/v1/openwrt/refresh_bulk", refresh_payload)
+            response = self._call_middleware("/v1/openwrt/cache_bulk", cache_payload)
             cache_rows = response.get("items") or []
             for item in cache_rows:
                 rec_id = int(item.get("id") or 0)

@@ -11,6 +11,7 @@ class IoTControlBoard(models.Model):
         [
             ("relay", "Relay"),
             ("th", "Temperature/Humidity"),
+            ("attendance", "Attendance"),
             ("openwrt", "OpenWrt AC"),
             ("other", "Other"),
         ],
@@ -76,6 +77,8 @@ class IoTControlBoard(models.Model):
         Sensor = self.env["iot.th.sensor"].sudo()
         Alert = self.env["iot.th.alert"].sudo()
         OpenwrtAP = self.env["iot.openwrt.ap"].sudo()
+        AttendanceDevice = self.env["iot.attendance.device"].sudo()
+        AttendancePunch = self.env["iot.attendance.punch"].sudo()
 
         for rec in self:
             if rec.key == "relay":
@@ -98,6 +101,11 @@ class IoTControlBoard(models.Model):
                         ("status", "=", "online"),
                     ]
                 )
+            elif rec.key == "attendance":
+                rec.metric_1_label = "Devices"
+                rec.metric_1_value = AttendanceDevice.search_count([("active", "=", True)])
+                rec.metric_2_label = "Punches"
+                rec.metric_2_value = AttendancePunch.search_count([])
             else:
                 rec.metric_1_label = "Items"
                 rec.metric_1_value = Gateway.search_count([])
@@ -125,6 +133,13 @@ class IoTControlBoard(models.Model):
                 "iot_control_center.action_iot_openwrt_ap",
                 "OpenWrt APs",
                 "iot.openwrt.ap",
+                default_view_mode="list,form",
+            )
+        if self.key == "attendance":
+            return self._safe_window_action(
+                "iot_control_center.action_iot_attendance_device",
+                "Attendance Devices",
+                "iot.attendance.device",
                 default_view_mode="list,form",
             )
         if self.action_id and self.action_id.type == "ir.actions.act_window":

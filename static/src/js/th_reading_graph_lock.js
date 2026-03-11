@@ -3,8 +3,58 @@
 import { patch } from "@web/core/utils/patch";
 import { GraphRenderer } from "@web/views/graph/graph_renderer";
 import { GraphModel } from "@web/views/graph/graph_model";
+
 function isTHReading(renderer) {
     return renderer?.model?.metaData?.resModel === "iot.th.reading";
+}
+
+function parseServerDateTime(value) {
+    if (!value || typeof value !== "string") {
+        return null;
+    }
+    const match = value.match(
+        /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?)?$/
+    );
+    if (!match) {
+        return null;
+    }
+    const [, year, month, day, hour = "00", minute = "00", second = "00"] = match;
+    const utcMillis = Date.UTC(
+        Number(year),
+        Number(month) - 1,
+        Number(day),
+        Number(hour),
+        Number(minute),
+        Number(second)
+    );
+    return new Date(utcMillis);
+}
+
+function formatDateBucketLabel(value, type) {
+    if (!value) {
+        return "";
+    }
+    if (type === "date") {
+        const dateOnly = parseServerDateTime(`${value} 00:00:00`);
+        return dateOnly
+            ? new Intl.DateTimeFormat(undefined, {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+              }).format(dateOnly)
+            : String(value);
+    }
+    const dateTime = parseServerDateTime(value);
+    return dateTime
+        ? new Intl.DateTimeFormat(undefined, {
+              year: "numeric",
+              month: "2-digit",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false,
+          }).format(dateTime)
+        : String(value);
 }
 
 function normalizeMeasures(renderer) {
@@ -131,7 +181,7 @@ patch(GraphModel.prototype, {
                     rawValues.push({ [gb.spec]: value });
                     let label;
                     if (["date", "datetime"].includes(type)) {
-                        label = String(value || "");
+                        label = formatDateBucketLabel(value, type);
                     } else if (["many2many", "many2one"].includes(type) && Array.isArray(value)) {
                         label = value[1] || "";
                     } else if (value === false || value === null || value === undefined) {
@@ -213,13 +263,8 @@ patch(GraphModel.prototype, {
                     const selected = (fieldDef.selection || []).find((s) => s[0] === val);
                     label = selected ? selected[1] : val;
                 } else if (["date", "datetime"].includes(type)) {
-                    // Use a stable bucket key to avoid 12h-label collisions
-                    // (e.g., 01:00 AM and 01:00 PM both rendered as "01:00").
-                    if (Array.isArray(val)) {
-                        label = String(val[0] ?? val[1] ?? "");
-                    } else {
-                        label = String(val ?? "");
-                    }
+                    const bucketValue = Array.isArray(val) ? (val[0] ?? val[1] ?? "") : (val ?? "");
+                    label = formatDateBucketLabel(bucketValue, type);
                 } else {
                     label = val;
                 }

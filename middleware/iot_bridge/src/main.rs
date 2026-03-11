@@ -17,6 +17,7 @@ use serde_json::{Map, Value};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::process::Command;
+use tokio::task::JoinSet;
 use tokio::sync::RwLock;
 use tracing::{error, info, warn};
 
@@ -405,60 +406,70 @@ async fn openwrt_refresh_bulk(
 ) -> Result<Json<Value>, (StatusCode, Json<OpenwrtActionResponse>)> {
     ensure_api_token(&headers)?;
     let cfg = Config::from_env().map_err(openwrt_internal_err)?;
+    let mut tasks = JoinSet::new();
+    for item in req.items {
+        let state = state.clone();
+        let default_key_path = cfg.openwrt_ssh_key_path.clone();
+        tasks.spawn(async move {
+            let key_path = match resolve_key_path(item.key_path, default_key_path) {
+                Ok(v) => v,
+                Err(err) => {
+                    let _ = state_for_heartbeat_writeback(
+                        &state,
+                        &OpenwrtHeartbeatPayload {
+                            id: item.id,
+                            auth_token: item.auth_token.clone(),
+                            ok: false,
+                            mode: "probe".to_string(),
+                            error: Some(err.to_string()),
+                            facts: None,
+                        },
+                    )
+                    .await;
+                    return false;
+                }
+            };
+            match perform_openwrt_probe(&item.host, item.port, &item.username, &key_path).await {
+                Ok(result) => {
+                    cache_openwrt_probe(&state.openwrt_cache, &item.host, item.port, &item.username, &result).await;
+                    let _ = state_for_heartbeat_writeback(
+                        &state,
+                        &OpenwrtHeartbeatPayload {
+                            id: item.id,
+                            auth_token: item.auth_token.clone(),
+                            ok: true,
+                            mode: "probe".to_string(),
+                            error: None,
+                            facts: result.facts.clone(),
+                        },
+                    )
+                    .await;
+                    true
+                }
+                Err(err) => {
+                    let _ = state_for_heartbeat_writeback(
+                        &state,
+                        &OpenwrtHeartbeatPayload {
+                            id: item.id,
+                            auth_token: item.auth_token.clone(),
+                            ok: false,
+                            mode: "probe".to_string(),
+                            error: Some(err.to_string()),
+                            facts: None,
+                        },
+                    )
+                    .await;
+                    false
+                }
+            }
+        });
+    }
     let mut refreshed = 0_u64;
     let mut failed = 0_u64;
-    for item in req.items {
-        let key_path = match resolve_key_path(item.key_path, cfg.openwrt_ssh_key_path.clone()) {
-            Ok(v) => v,
-            Err(err) => {
-                failed += 1;
-                let _ = state_for_heartbeat_writeback(
-                    &state,
-                    &OpenwrtHeartbeatPayload {
-                        id: item.id,
-                        auth_token: item.auth_token.clone(),
-                        ok: false,
-                        mode: "probe".to_string(),
-                        error: Some(err.to_string()),
-                        facts: None,
-                    },
-                )
-                .await;
-                continue;
-            }
-        };
-        match perform_openwrt_probe(&item.host, item.port, &item.username, &key_path).await {
-            Ok(result) => {
-                cache_openwrt_probe(&state.openwrt_cache, &item.host, item.port, &item.username, &result).await;
-                let _ = state_for_heartbeat_writeback(
-                    &state,
-                    &OpenwrtHeartbeatPayload {
-                        id: item.id,
-                        auth_token: item.auth_token.clone(),
-                        ok: true,
-                        mode: "probe".to_string(),
-                        error: None,
-                        facts: result.facts.clone(),
-                    },
-                )
-                .await;
-                refreshed += 1;
-            }
-            Err(err) => {
-                let _ = state_for_heartbeat_writeback(
-                    &state,
-                    &OpenwrtHeartbeatPayload {
-                        id: item.id,
-                        auth_token: item.auth_token.clone(),
-                        ok: false,
-                        mode: "probe".to_string(),
-                        error: Some(err.to_string()),
-                        facts: None,
-                    },
-                )
-                .await;
-                failed += 1;
-            }
+    while let Some(result) = tasks.join_next().await {
+        match result {
+            Ok(true) => refreshed += 1,
+            Ok(false) | Err(_) => failed += 1,
         }
     }
     Ok(Json(serde_json::json!({

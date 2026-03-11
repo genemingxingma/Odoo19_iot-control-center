@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_iot_attendance_root" name="Attendance" parent="menu_iot_mode_detailed" sequence="15" groups="base.group_erp_manager"/>
+</odoo>

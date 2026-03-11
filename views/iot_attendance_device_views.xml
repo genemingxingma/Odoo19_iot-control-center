@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_iot_attendance_device_tree" model="ir.ui.view">
+        <field name="name">iot.attendance.device.tree</field>
+        <field name="model">iot.attendance.device</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="serial_number"/>
+                <field name="protocol"/>
+                <field name="company_id"/>
+                <field name="adms_last_seen_at"/>
+                <field name="last_sync_message"/>
+                <field name="sync_enabled"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_iot_attendance_device_form" model="ir.ui.view">
+        <field name="name">iot.attendance.device.form</field>
+        <field name="model">iot.attendance.device</field>
+        <field name="arch" type="xml">
+            <form string="Attendance Device">
+                <header>
+                    <button name="action_test_connection" string="Test Connection" type="object" class="btn-secondary" invisible="protocol != 'zk_tcp'"/>
+                    <button name="action_sync_now" string="Sync Now" type="object" class="btn-primary" invisible="protocol != 'zk_tcp'"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button type="action" class="oe_stat_button" icon="fa-list" name="%(action_iot_attendance_punch)d" context="{'search_default_device_id': id, 'default_device_id': id}">
+                            <field name="punch_count" widget="statinfo" string="Punches"/>
+                        </button>
+                        <button type="action" class="oe_stat_button" icon="fa-users" name="%(action_iot_attendance_user)d" context="{'search_default_device_id': id, 'default_device_id': id}">
+                            <field name="user_count" widget="statinfo" string="Mappings"/>
+                        </button>
+                        <button type="action" class="oe_stat_button" icon="fa-exchange" name="%(action_iot_attendance_request)d" context="{'search_default_device_id': id, 'default_device_id': id}">
+                            <field name="request_count" widget="statinfo" string="Requests"/>
+                        </button>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="protocol"/>
+                            <field name="serial_number"/>
+                            <field name="sync_enabled"/>
+                            <field name="punch_direction_mode"/>
+                            <field name="timezone"/>
+                        </group>
+                        <group>
+                            <field name="host" invisible="protocol != 'zk_tcp'"/>
+                            <field name="port" invisible="protocol != 'zk_tcp'"/>
+                            <field name="password" password="True" invisible="protocol != 'zk_tcp'"/>
+                            <field name="auto_clear_after_sync" invisible="protocol != 'zk_tcp'"/>
+                            <field name="active"/>
+                            <field name="adms_last_seen_at" readonly="1"/>
+                            <field name="last_sync_at" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="ADMS / Push" invisible="protocol != 'adms_http'">
+                        <field name="adms_https_url" widget="url" readonly="1" string="HTTPS URL"/>
+                        <field name="adms_http_url" widget="url" readonly="1" string="HTTP URL"/>
+                        <field name="adms_last_payload" widget="text" readonly="1"/>
+                    </group>
+                    <group string="Webhook" invisible="protocol != 'http_push'">
+                        <field name="webhook_url" widget="url" readonly="1"/>
+                        <field name="webhook_token" password="True"/>
+                        <button name="action_generate_token" type="object" string="Generate Token"/>
+                    </group>
+                    <group string="Status">
+                        <field name="last_sync_message" readonly="1"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_iot_attendance_device" model="ir.actions.act_window">
+        <field name="name">Attendance Devices</field>
+        <field name="res_model">iot.attendance.device</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_iot_attendance_device" name="Devices" parent="menu_iot_attendance_root" action="action_iot_attendance_device" sequence="10" groups="base.group_erp_manager"/>
+</odoo>
