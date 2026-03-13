@@ -55,6 +55,7 @@
             "iot_control_center/static/src/js/delay_countdown_field.js",
             "iot_control_center/static/src/xml/th_reading_graph_lock.xml",
             "iot_control_center/static/src/js/th_reading_graph_lock.js",
+            "iot_control_center/static/src/js/openwrt_ap_list_live_refresh.js",
         ],
     },
     "installable": True,

@@ -4,9 +4,15 @@
         <field name="name">iot.openwrt.ap.list</field>
         <field name="model">iot.openwrt.ap</field>
         <field name="arch" type="xml">
-            <list>
+            <list decoration-success="online" decoration-danger="status == 'error'" decoration-muted="status == 'offline'">
                 <field name="name"/>
                 <field name="model"/>
+                <field name="company_id" optional="show"/>
+                <field name="department_id" optional="hide"/>
+                <field name="location_id" optional="hide"/>
+                <field name="host"/>
+                <field name="online" optional="show" readonly="1"/>
+                <field name="status" widget="badge"/>
                 <field name="client_count_24g"/>
                 <field name="client_count_5g"/>
                 <field name="upload_rate_display"/>
@@ -15,8 +21,8 @@
                 <field name="download_total_display"/>
                 <field name="openwrt_version"/>
                 <field name="template_id"/>
-                <field name="status"/>
                 <field name="last_seen"/>
+                <field name="last_error" optional="hide"/>
             </list>
         </field>
     </record>
