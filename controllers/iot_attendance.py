@@ -83,20 +83,6 @@ class IoTAttendanceController(http.Controller):
             log.device_id = device.id
         return self._plain_ok("OK")
 
-    @http.route(["/", "/index"], type="http", auth="none", methods=["GET", "POST"], csrf=False, sitemap=False)
-    def adms_root_compat(self, **kwargs):
-        # Compatibility entrypoint for ADMS devices that only allow host:port input.
-        # Non-ADMS browser access keeps using the standard Odoo web entrypoint.
-        serial_number = (request.params.get("SN") or request.params.get("sn") or "").strip()
-        table = (request.params.get("table") or request.params.get("Table") or "").strip()
-        payload_text = (request.httprequest.data or b"").decode("utf-8", errors="ignore")
-        adms_hint = bool(serial_number or table or payload_text.strip())
-        if not adms_hint:
-            return request.redirect("/web", code=303)
-        if table or payload_text.strip():
-            return self.adms_cdata(**kwargs)
-        return self.adms_getrequest(**kwargs)
-
     @http.route(["/cdata", "/iclock/cdata"], type="http", auth="none", methods=["GET", "POST"], csrf=False)
     def adms_cdata(self, **kwargs):
         serial_number = (request.params.get("SN") or request.params.get("sn") or "").strip()
