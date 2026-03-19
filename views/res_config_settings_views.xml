@@ -124,6 +124,12 @@
                         <setting string="TH Online Timeout (sec)">
                             <field name="iot_th_online_timeout_sec"/>
                         </setting>
+                        <setting string="TH Raw Retention (days)">
+                            <field name="iot_th_raw_retention_days"/>
+                            <div class="text-muted">
+                                Raw node-frequency readings older than this are compressed into hourly averages unless the sensor keeps full history.
+                            </div>
+                        </setting>
                     </block>
                     <block title="Attendance ADMS">
                         <setting string="Attendance ADMS External Port">

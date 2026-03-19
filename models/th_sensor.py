@@ -50,7 +50,7 @@ class IoTTHSensor(models.Model):
     keep_full_history = fields.Boolean(
         string="Keep Full History",
         default=False,
-        help="If enabled, this node keeps all raw readings and skips 30-day rollup.",
+        help="If enabled, this node keeps all raw readings and skips historical hourly rollup.",
     )
     avg_temperature = fields.Float(compute="_compute_stats")
     avg_humidity = fields.Float(compute="_compute_stats")

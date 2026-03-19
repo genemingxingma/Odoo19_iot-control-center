@@ -9,6 +9,7 @@
                 <field name="node_id"/>
                 <field name="sensor_id"/>
                 <field name="sensor_code"/>
+                <field name="is_hourly_rollup"/>
                 <field name="is_daily_rollup"/>
                 <field name="temperature"/>
                 <field name="humidity"/>

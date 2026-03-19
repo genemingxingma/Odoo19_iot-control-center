@@ -41,6 +41,10 @@ class ResConfigSettings(models.TransientModel):
     iot_th_tcp_host = fields.Char(config_parameter="iot_control_center.th_tcp_host", default="0.0.0.0")
     iot_th_tcp_port = fields.Integer(config_parameter="iot_control_center.th_tcp_port", default=9910)
     iot_th_online_timeout_sec = fields.Integer(config_parameter="iot_control_center.th_online_timeout_sec", default=300)
+    iot_th_raw_retention_days = fields.Integer(
+        config_parameter="iot_control_center.th_raw_retention_days",
+        default=15,
+    )
     iot_middleware_enabled = fields.Boolean(config_parameter="iot_control_center.middleware_enabled", default=False)
     iot_middleware_base_url = fields.Char(config_parameter="iot_control_center.middleware_base_url", default="http://127.0.0.1:8099")
     iot_middleware_token = fields.Char(config_parameter="iot_control_center.middleware_token", default="imytest-middleware-token")
