@@ -1,7 +1,7 @@
 import hashlib
 import json
 
-from odoo import api, fields, models
+from odoo import SUPERUSER_ID, api, fields, models
 
 
 class IoTAttendancePunch(models.Model):
@@ -61,7 +61,7 @@ class IoTAttendancePunch(models.Model):
             raw_payload = vals.get("raw_payload")
             if raw_payload and not isinstance(raw_payload, str):
                 vals["raw_payload"] = json.dumps(raw_payload, ensure_ascii=True)
-        records = super().create(vals_list)
+        records = super(IoTAttendancePunch, self.with_user(SUPERUSER_ID).sudo()).create(vals_list)
         records._process_punches()
         return records
 
@@ -75,19 +75,33 @@ class IoTAttendancePunch(models.Model):
         self.ensure_one()
         if not self.employee_id:
             return self.env["hr.attendance"]
-        return self.env["hr.attendance"].search(
+        return self.env["hr.attendance"].with_user(SUPERUSER_ID).sudo().search(
             [("employee_id", "=", self.employee_id.id), ("check_out", "=", False)],
             order="check_in desc, id desc",
             limit=1,
         )
 
+    def _attendance_service(self):
+        return self.env["hr.attendance"].with_user(SUPERUSER_ID).sudo().with_context(
+            mail_create_nolog=True,
+            mail_create_nosubscribe=True,
+            mail_notrack=True,
+            tracking_disable=True,
+        )
+
     def _process_punches(self):
+        attendance_model = self._attendance_service()
         for punch in self.sorted(key=lambda rec: (rec.punch_time or fields.Datetime.now(), rec.id)):
             if punch.state != "new":
                 continue
             if not punch.employee_id:
-                punch._mark("error", "No employee mapping found for this punch.")
-                continue
+                # Re-resolve employee at processing time so records imported before mapping can be recovered.
+                employee = punch.device_id._resolve_employee(punch.device_user_id, device_uid=punch.device_uid)
+                if employee:
+                    punch.employee_id = employee.id
+                else:
+                    punch._mark("error", "No employee mapping found for this punch.")
+                    continue
             open_attendance = punch._get_open_attendance()
             if punch.direction == "out":
                 if not open_attendance:
@@ -103,16 +117,29 @@ class IoTAttendancePunch(models.Model):
                 if open_attendance:
                     punch._mark("ignored", "Employee already has an open attendance.")
                     continue
-                attendance = self.env["hr.attendance"].create({"employee_id": punch.employee_id.id, "check_in": punch.punch_time})
+                attendance = attendance_model.create({"employee_id": punch.employee_id.id, "check_in": punch.punch_time})
                 punch._mark("processed", "Created check-in attendance.", attendance=attendance)
                 continue
             if open_attendance and punch.punch_time > open_attendance.check_in:
                 open_attendance.write({"check_out": punch.punch_time})
                 punch._mark("processed", "Auto-matched as check-out.", attendance=open_attendance)
             else:
-                attendance = self.env["hr.attendance"].create({"employee_id": punch.employee_id.id, "check_in": punch.punch_time})
+                attendance = attendance_model.create({"employee_id": punch.employee_id.id, "check_in": punch.punch_time})
                 punch._mark("processed", "Auto-created as check-in.", attendance=attendance)
 
     @api.model
     def cron_reprocess_pending(self):
-        self.search([("state", "=", "new")], order="punch_time asc, id asc", limit=500)._process_punches()
+        pending = self.search([("state", "=", "new")], order="punch_time asc, id asc", limit=500)
+        retry = self.search(
+            [
+                ("state", "=", "error"),
+                ("message", "in", [
+                    "No employee mapping found for this punch.",
+                    "Expected singleton: res.users()",
+                ]),
+            ],
+            order="punch_time asc, id asc",
+            limit=500,
+        )
+        (pending | retry).write({"state": "new", "message": False})
+        (pending | retry)._process_punches()
