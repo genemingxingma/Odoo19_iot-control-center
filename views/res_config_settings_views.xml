@@ -98,6 +98,12 @@
                                 High-frequency processed telemetry is kept for a much shorter time than command/status messages.
                             </div>
                         </setting>
+                        <setting string="MQTT Telemetry Sample Window (sec)">
+                            <field name="iot_mqtt_telemetry_sample_window_seconds"/>
+                            <div class="text-muted">
+                                Relay telemetry from the same device/topic inside this window is collapsed into one queue row to reduce database growth.
+                            </div>
+                        </setting>
                         <setting string="Unbound Device Retention (days)">
                             <field name="iot_device_retention_days"/>
                         </setting>

@@ -275,19 +275,6 @@ class IoTOpenwrtAP(models.Model):
         if isinstance(cache, dict):
             return cache
         data_map = {rec.id: self._empty_live_telemetry() for rec in self}
-        refresh_payload = {
-            "items": [
-                {
-                    "id": rec.id,
-                    "host": (rec.host or "").strip(),
-                    "port": int(rec.ssh_port or 22),
-                    "username": (rec.ssh_user or "").strip() or "root",
-                    "key_path": self._middleware_private_key_path() or None,
-                    "auth_token": rec.auth_token,
-                }
-                for rec in self
-            ]
-        }
         cache_payload = {
             "items": [
                 {
@@ -300,7 +287,21 @@ class IoTOpenwrtAP(models.Model):
             ]
         }
         try:
-            self._call_middleware("/v1/openwrt/refresh_bulk", refresh_payload)
+            if force:
+                refresh_payload = {
+                    "items": [
+                        {
+                            "id": rec.id,
+                            "host": (rec.host or "").strip(),
+                            "port": int(rec.ssh_port or 22),
+                            "username": (rec.ssh_user or "").strip() or "root",
+                            "key_path": self._middleware_private_key_path() or None,
+                            "auth_token": rec.auth_token,
+                        }
+                        for rec in self
+                    ]
+                }
+                self._call_middleware("/v1/openwrt/refresh_bulk", refresh_payload)
             response = self._call_middleware("/v1/openwrt/cache_bulk", cache_payload)
             cache_rows = response.get("items") or []
             for item in cache_rows:
@@ -586,7 +587,7 @@ class IoTOpenwrtAP(models.Model):
                 )
                 rec._write_job_result(job, response, success=True)
             except Exception as exc:
-                rec.write({"status": "error", "last_error": str(exc)})
+                rec.with_context(**self._system_no_track_context()).write({"status": "error", "last_error": str(exc)})
                 rec._write_job_result(job, {"ok": False}, success=False, note=str(exc))
                 raise
         return True
@@ -608,7 +609,7 @@ class IoTOpenwrtAP(models.Model):
                 )
                 rec._write_job_result(job, response, success=True)
             except Exception as exc:
-                rec.write({"status": "error", "last_error": str(exc)})
+                rec.with_context(**self._system_no_track_context()).write({"status": "error", "last_error": str(exc)})
                 rec._write_job_result(job, {"ok": False}, success=False, note=str(exc))
                 raise
         return True
@@ -636,7 +637,9 @@ class IoTOpenwrtAP(models.Model):
                 )
                 rec._write_job_result(job, response, success=True)
             except Exception as exc:
-                rec.write({"status": "error", "last_error": str(exc), "last_locate_at": fields.Datetime.now()})
+                rec.with_context(**self._system_no_track_context()).write(
+                    {"status": "error", "last_error": str(exc), "last_locate_at": fields.Datetime.now()}
+                )
                 rec._write_job_result(job, {"ok": False}, success=False, note=str(exc))
                 raise
         return True
@@ -662,7 +665,9 @@ class IoTOpenwrtAP(models.Model):
                 )
                 rec._write_job_result(job, response, success=True)
             except Exception as exc:
-                rec.write({"status": "error", "last_error": str(exc), "last_locate_at": fields.Datetime.now()})
+                rec.with_context(**self._system_no_track_context()).write(
+                    {"status": "error", "last_error": str(exc), "last_locate_at": fields.Datetime.now()}
+                )
                 rec._write_job_result(job, {"ok": False}, success=False, note=str(exc))
                 raise
         return True
@@ -692,7 +697,7 @@ class IoTOpenwrtAP(models.Model):
                 rec._write_job_result(job, response, success=True)
                 rec._probe_after_upgrade(delay_seconds=45)
             except Exception as exc:
-                rec.write({"status": "error", "last_error": str(exc)})
+                rec.with_context(**self._system_no_track_context()).write({"status": "error", "last_error": str(exc)})
                 rec._write_job_result(job, {"ok": False}, success=False, note=str(exc))
                 raise
         return True

@@ -32,6 +32,15 @@ class IoTAttendanceController(http.Controller):
         except Exception as exc:
             _logger.warning("IoT attendance device touch skipped due to DB conflict: %s", exc)
 
+    def _compact_query_params(self):
+        keep_keys = ("SN", "sn", "table", "Table", "Stamp", "stamp", "OpStamp", "ErrorDelay")
+        compact = {}
+        for key in keep_keys:
+            value = request.params.get(key)
+            if value not in (None, "", False):
+                compact[key] = value
+        return compact
+
     def _create_request_log(self, endpoint, serial_number="", remote_ip="", payload_text="", device=None, status="received", note=""):
         try:
             return request.env["iot.attendance.request"].sudo().create(
@@ -44,8 +53,8 @@ class IoTAttendanceController(http.Controller):
                     "status": status,
                     "note": note or False,
                     "device_id": device.id if device else False,
-                    "query_params": json.dumps(dict(request.params), ensure_ascii=True, sort_keys=True),
-                    "headers": json.dumps(self._headers(), ensure_ascii=True, sort_keys=True),
+                    "query_params": json.dumps(self._compact_query_params(), ensure_ascii=True, sort_keys=True) or False,
+                    "headers": False,
                 }
             )
         except Exception as exc:

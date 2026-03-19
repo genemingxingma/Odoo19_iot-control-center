@@ -45,6 +45,12 @@ class IoTMQTTMessage(models.Model):
             ON iot_mqtt_message (message_type, state, received_at DESC, id DESC)
             """
         )
+        self.env.cr.execute(
+            """
+            CREATE INDEX IF NOT EXISTS iot_mqtt_message_serial_type_topic_received_idx
+            ON iot_mqtt_message (lower(device_serial), message_type, topic, received_at DESC, id DESC)
+            """
+        )
 
     @api.model
     def _normalize_device_key(self, value):
@@ -57,6 +63,17 @@ class IoTMQTTMessage(models.Model):
     @api.model
     def _dedupe_window_seconds(self, message_type):
         return 15 if message_type == "status" else 10
+
+    @api.model
+    def _telemetry_sample_window_seconds(self):
+        raw = self.env["ir.config_parameter"].sudo().get_param(
+            "iot_control_center.mqtt_telemetry_sample_window_seconds",
+            "60",
+        )
+        try:
+            return max(int(raw or 60), 5)
+        except Exception:
+            return 60
 
     @api.model
     def _find_recent_duplicate(self, serial_key, message_type, topic, payload_text, now_value):
@@ -86,6 +103,30 @@ class IoTMQTTMessage(models.Model):
                 topic,
                 payload_text,
                 now_value - timedelta(seconds=self._dedupe_window_seconds(message_type)),
+            ],
+        )
+        row = self.env.cr.fetchone()
+        return self.browse(row[0]) if row else self.browse()
+
+    @api.model
+    def _find_recent_telemetry_slot(self, serial_key, topic, now_value):
+        if not serial_key:
+            return self.browse()
+        self.env.cr.execute(
+            """
+            SELECT id
+            FROM iot_mqtt_message
+            WHERE lower(device_serial) = %s
+              AND message_type = 'telemetry'
+              AND topic = %s
+              AND received_at >= %s
+            ORDER BY received_at DESC, id DESC
+            LIMIT 1
+            """,
+            [
+                serial_key,
+                topic,
+                now_value - timedelta(seconds=self._telemetry_sample_window_seconds()),
             ],
         )
         row = self.env.cr.fetchone()
@@ -152,6 +193,19 @@ class IoTMQTTMessage(models.Model):
             if duplicate:
                 duplicate.sudo().write({"received_at": now_value})
                 return duplicate
+            if msg_type == "telemetry":
+                slot = self._find_recent_telemetry_slot(serial_key, topic, now_value)
+                if slot:
+                    slot.sudo().write(
+                        {
+                            "payload": payload_text,
+                            "received_at": now_value,
+                            "state": "new",
+                            "processed_at": False,
+                            "error": False,
+                        }
+                    )
+                    return slot
         vals = {
             "topic": topic,
             "payload": payload_text,
@@ -321,7 +375,34 @@ class IoTMQTTMessage(models.Model):
                 )
 
     @api.model
-    def _cron_purge_old_messages(self):
+    def _delete_in_batches(self, where_sql, params, batch_size):
+        batch_size = max(int(batch_size or 5000), 100)
+        total_deleted = 0
+        while True:
+            self.env.cr.execute(
+                f"""
+                WITH doomed AS (
+                    SELECT id
+                    FROM iot_mqtt_message
+                    WHERE {where_sql}
+                    ORDER BY id
+                    LIMIT %s
+                )
+                DELETE FROM iot_mqtt_message msg
+                USING doomed
+                WHERE msg.id = doomed.id
+                """,
+                list(params) + [batch_size],
+            )
+            deleted = self.env.cr.rowcount
+            total_deleted += max(deleted, 0)
+            self.env.cr.commit()
+            if deleted < batch_size:
+                break
+        return total_deleted
+
+    @api.model
+    def _cron_purge_old_messages(self, batch_size=5000):
         icp = self.env["ir.config_parameter"].sudo()
         retention_days_raw = icp.get_param("iot_control_center.mqtt_message_retention_days", "7")
         telemetry_hours_raw = icp.get_param("iot_control_center.mqtt_telemetry_retention_hours", "24")
@@ -335,19 +416,13 @@ class IoTMQTTMessage(models.Model):
             telemetry_hours = 24
         cutoff = fields.Datetime.now() - timedelta(days=retention_days)
         telemetry_cutoff = fields.Datetime.now() - timedelta(hours=telemetry_hours)
-        self.env.cr.execute(
-            """
-            DELETE FROM iot_mqtt_message
-            WHERE message_type = 'telemetry'
-              AND state = 'done'
-              AND received_at < %s
-            """,
+        self._delete_in_batches(
+            "message_type = 'telemetry' AND state = 'done' AND received_at < %s",
             [telemetry_cutoff],
+            batch_size,
         )
-        self.env.cr.execute(
-            """
-            DELETE FROM iot_mqtt_message
-            WHERE received_at < %s
-            """,
+        self._delete_in_batches(
+            "received_at < %s",
             [cutoff],
+            batch_size,
         )

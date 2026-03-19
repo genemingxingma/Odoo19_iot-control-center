@@ -29,6 +29,10 @@ class ResConfigSettings(models.TransientModel):
         config_parameter="iot_control_center.mqtt_telemetry_retention_hours",
         default=24,
     )
+    iot_mqtt_telemetry_sample_window_seconds = fields.Integer(
+        config_parameter="iot_control_center.mqtt_telemetry_sample_window_seconds",
+        default=60,
+    )
     iot_device_retention_days = fields.Integer(
         config_parameter="iot_control_center.device_retention_days",
         default=30,

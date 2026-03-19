@@ -39,6 +39,27 @@ class IoTTHReading(models.Model):
             ON iot_th_reading (sensor_id, reported_at DESC, is_hourly_rollup, is_daily_rollup, id DESC)
             """
         )
+        self.env.cr.execute(
+            """
+            CREATE INDEX IF NOT EXISTS iot_th_reading_company_reported_sensor_idx
+            ON iot_th_reading (company_id, reported_at DESC, sensor_id, id DESC)
+            """
+        )
+        self.env.cr.execute(
+            """
+            CREATE INDEX IF NOT EXISTS iot_th_reading_graph_raw_idx
+            ON iot_th_reading (company_id, reported_at DESC, sensor_id, id DESC)
+            WHERE COALESCE(is_hourly_rollup, FALSE) = FALSE
+              AND COALESCE(is_daily_rollup, FALSE) = FALSE
+            """
+        )
+        self.env.cr.execute(
+            """
+            CREATE INDEX IF NOT EXISTS iot_th_reading_graph_hourly_idx
+            ON iot_th_reading (company_id, reported_at DESC, sensor_id, id DESC)
+            WHERE COALESCE(is_hourly_rollup, FALSE) = TRUE
+            """
+        )
 
     @api.model
     def _is_invalid_zero_pair(self, temperature, humidity):
