@@ -91,4 +91,54 @@
         <field name="interval_type">days</field>
         <field name="active">True</field>
     </record>
+
+    <record id="cron_iot_purge_attendance_punch_raw_payloads" model="ir.cron">
+        <field name="name">IoT Attendance - Purge Punch Raw Payloads</field>
+        <field name="model_id" ref="model_iot_attendance_punch"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_purge_old_raw_payloads()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active">True</field>
+    </record>
+
+    <record id="cron_iot_trim_firmware_log_payloads" model="ir.cron">
+        <field name="name">IoT - Trim Firmware Log Payloads</field>
+        <field name="model_id" ref="model_iot_firmware_upgrade_log"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_trim_old_payloads()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active">True</field>
+    </record>
+
+    <record id="cron_iot_purge_firmware_logs" model="ir.cron">
+        <field name="name">IoT - Purge Firmware Logs</field>
+        <field name="model_id" ref="model_iot_firmware_upgrade_log"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_purge_old_logs()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active">True</field>
+    </record>
+
+    <record id="cron_iot_trim_openwrt_job_payloads" model="ir.cron">
+        <field name="name">IoT OpenWrt - Trim Job Payloads</field>
+        <field name="model_id" ref="model_iot_openwrt_job"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_trim_old_payloads()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active">True</field>
+    </record>
+
+    <record id="cron_iot_purge_openwrt_jobs" model="ir.cron">
+        <field name="name">IoT OpenWrt - Purge Jobs</field>
+        <field name="model_id" ref="model_iot_openwrt_job"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_purge_old_jobs()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active">True</field>
+    </record>
 </odoo>

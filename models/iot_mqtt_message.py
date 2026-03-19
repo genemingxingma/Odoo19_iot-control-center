@@ -39,6 +39,12 @@ class IoTMQTTMessage(models.Model):
             ON iot_mqtt_message (lower(device_serial), message_type, id DESC)
             """
         )
+        self.env.cr.execute(
+            """
+            CREATE INDEX IF NOT EXISTS iot_mqtt_message_type_state_received_idx
+            ON iot_mqtt_message (message_type, state, received_at DESC, id DESC)
+            """
+        )
 
     @api.model
     def _normalize_device_key(self, value):
@@ -318,9 +324,30 @@ class IoTMQTTMessage(models.Model):
     def _cron_purge_old_messages(self):
         icp = self.env["ir.config_parameter"].sudo()
         retention_days_raw = icp.get_param("iot_control_center.mqtt_message_retention_days", "7")
+        telemetry_hours_raw = icp.get_param("iot_control_center.mqtt_telemetry_retention_hours", "24")
         try:
             retention_days = max(int(retention_days_raw or 7), 1)
         except Exception:
             retention_days = 7
+        try:
+            telemetry_hours = max(int(telemetry_hours_raw or 24), 1)
+        except Exception:
+            telemetry_hours = 24
         cutoff = fields.Datetime.now() - timedelta(days=retention_days)
-        self.env.cr.execute("DELETE FROM iot_mqtt_message WHERE received_at < %s", [cutoff])
+        telemetry_cutoff = fields.Datetime.now() - timedelta(hours=telemetry_hours)
+        self.env.cr.execute(
+            """
+            DELETE FROM iot_mqtt_message
+            WHERE message_type = 'telemetry'
+              AND state = 'done'
+              AND received_at < %s
+            """,
+            [telemetry_cutoff],
+        )
+        self.env.cr.execute(
+            """
+            DELETE FROM iot_mqtt_message
+            WHERE received_at < %s
+            """,
+            [cutoff],
+        )

@@ -5,6 +5,7 @@ from . import iot_device
 from . import iot_attendance_device
 from . import iot_attendance_user
 from . import iot_attendance_punch
+from . import iot_attendance_punch_retention
 from . import iot_attendance_request
 from . import iot_schedule
 from . import iot_firmware

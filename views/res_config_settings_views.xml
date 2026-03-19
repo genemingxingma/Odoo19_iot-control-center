@@ -46,6 +46,12 @@
                                 After this many consecutive heartbeat failures, the AP is marked offline.
                             </div>
                         </setting>
+                        <setting string="OpenWrt Job Payload Retention (days)">
+                            <field name="iot_openwrt_job_payload_retention_days"/>
+                        </setting>
+                        <setting string="OpenWrt Job Retention (days)">
+                            <field name="iot_openwrt_job_retention_days"/>
+                        </setting>
                         <setting string="Generate OpenWrt SSH Key">
                             <div class="content-group">
                                 <button name="action_generate_openwrt_ssh_key" type="object" string="Generate / Refresh SSH Key" class="btn btn-primary"/>
@@ -86,6 +92,12 @@
                         <setting string="MQTT Message Retention (days)">
                             <field name="iot_mqtt_message_retention_days"/>
                         </setting>
+                        <setting string="MQTT Telemetry Retention (hours)">
+                            <field name="iot_mqtt_telemetry_retention_hours"/>
+                            <div class="text-muted">
+                                High-frequency processed telemetry is kept for a much shorter time than command/status messages.
+                            </div>
+                        </setting>
                         <setting string="Unbound Device Retention (days)">
                             <field name="iot_device_retention_days"/>
                         </setting>
@@ -94,6 +106,12 @@
                         </setting>
                         <setting string="Firmware Base URL">
                             <field name="iot_firmware_base_url" placeholder="iot.imytest.com"/>
+                        </setting>
+                        <setting string="Firmware Log Payload Retention (days)">
+                            <field name="iot_firmware_log_payload_retention_days"/>
+                        </setting>
+                        <setting string="Firmware Log Retention (days)">
+                            <field name="iot_firmware_log_retention_days"/>
                         </setting>
                     </block>
                     <block title="Temperature/Humidity TCP Ingest">
@@ -118,6 +136,12 @@
                             <field name="iot_attendance_request_retention_days"/>
                             <div class="text-muted">
                                 High-frequency ADMS request logs older than this many days are purged automatically to keep the database lean.
+                            </div>
+                        </setting>
+                        <setting string="Attendance Punch Raw Payload Retention (days)">
+                            <field name="iot_attendance_punch_raw_retention_days"/>
+                            <div class="text-muted">
+                                Processed or ignored punch raw payloads are cleared after this many days while keeping the punch result itself.
                             </div>
                         </setting>
                     </block>

@@ -25,6 +25,10 @@ class ResConfigSettings(models.TransientModel):
         config_parameter="iot_control_center.mqtt_message_retention_days",
         default=7,
     )
+    iot_mqtt_telemetry_retention_hours = fields.Integer(
+        config_parameter="iot_control_center.mqtt_telemetry_retention_hours",
+        default=24,
+    )
     iot_device_retention_days = fields.Integer(
         config_parameter="iot_control_center.device_retention_days",
         default=30,
@@ -71,6 +75,26 @@ class ResConfigSettings(models.TransientModel):
     iot_attendance_request_retention_days = fields.Integer(
         config_parameter="iot_control_center.attendance_request_retention_days",
         default=7,
+    )
+    iot_attendance_punch_raw_retention_days = fields.Integer(
+        config_parameter="iot_control_center.attendance_punch_raw_retention_days",
+        default=7,
+    )
+    iot_firmware_log_payload_retention_days = fields.Integer(
+        config_parameter="iot_control_center.firmware_log_payload_retention_days",
+        default=7,
+    )
+    iot_firmware_log_retention_days = fields.Integer(
+        config_parameter="iot_control_center.firmware_log_retention_days",
+        default=90,
+    )
+    iot_openwrt_job_payload_retention_days = fields.Integer(
+        config_parameter="iot_control_center.openwrt_job_payload_retention_days",
+        default=7,
+    )
+    iot_openwrt_job_retention_days = fields.Integer(
+        config_parameter="iot_control_center.openwrt_job_retention_days",
+        default=30,
     )
 
     def action_generate_openwrt_ssh_key(self):

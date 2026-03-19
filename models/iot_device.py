@@ -89,6 +89,33 @@ class IoTDevice(models.Model):
     ]
 
     @api.model
+    def _runtime_no_track_fields(self):
+        return {
+            "relay_state",
+            "last_seen",
+            "firmware_version",
+            "firmware_target_version",
+            "firmware_upgrade_requested_at",
+            "firmware_upgrade_completed_at",
+            "firmware_upgrade_state",
+            "on_since",
+            "total_on_minutes",
+            "delay_duration_minutes",
+            "delay_active",
+            "delay_started_at",
+            "delay_end_at",
+            "manual_override",
+            "last_command_at",
+            "last_command_payload",
+            "schedule_dirty",
+            "schedule_version",
+            "schedule_applied_version",
+            "schedule_last_push_at",
+            "schedule_last_sync_at",
+            "module_id",
+        }
+
+    @api.model
     def _system_no_track_context(self):
         # System background updates should not create chatter/tracking history.
         return {
@@ -677,7 +704,11 @@ class IoTDevice(models.Model):
 
     def write(self, vals):
         needs_auto_sync = "group_ids" in vals
-        res = super().write(vals)
+        runtime_only = bool(vals) and set(vals).issubset(self._runtime_no_track_fields())
+        if runtime_only:
+            res = super(IoTDevice, self.with_context(**self._system_no_track_context())).write(vals)
+        else:
+            res = super().write(vals)
         if needs_auto_sync:
             self.mark_schedule_dirty(auto_sync=True)
         return res
