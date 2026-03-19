@@ -114,6 +114,12 @@
                                 Used to generate the ADMS HTTP/HTTPS address shown in attendance devices. Default is 9910.
                             </div>
                         </setting>
+                        <setting string="Attendance Request Retention (days)">
+                            <field name="iot_attendance_request_retention_days"/>
+                            <div class="text-muted">
+                                High-frequency ADMS request logs older than this many days are purged automatically to keep the database lean.
+                            </div>
+                        </setting>
                     </block>
                 </app>
             </xpath>

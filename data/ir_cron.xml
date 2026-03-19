@@ -81,4 +81,14 @@
         <field name="interval_type">days</field>
         <field name="active">True</field>
     </record>
+
+    <record id="cron_iot_purge_attendance_requests" model="ir.cron">
+        <field name="name">IoT Attendance - Purge Old Requests</field>
+        <field name="model_id" ref="model_iot_attendance_request"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_purge_old_requests()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active">True</field>
+    </record>
 </odoo>

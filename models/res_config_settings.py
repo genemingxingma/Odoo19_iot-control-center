@@ -68,6 +68,10 @@ class ResConfigSettings(models.TransientModel):
         config_parameter="iot_control_center.attendance_adms_port",
         default=8069,
     )
+    iot_attendance_request_retention_days = fields.Integer(
+        config_parameter="iot_control_center.attendance_request_retention_days",
+        default=7,
+    )
 
     def action_generate_openwrt_ssh_key(self):
         self.ensure_one()

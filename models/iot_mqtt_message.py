@@ -10,7 +10,7 @@ class IoTMQTTMessage(models.Model):
     _description = "MQTT Message Queue"
     _order = "id desc"
 
-    state = fields.Selection([("new", "New"), ("done", "Done"), ("error", "Error")], default="new", required=True)
+    state = fields.Selection([("new", "New"), ("done", "Done"), ("error", "Error")], default="new", required=True, index=True)
     topic = fields.Char(required=True, index=True)
     payload = fields.Text(required=True)
     error = fields.Text()
@@ -18,12 +18,72 @@ class IoTMQTTMessage(models.Model):
     processed_at = fields.Datetime()
 
     device_serial = fields.Char(index=True)
-    message_type = fields.Selection([("status", "Status"), ("telemetry", "Telemetry"), ("unknown", "Unknown")], default="unknown")
+    message_type = fields.Selection(
+        [("status", "Status"), ("telemetry", "Telemetry"), ("unknown", "Unknown")],
+        default="unknown",
+        index=True,
+    )
     device_id = fields.Many2one("iot.device")
+
+    @api.model
+    def init(self):
+        self.env.cr.execute(
+            """
+            CREATE INDEX IF NOT EXISTS iot_mqtt_message_state_id_idx
+            ON iot_mqtt_message (state, id)
+            """
+        )
+        self.env.cr.execute(
+            """
+            CREATE INDEX IF NOT EXISTS iot_mqtt_message_serial_type_id_idx
+            ON iot_mqtt_message (lower(device_serial), message_type, id DESC)
+            """
+        )
 
     @api.model
     def _normalize_device_key(self, value):
         return (value or "").strip().lower()
+
+    @api.model
+    def _is_noise_prone_message_type(self, message_type):
+        return message_type in ("status", "telemetry")
+
+    @api.model
+    def _dedupe_window_seconds(self, message_type):
+        return 15 if message_type == "status" else 10
+
+    @api.model
+    def _find_recent_duplicate(self, serial_key, message_type, topic, payload_text, now_value):
+        if not serial_key or not self._is_noise_prone_message_type(message_type):
+            return self.browse()
+        self.env.cr.execute(
+            """
+            SELECT id
+            FROM iot_mqtt_message
+            WHERE lower(device_serial) = %s
+              AND message_type = %s
+              AND topic = %s
+              AND payload = %s
+              AND (
+                    state = 'new'
+                    OR (
+                        state = 'done'
+                        AND received_at >= %s
+                    )
+              )
+            ORDER BY id DESC
+            LIMIT 1
+            """,
+            [
+                serial_key,
+                message_type,
+                topic,
+                payload_text,
+                now_value - timedelta(seconds=self._dedupe_window_seconds(message_type)),
+            ],
+        )
+        row = self.env.cr.fetchone()
+        return self.browse(row[0]) if row else self.browse()
 
     @api.model
     def _find_or_create_device_by_key(self, key):
@@ -75,6 +135,17 @@ class IoTMQTTMessage(models.Model):
         if len(parts) >= 3:
             serial = parts[-2]
             msg_type = parts[-1] if parts[-1] in ("status", "telemetry") else "unknown"
+        serial_key = self._normalize_device_key(serial)
+        if serial_key and self._is_noise_prone_message_type(msg_type):
+            self.env.cr.execute(
+                "SELECT pg_advisory_xact_lock(hashtext(%s))",
+                [f"iot.mqtt.message:{serial_key}:{msg_type}"],
+            )
+            now_value = fields.Datetime.now()
+            duplicate = self._find_recent_duplicate(serial_key, msg_type, topic, payload_text, now_value)
+            if duplicate:
+                duplicate.sudo().write({"received_at": now_value})
+                return duplicate
         vals = {
             "topic": topic,
             "payload": payload_text,

@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from odoo import api, fields, models
 from odoo.osv import expression
 
@@ -22,6 +24,15 @@ class IoTTHReading(models.Model):
     )
     temperature = fields.Float(required=True)
     humidity = fields.Float(required=True)
+
+    @api.model
+    def init(self):
+        self.env.cr.execute(
+            """
+            CREATE INDEX IF NOT EXISTS iot_th_reading_sensor_reported_rollup_idx
+            ON iot_th_reading (sensor_id, reported_at DESC, is_daily_rollup, id DESC)
+            """
+        )
 
     @api.model
     def _is_invalid_zero_pair(self, temperature, humidity):
@@ -86,56 +97,94 @@ class IoTTHReading(models.Model):
         )
 
     @api.model
-    def _cron_rollup_old_readings(self, retention_days=30):
+    def _cron_rollup_old_readings(self, retention_days=30, batch_size=200):
         cutoff = fields.Datetime.subtract(fields.Datetime.now(), days=int(retention_days))
-        source_domain = [
-            ("reported_at", "<", cutoff),
-            ("is_daily_rollup", "=", False),
-            ("sensor_id.keep_full_history", "=", False),
-        ]
-        source_rows = self.sudo().search(source_domain)
-        if not source_rows:
+        sensor_model = self.env["iot.th.sensor"].sudo()
+        affected_sensor_ids = set()
+        batch_size = max(int(batch_size), 1)
+
+        while True:
+            self.env.cr.execute(
+                """
+                SELECT sensor_id, bucket_day
+                FROM (
+                    SELECT
+                        reading.sensor_id AS sensor_id,
+                        date_trunc('day', reading.reported_at) AS bucket_day
+                    FROM iot_th_reading reading
+                    JOIN iot_th_sensor sensor ON sensor.id = reading.sensor_id
+                    WHERE reading.reported_at < %s
+                      AND reading.is_daily_rollup = FALSE
+                      AND COALESCE(sensor.keep_full_history, FALSE) = FALSE
+                    GROUP BY reading.sensor_id, date_trunc('day', reading.reported_at)
+                    ORDER BY bucket_day, reading.sensor_id
+                    LIMIT %s
+                ) batches
+                """,
+                [cutoff, batch_size],
+            )
+            batch_rows = self.env.cr.fetchall()
+            if not batch_rows:
+                break
+
+            for sensor_id, bucket_day in batch_rows:
+                bucket_end = bucket_day + timedelta(days=1)
+                self.env.cr.execute(
+                    """
+                    SELECT
+                        COALESCE(MAX(reading.gateway_id), MAX(sensor.gateway_id), 0),
+                        AVG(temperature),
+                        AVG(humidity)
+                    FROM iot_th_reading reading
+                    JOIN iot_th_sensor sensor ON sensor.id = reading.sensor_id
+                    WHERE reading.sensor_id = %s
+                      AND reading.reported_at >= %s
+                      AND reading.reported_at < %s
+                      AND reading.is_daily_rollup = FALSE
+                    """,
+                    [sensor_id, bucket_day, bucket_end],
+                )
+                gateway_id, avg_temperature, avg_humidity = self.env.cr.fetchone() or (0, None, None)
+                if not gateway_id or avg_temperature is None or avg_humidity is None:
+                    continue
+
+                self.env.cr.execute(
+                    """
+                    DELETE FROM iot_th_reading
+                    WHERE sensor_id = %s
+                      AND reported_at = %s
+                      AND is_daily_rollup = TRUE
+                    """,
+                    [sensor_id, bucket_day],
+                )
+                self.sudo().create(
+                    {
+                        "sensor_id": sensor_id,
+                        "gateway_id": gateway_id,
+                        "reported_at": bucket_day,
+                        "temperature": avg_temperature,
+                        "humidity": avg_humidity,
+                        "is_daily_rollup": True,
+                    }
+                )
+                self.env.cr.execute(
+                    """
+                    DELETE FROM iot_th_reading
+                    WHERE sensor_id = %s
+                      AND reported_at >= %s
+                      AND reported_at < %s
+                      AND is_daily_rollup = FALSE
+                    """,
+                    [sensor_id, bucket_day, bucket_end],
+                )
+                affected_sensor_ids.add(sensor_id)
+
+            self.env.cr.commit()
+
+        if not affected_sensor_ids:
             return
 
-        grouped = self.sudo().read_group(
-            source_domain,
-            ["temperature:avg", "humidity:avg", "sensor_id", "reported_at:day"],
-            ["sensor_id", "reported_at:day"],
-            lazy=False,
-        )
-
-        sensor_model = self.env["iot.th.sensor"].sudo()
-        sensor_ids = [g["sensor_id"][0] for g in grouped if g.get("sensor_id")]
-        sensors = sensor_model.browse(sensor_ids)
-        gateway_by_sensor = {s.id: s.gateway_id.id for s in sensors}
-
-        rollup_vals = []
-        for g in grouped:
-            sensor = g.get("sensor_id")
-            day_label = g.get("reported_at:day")
-            if not sensor or not day_label:
-                continue
-            sensor_id = sensor[0]
-            gateway_id = gateway_by_sensor.get(sensor_id)
-            if not gateway_id:
-                continue
-            rollup_vals.append(
-                {
-                    "sensor_id": sensor_id,
-                    "gateway_id": gateway_id,
-                    "reported_at": day_label,
-                    "temperature": g.get("temperature") or 0.0,
-                    "humidity": g.get("humidity") or 0.0,
-                    "is_daily_rollup": True,
-                }
-            )
-
-        source_rows.unlink()
-        if rollup_vals:
-            self.sudo().create(rollup_vals)
-
-        # Keep sensor counters/last values consistent after compression.
-        for sensor in sensors:
+        for sensor in sensor_model.browse(list(affected_sensor_ids)):
             vals = {"reading_count": self.sudo().search_count([("sensor_id", "=", sensor.id)])}
             last = self.sudo().search([("sensor_id", "=", sensor.id)], order="reported_at desc, id desc", limit=1)
             if last:
