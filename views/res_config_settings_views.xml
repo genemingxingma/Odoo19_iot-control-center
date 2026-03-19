@@ -20,7 +20,7 @@
                         <setting string="Middleware Token">
                             <field name="iot_middleware_token" password="True"/>
                             <div class="text-muted">
-                                Must exactly match the IOT_BRIDGE_TOKEN value in middleware environment config.
+                                Must exactly match the IOT_BRIDGE_TOKEN value in middleware environment config. If left blank when saving, Odoo will generate a secure token automatically.
                             </div>
                         </setting>
                     </block>
@@ -105,6 +105,14 @@
                         </setting>
                         <setting string="TH Online Timeout (sec)">
                             <field name="iot_th_online_timeout_sec"/>
+                        </setting>
+                    </block>
+                    <block title="Attendance ADMS">
+                        <setting string="Attendance ADMS External Port">
+                            <field name="iot_attendance_adms_port"/>
+                            <div class="text-muted">
+                                Used to generate the ADMS HTTP/HTTPS address shown in attendance devices. Default is 9910.
+                            </div>
                         </setting>
                     </block>
                 </app>

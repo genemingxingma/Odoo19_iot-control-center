@@ -1,6 +1,7 @@
 import base64
 import json
 import logging
+import secrets
 
 from odoo import http
 from odoo.http import request
@@ -14,8 +15,10 @@ class IoTInternalIngestController(http.Controller):
     def _check_token(self):
         expected = (request.env["ir.config_parameter"].sudo().get_param("iot_control_center.middleware_token") or "").strip()
         provided = (request.httprequest.headers.get("X-IoT-Middleware-Token") or "").strip()
-        # Keep backward compatibility: if token is empty in config, allow requests.
-        return (not expected) or (provided == expected)
+        if not expected:
+            _logger.error("IoT internal ingest rejected because middleware token is not configured.")
+            return False
+        return secrets.compare_digest(provided, expected)
 
     def _parse_json(self):
         raw = request.httprequest.data or b"{}"

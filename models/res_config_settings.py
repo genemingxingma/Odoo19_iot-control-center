@@ -1,5 +1,6 @@
 import logging
 import os
+import secrets
 import subprocess
 from pathlib import Path
 
@@ -62,6 +63,10 @@ class ResConfigSettings(models.TransientModel):
     iot_openwrt_offline_failure_threshold = fields.Integer(
         config_parameter="iot_control_center.openwrt_offline_failure_threshold",
         default=2,
+    )
+    iot_attendance_adms_port = fields.Integer(
+        config_parameter="iot_control_center.attendance_adms_port",
+        default=8069,
     )
 
     def action_generate_openwrt_ssh_key(self):
@@ -129,6 +134,8 @@ class ResConfigSettings(models.TransientModel):
         self.env.cr.postcommit.add(_runner)
 
     def set_values(self):
+        if not (self.iot_middleware_token or "").strip():
+            self.iot_middleware_token = secrets.token_urlsafe(24)
         res = super().set_values()
         self._run_iot_services_after_commit()
         return res

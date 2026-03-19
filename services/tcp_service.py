@@ -2,15 +2,23 @@ import json
 import logging
 import socketserver
 import threading
+import time
 from datetime import datetime
 
 from odoo import SUPERUSER_ID, api, fields
 from odoo.modules.registry import Registry
 
+try:
+    from psycopg2.errors import SerializationFailure
+except Exception:  # pragma: no cover
+    SerializationFailure = tuple()
+
 _logger = logging.getLogger(__name__)
 
 _instances = {}
 _instances_lock = threading.Lock()
+
+MAX_INGEST_RETRIES = 3
 
 
 class _GatewayTCPHandler(socketserver.BaseRequestHandler):
@@ -52,6 +60,16 @@ class TCPIngestService:
             return datetime.fromisoformat(str(value).replace("Z", "+00:00")).replace(tzinfo=None)
         except Exception:
             return fields.Datetime.now()
+
+    def _is_retryable_db_error(self, exc):
+        if SerializationFailure and isinstance(exc, SerializationFailure):
+            return True
+        pgcode = getattr(exc, "pgcode", None)
+        if pgcode == "40001":
+            return True
+        cause = getattr(exc, "__cause__", None)
+        cause_pgcode = getattr(cause, "pgcode", None)
+        return cause_pgcode == "40001"
 
     def _ensure_gateway(self, env, serial):
         gateway_model = env["iot.th.gateway"].sudo()
@@ -102,56 +120,69 @@ class TCPIngestService:
         node_id=None,
     ):
         registry = Registry(self.dbname)
-        with registry.cursor() as cr:
-            env = api.Environment(cr, SUPERUSER_ID, {})
-            reading_model = env["iot.th.reading"].sudo()
+        for attempt in range(1, MAX_INGEST_RETRIES + 1):
+            try:
+                with registry.cursor() as cr:
+                    env = api.Environment(cr, SUPERUSER_ID, {})
+                    reading_model = env["iot.th.reading"].sudo()
 
-            gateway = self._ensure_gateway(env, serial)
-            if extra_gateway_vals:
-                gateway.sudo().write(extra_gateway_vals)
+                    gateway = self._ensure_gateway(env, serial)
+                    if extra_gateway_vals:
+                        gateway.sudo().write(extra_gateway_vals)
 
-            if gateway.tcp_token and token is not None and token != gateway.tcp_token:
-                _logger.warning("TH payload token mismatch for gateway %s", serial)
-                cr.commit()
-                return
+                    if gateway.tcp_token and token is not None and token != gateway.tcp_token:
+                        _logger.warning("TH payload token mismatch for gateway %s", serial)
+                        cr.commit()
+                        return
 
-            gateway.last_seen = reported_at
+                    gateway.last_seen = reported_at
 
-            for m in measurements:
-                probe_code = m.get("probe_code")
-                if not probe_code:
-                    continue
-                temperature = m.get("temperature")
-                humidity = m.get("humidity")
-                battery_voltage = m.get("battery_voltage")
-                if temperature is None or humidity is None:
-                    continue
-                try:
-                    t_val = float(temperature)
-                    h_val = float(humidity)
-                except Exception:
-                    continue
-                # Drop invalid zero-pair samples (T=0 and H=0) from gateway glitches.
-                if abs(t_val) < 1e-9 and abs(h_val) < 1e-9:
-                    continue
+                    for m in measurements:
+                        probe_code = m.get("probe_code")
+                        if not probe_code:
+                            continue
+                        temperature = m.get("temperature")
+                        humidity = m.get("humidity")
+                        battery_voltage = m.get("battery_voltage")
+                        if temperature is None or humidity is None:
+                            continue
+                        try:
+                            t_val = float(temperature)
+                            h_val = float(humidity)
+                        except Exception:
+                            continue
+                        # Drop invalid zero-pair samples (T=0 and H=0) from gateway glitches.
+                        if abs(t_val) < 1e-9 and abs(h_val) < 1e-9:
+                            continue
 
-                sensor_node_id = (m.get("node_id") or node_id or "").strip().upper()
-                if not sensor_node_id:
-                    sensor_node_id = "unknown"
+                        sensor_node_id = (m.get("node_id") or node_id or "").strip().upper()
+                        if not sensor_node_id:
+                            sensor_node_id = "unknown"
 
-                sensor = self._ensure_sensor(env, gateway, sensor_node_id, probe_code)
-                reading_model.create(
-                    {
-                        "sensor_id": sensor.id,
-                        "gateway_id": gateway.id,
-                        "reported_at": reported_at,
-                        "temperature": t_val,
-                        "humidity": h_val,
-                    }
+                        sensor = self._ensure_sensor(env, gateway, sensor_node_id, probe_code)
+                        reading_model.create(
+                            {
+                                "sensor_id": sensor.id,
+                                "gateway_id": gateway.id,
+                                "reported_at": reported_at,
+                                "temperature": t_val,
+                                "humidity": h_val,
+                            }
+                        )
+                        sensor.apply_reading(t_val, h_val, reported_at, battery_voltage=battery_voltage)
+
+                    cr.commit()
+                    return
+            except Exception as exc:
+                if not self._is_retryable_db_error(exc) or attempt >= MAX_INGEST_RETRIES:
+                    raise
+                _logger.warning(
+                    "TH ingest serialization conflict for gateway %s, retry %s/%s",
+                    serial,
+                    attempt,
+                    MAX_INGEST_RETRIES,
                 )
-                sensor.apply_reading(t_val, h_val, reported_at, battery_voltage=battery_voltage)
-
-            cr.commit()
+                time.sleep(0.1 * attempt)
 
     def process_json_line(self, payload_text, source_ip=None, source_port=None):
         try:
