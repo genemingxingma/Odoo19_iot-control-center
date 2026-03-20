@@ -1,7 +1,7 @@
 {
     "name": "IoT Control Center",
     "summary": "ESP8266 relay management via MQTT",
-    "version": "19.0.1.0.6",
+    "version": "19.0.1.0.7",
     "category": "IoT",
     "author": "mamingxing",
     "maintainer": "mamingxing",

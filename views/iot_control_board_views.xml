@@ -38,24 +38,6 @@
                                 </div>
                             </div>
 
-                            <div class="iot_dash_trend">
-                                <t t-if="record.key.raw_value == 'relay'">
-                                    <svg viewBox="0 0 320 72" preserveAspectRatio="none">
-                                        <polyline points="0,58 36,52 72,48 108,50 144,42 180,38 216,32 252,28 288,20 320,14"/>
-                                    </svg>
-                                </t>
-                                <t t-elif="record.key.raw_value == 'th'">
-                                    <svg viewBox="0 0 320 72" preserveAspectRatio="none">
-                                        <polyline points="0,54 36,40 72,46 108,30 144,36 180,22 216,28 252,18 288,24 320,12"/>
-                                    </svg>
-                                </t>
-                                <t t-else="">
-                                    <svg viewBox="0 0 320 72" preserveAspectRatio="none">
-                                        <polyline points="0,60 36,58 72,54 108,50 144,48 180,42 216,40 252,34 288,30 320,26"/>
-                                    </svg>
-                                </t>
-                            </div>
-
                             <button type="object" name="action_open_module" class="btn iot_dash_open_btn" string="Open"/>
                         </div>
                     </t>
