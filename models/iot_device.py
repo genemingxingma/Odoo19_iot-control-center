@@ -191,6 +191,10 @@ class IoTDevice(models.Model):
     def _mqtt_topic_root(self):
         return self.env["ir.config_parameter"].sudo().get_param("iot_control_center.mqtt_topic_root", "iot/relay")
 
+    def _command_identity(self):
+        self.ensure_one()
+        return (self.module_id or self.serial or "").strip()
+
     @api.model
     def find_bind_candidate(self, serial_or_id, require_online=False):
         key = (serial_or_id or "").strip()
@@ -273,7 +277,8 @@ class IoTDevice(models.Model):
         all_ok = True
         succeeded = self.browse()
         for rec in self:
-            topic = f"{self._mqtt_topic_root()}/{rec.serial}/command"
+            command_id = rec._command_identity()
+            topic = f"{self._mqtt_topic_root()}/{command_id}/command"
             body = {"command": command, **payload}
             ok = publish_once(self.env, topic, json.dumps(body, separators=(",", ":")), retain=retain)
             if not ok:
@@ -315,7 +320,8 @@ class IoTDevice(models.Model):
         all_ok = True
         succeeded = self.browse()
         for rec in self:
-            endpoint = f"{base_url}/v1/switch/{urlparse.quote(rec.serial, safe='')}/command"
+            command_id = rec._command_identity()
+            endpoint = f"{base_url}/v1/switch/{urlparse.quote(command_id, safe='')}/command"
             body = {"command": command, "payload": payload, "retain": bool(retain)}
             req = urlrequest.Request(
                 endpoint,
