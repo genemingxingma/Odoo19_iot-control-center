@@ -11,7 +11,6 @@
                 <field name="department_id" optional="hide"/>
                 <field name="location_id" optional="hide"/>
                 <field name="host"/>
-                <field name="online" optional="show" readonly="1"/>
                 <field name="status" widget="badge"/>
                 <field name="client_count_24g"/>
                 <field name="client_count_5g"/>
@@ -48,7 +47,6 @@
                             <field name="host"/>
                             <field name="ssh_user"/>
                             <field name="status" readonly="1"/>
-                            <field name="online" readonly="1"/>
                             <field name="locate_active" readonly="1"/>
                         </group>
                         <group>

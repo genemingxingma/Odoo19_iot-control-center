@@ -208,6 +208,8 @@ struct OpenwrtUpgradeRequest {
     firmware_id: Option<i64>,
     filename: String,
     #[serde(default)]
+    expected_version: Option<String>,
+    #[serde(default)]
     checksum_sha256: Option<String>,
 }
 
@@ -363,8 +365,8 @@ async fn openwrt_probe(
 ) -> Result<Json<OpenwrtActionResponse>, (StatusCode, Json<OpenwrtActionResponse>)> {
     ensure_api_token(&headers)?;
     let cfg = Config::from_env().map_err(openwrt_internal_err)?;
-    let key_path =
-        resolve_key_path(req.key_path, cfg.openwrt_ssh_key_path).map_err(openwrt_bad_request)?;
+    let key_path = resolve_key_path(req.key_path.clone(), cfg.openwrt_ssh_key_path)
+        .map_err(openwrt_bad_request)?;
     let response = perform_openwrt_probe(&req.host, req.port, &req.username, &key_path)
         .await
         .map_err(openwrt_internal_err)?;
@@ -587,8 +589,8 @@ async fn openwrt_apply_template(
 ) -> Result<Json<OpenwrtActionResponse>, (StatusCode, Json<OpenwrtActionResponse>)> {
     ensure_api_token(&headers)?;
     let cfg = Config::from_env().map_err(openwrt_internal_err)?;
-    let key_path =
-        resolve_key_path(req.key_path, cfg.openwrt_ssh_key_path).map_err(openwrt_bad_request)?;
+    let key_path = resolve_key_path(req.key_path.clone(), cfg.openwrt_ssh_key_path)
+        .map_err(openwrt_bad_request)?;
     let script = build_apply_template_script(&req.template).map_err(openwrt_bad_request)?;
     run_ssh_command(
         &req.host,
@@ -615,8 +617,8 @@ async fn openwrt_reboot(
 ) -> Result<Json<OpenwrtActionResponse>, (StatusCode, Json<OpenwrtActionResponse>)> {
     ensure_api_token(&headers)?;
     let cfg = Config::from_env().map_err(openwrt_internal_err)?;
-    let key_path =
-        resolve_key_path(req.key_path, cfg.openwrt_ssh_key_path).map_err(openwrt_bad_request)?;
+    let key_path = resolve_key_path(req.key_path.clone(), cfg.openwrt_ssh_key_path)
+        .map_err(openwrt_bad_request)?;
     run_ssh_command(
         &req.host,
         req.port,
@@ -642,8 +644,8 @@ async fn openwrt_locate(
 ) -> Result<Json<OpenwrtActionResponse>, (StatusCode, Json<OpenwrtActionResponse>)> {
     ensure_api_token(&headers)?;
     let cfg = Config::from_env().map_err(openwrt_internal_err)?;
-    let key_path =
-        resolve_key_path(req.key_path, cfg.openwrt_ssh_key_path).map_err(openwrt_bad_request)?;
+    let key_path = resolve_key_path(req.key_path.clone(), cfg.openwrt_ssh_key_path)
+        .map_err(openwrt_bad_request)?;
     let script =
         build_locate_script(req.enable, req.duration_sec.max(30)).map_err(openwrt_bad_request)?;
     let output = run_ssh_command(
@@ -665,14 +667,14 @@ async fn openwrt_locate(
 }
 
 async fn openwrt_upgrade(
-    State(_state): State<AppState>,
+    State(state): State<AppState>,
     headers: HeaderMap,
     Json(req): Json<OpenwrtUpgradeRequest>,
 ) -> Result<Json<OpenwrtActionResponse>, (StatusCode, Json<OpenwrtActionResponse>)> {
     ensure_api_token(&headers)?;
     let cfg = Config::from_env().map_err(openwrt_internal_err)?;
-    let key_path =
-        resolve_key_path(req.key_path, cfg.openwrt_ssh_key_path).map_err(openwrt_bad_request)?;
+    let key_path = resolve_key_path(req.key_path.clone(), cfg.openwrt_ssh_key_path)
+        .map_err(openwrt_bad_request)?;
     let filename = sanitize_filename(&req.filename);
     let firmware_url = if let Some(firmware_id) = req.firmware_id {
         format!(
@@ -721,7 +723,13 @@ async fn openwrt_upgrade(
         }
     }
     let remote_path = format!("/tmp/{}", filename);
-    upload_to_remote(
+    let expected_version = req
+        .expected_version
+        .as_ref()
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty());
+
+    if let Err(err) = upload_to_remote(
         &req.host,
         req.port,
         &req.username,
@@ -730,8 +738,17 @@ async fn openwrt_upgrade(
         &remote_path,
     )
     .await
-    .map_err(openwrt_internal_err)?;
-    run_ssh_command(
+    {
+        return complete_openwrt_upgrade_after_disconnect(
+            &state,
+            &req,
+            &key_path,
+            expected_version.as_deref(),
+            err,
+        )
+        .await;
+    }
+    if let Err(err) = run_ssh_command(
         &req.host,
         req.port,
         &req.username,
@@ -739,8 +756,17 @@ async fn openwrt_upgrade(
         &format!("sysupgrade -T {}", shell_escape(&remote_path)),
     )
     .await
-    .map_err(openwrt_internal_err)?;
-    run_ssh_command(
+    {
+        return complete_openwrt_upgrade_after_disconnect(
+            &state,
+            &req,
+            &key_path,
+            expected_version.as_deref(),
+            err,
+        )
+        .await;
+    }
+    if let Err(err) = run_ssh_command(
         &req.host,
         req.port,
         &req.username,
@@ -751,7 +777,16 @@ async fn openwrt_upgrade(
         ),
     )
     .await
-    .map_err(openwrt_internal_err)?;
+    {
+        return complete_openwrt_upgrade_after_disconnect(
+            &state,
+            &req,
+            &key_path,
+            expected_version.as_deref(),
+            err,
+        )
+        .await;
+    }
     Ok(Json(OpenwrtActionResponse {
         ok: true,
         message: "firmware uploaded and sysupgrade started".to_string(),
@@ -759,6 +794,92 @@ async fn openwrt_upgrade(
         clients: None,
         summary: None,
     }))
+}
+
+async fn complete_openwrt_upgrade_after_disconnect(
+    state: &AppState,
+    req: &OpenwrtUpgradeRequest,
+    key_path: &str,
+    expected_version: Option<&str>,
+    err: anyhow::Error,
+) -> Result<Json<OpenwrtActionResponse>, (StatusCode, Json<OpenwrtActionResponse>)> {
+    if !is_probable_upgrade_disconnect(&err) {
+        return Err(openwrt_internal_err(err));
+    }
+    match verify_openwrt_upgrade(
+        &req.host,
+        req.port,
+        &req.username,
+        key_path,
+        expected_version,
+    )
+    .await
+    {
+        Ok(response) => {
+            cache_openwrt_probe(&state.openwrt_cache, &req.host, req.port, &req.username, &response).await;
+            let version_note = extract_openwrt_release_version(&response).unwrap_or_default();
+            let message = if version_note.is_empty() {
+                "device rebooted during sysupgrade and came back online".to_string()
+            } else {
+                format!(
+                    "device rebooted during sysupgrade and came back online with version {}",
+                    version_note
+                )
+            };
+            Ok(Json(OpenwrtActionResponse {
+                ok: true,
+                message,
+                facts: response.facts,
+                clients: response.clients,
+                summary: response.summary,
+            }))
+        }
+        Err(_) => Err(openwrt_internal_err(err)),
+    }
+}
+
+fn is_probable_upgrade_disconnect(err: &anyhow::Error) -> bool {
+    let message = err.to_string().to_ascii_lowercase();
+    message.contains("broken pipe")
+        || message.contains("connection refused")
+        || message.contains("connection reset")
+        || message.contains("closed channel")
+        || message.contains("connection closed")
+}
+
+async fn verify_openwrt_upgrade(
+    host: &str,
+    port: u16,
+    username: &str,
+    key_path: &str,
+    expected_version: Option<&str>,
+) -> anyhow::Result<OpenwrtActionResponse> {
+    for delay in [15_u64, 20, 30, 45] {
+        tokio::time::sleep(Duration::from_secs(delay)).await;
+        if let Ok(response) = perform_openwrt_probe(host, port, username, key_path).await {
+            let version_ok = match expected_version {
+                Some(expected) => extract_openwrt_release_version(&response)
+                    .map(|value| value == expected)
+                    .unwrap_or(false),
+                None => true,
+            };
+            if version_ok {
+                return Ok(response);
+            }
+        }
+    }
+    Err(anyhow::anyhow!("device did not come back with expected firmware version"))
+}
+
+fn extract_openwrt_release_version(response: &OpenwrtActionResponse) -> Option<String> {
+    response
+        .facts
+        .as_ref()
+        .and_then(|facts| facts.get("release"))
+        .and_then(|release| release.get("version"))
+        .and_then(Value::as_str)
+        .map(|value| value.trim().to_string())
+        .filter(|value| !value.is_empty())
 }
 
 async fn run_mqtt_loop(
@@ -1204,6 +1325,29 @@ async fn upload_to_remote(
     content: &[u8],
     remote_path: &str,
 ) -> anyhow::Result<()> {
+    let mut last_error: Option<anyhow::Error> = None;
+    for attempt in 1..=2 {
+        match upload_to_remote_once(host, port, username, key_path, content, remote_path).await {
+            Ok(()) => return Ok(()),
+            Err(err) => {
+                last_error = Some(err);
+                if attempt < 2 {
+                    tokio::time::sleep(Duration::from_millis(600)).await;
+                }
+            }
+        }
+    }
+    Err(last_error.unwrap_or_else(|| anyhow::anyhow!("firmware upload failed")))
+}
+
+async fn upload_to_remote_once(
+    host: &str,
+    port: u16,
+    username: &str,
+    key_path: &str,
+    content: &[u8],
+    remote_path: &str,
+) -> anyhow::Result<()> {
     let mut child = Command::new("ssh")
         .arg("-i")
         .arg(key_path)
@@ -1224,13 +1368,30 @@ async fn upload_to_remote(
         .stderr(std::process::Stdio::piped())
         .spawn()
         .context("failed to spawn ssh upload command")?;
+
     if let Some(mut stdin) = child.stdin.take() {
-        stdin
-            .write_all(content)
-            .await
-            .context("failed to stream firmware bytes to ssh")?;
+        if let Err(write_err) = stdin.write_all(content).await {
+            stdin.shutdown().await.ok();
+            let output = child.wait_with_output().await.ok();
+            let stderr = output
+                .as_ref()
+                .map(|data| String::from_utf8_lossy(&data.stderr).trim().to_string())
+                .filter(|value| !value.is_empty());
+            return match stderr {
+                Some(stderr) => Err(anyhow::anyhow!(
+                    "failed to stream firmware bytes to ssh: {}; remote stderr: {}",
+                    write_err,
+                    stderr
+                )),
+                None => Err(anyhow::anyhow!(
+                    "failed to stream firmware bytes to ssh: {}",
+                    write_err
+                )),
+            };
+        }
         stdin.shutdown().await.ok();
     }
+
     let output = child
         .wait_with_output()
         .await
@@ -1733,6 +1894,10 @@ fn append_wifi_apply_lines(
         .cloned()
         .unwrap_or_default();
     if entries.is_empty() {
+        lines.push(format!("  {iface_var}=$(uci add wireless wifi-iface)"));
+        lines.push(format!("  uci set wireless.${{{iface_var}}}.device=${{{dev_var}}}"));
+        lines.push("  uci set wireless.${wifi_iface}.mode='ap'".replace("${wifi_iface}", &format!("${{{iface_var}}}")));
+        lines.push("  uci set wireless.${wifi_iface}.network='lan'".replace("${wifi_iface}", &format!("${{{iface_var}}}")));
         append_wifi_entry_lines(lines, &iface_var, obj)?;
     } else {
         for entry in entries {
@@ -1765,7 +1930,6 @@ fn append_wifi_entry_lines(
     iface_var: &str,
     obj: &serde_json::Map<String, Value>,
 ) -> anyhow::Result<()> {
-    lines.push(format!("  {iface_var}=$(uci -q get wireless.${{{iface_var}}} 2>/dev/null || echo ${{{iface_var}}})"));
     if let Some(enabled) = obj.get("enabled").and_then(|v| v.as_bool()) {
         lines.push(format!(
             "  uci set wireless.${{{iface_var}}}.disabled='{}'",

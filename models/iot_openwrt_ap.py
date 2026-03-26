@@ -143,7 +143,7 @@ class IoTOpenwrtAP(models.Model):
     def _middleware_private_key_path(self):
         return (self.env["ir.config_parameter"].sudo().get_param("iot_control_center.openwrt_ssh_private_key_path") or "").strip()
 
-    def _call_middleware(self, endpoint, payload):
+    def _call_middleware(self, endpoint, payload, timeout=60):
         headers = {"Content-Type": "application/json"}
         token = self._middleware_token()
         if token:
@@ -155,7 +155,7 @@ class IoTOpenwrtAP(models.Model):
             method="POST",
         )
         try:
-            with urlrequest.urlopen(req, timeout=60) as resp:
+            with urlrequest.urlopen(req, timeout=timeout) as resp:
                 body = resp.read().decode("utf-8")
                 return json.loads(body or "{}")
         except urlerror.HTTPError as exc:
@@ -682,10 +682,11 @@ class IoTOpenwrtAP(models.Model):
             payload = rec._base_payload()
             payload["firmware_id"] = firmware.id
             payload["filename"] = firmware.filename
+            payload["expected_version"] = firmware.version or ""
             payload["checksum_sha256"] = firmware.checksum_sha256 or ""
             job = rec._create_job("upgrade", payload)
             try:
-                response = rec._call_middleware("/v1/openwrt/upgrade", payload)
+                response = rec._call_middleware("/v1/openwrt/upgrade", payload, timeout=180)
                 upgrade_time = fields.Datetime.now()
                 rec.with_context(**self._system_no_track_context()).write(
                     {
