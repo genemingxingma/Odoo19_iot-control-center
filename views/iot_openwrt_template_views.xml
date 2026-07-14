@@ -7,7 +7,7 @@
             <list>
                 <field name="name"/>
                 <field name="company_id"/>
-                <field name="country_code"/>
+                <field name="country_code" readonly="1"/>
                 <field name="wifi24_ssid_count"/>
                 <field name="wifi5_ssid_count"/>
                 <field name="active"/>
@@ -25,9 +25,9 @@
                         <group>
                             <field name="name"/>
                             <field name="company_id"/>
-                            <field name="country_code"/>
+                            <field name="country_code" readonly="1"/>
                             <field name="system_hostname"/>
-                            <field name="timezone_name"/>
+                            <field name="timezone_name" readonly="1"/>
                             <field name="active"/>
                         </group>
                         <group>

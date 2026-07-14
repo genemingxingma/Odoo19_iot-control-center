@@ -1,5 +1,6 @@
 import hashlib
 import json
+from datetime import timedelta
 
 from odoo import SUPERUSER_ID, api, fields, models
 
@@ -27,11 +28,13 @@ class IoTAttendancePunch(models.Model):
     state = fields.Selection([("new", "New"), ("processed", "Processed"), ("ignored", "Ignored"), ("error", "Error")], default="new", required=True, index=True)
     raw_payload = fields.Text()
     message = fields.Char()
+    error_code = fields.Char(index=True)
     unique_hash = fields.Char(required=True, copy=False, index=True)
 
-    _sql_constraints = [
-        ("iot_attendance_punch_unique_hash", "unique(unique_hash)", "The same punch cannot be imported twice."),
-    ]
+    _unique_hash = models.Constraint(
+        "UNIQUE(unique_hash)",
+        "The same punch cannot be imported twice.",
+    )
 
     @api.depends("employee_id.name", "device_user_id", "punch_time")
     def _compute_name(self):
@@ -61,15 +64,36 @@ class IoTAttendancePunch(models.Model):
             raw_payload = vals.get("raw_payload")
             if raw_payload and not isinstance(raw_payload, str):
                 vals["raw_payload"] = json.dumps(raw_payload, ensure_ascii=True)
-        records = super(IoTAttendancePunch, self.with_user(SUPERUSER_ID).sudo()).create(vals_list)
+        creator = self.with_user(SUPERUSER_ID).sudo() if self.env.context.get("iot_attendance_ingest") else self
+        records = super(IoTAttendancePunch, creator).create(vals_list)
         records._process_punches()
         return records
 
-    def _mark(self, state, message, attendance=None):
-        values = {"state": state, "message": message}
+    def _mark(self, state, message, attendance=None, error_code=False):
+        values = {"state": state, "message": message, "error_code": error_code or False}
         if attendance:
             values["attendance_id"] = attendance.id
         self.write(values)
+
+    def _max_open_delta(self):
+        raw = self.env["ir.config_parameter"].sudo().get_param("iot_control_center.attendance_max_open_hours", "16")
+        try:
+            hours = max(int(raw or 16), 1)
+        except Exception:
+            hours = 16
+        return timedelta(hours=hours)
+
+    def _is_open_attendance_matchable(self, attendance):
+        self.ensure_one()
+        if not attendance or not self.punch_time or not attendance.check_in:
+            return False
+        if self.punch_time <= attendance.check_in:
+            return False
+        if self.punch_time - attendance.check_in > self._max_open_delta():
+            return False
+        punch_local = fields.Datetime.context_timestamp(self, self.punch_time)
+        checkin_local = fields.Datetime.context_timestamp(self, attendance.check_in)
+        return punch_local.date() == checkin_local.date()
 
     def _get_open_attendance(self):
         self.ensure_one()
@@ -100,29 +124,31 @@ class IoTAttendancePunch(models.Model):
                 if employee:
                     punch.employee_id = employee.id
                 else:
-                    punch._mark("error", "No employee mapping found for this punch.")
+                    punch._mark("error", "No employee mapping found for this punch.", error_code="no_employee_mapping")
                     continue
             open_attendance = punch._get_open_attendance()
             if punch.direction == "out":
                 if not open_attendance:
-                    punch._mark("error", "Cannot check out without an open attendance.")
+                    punch._mark("error", "Cannot check out without an open attendance.", error_code="no_open_attendance")
                     continue
-                if punch.punch_time <= open_attendance.check_in:
-                    punch._mark("ignored", "Checkout time is not later than check-in.")
+                if not punch._is_open_attendance_matchable(open_attendance):
+                    punch._mark("error", "Open attendance is stale or not in the same local day.", error_code="stale_open_attendance")
                     continue
                 open_attendance.write({"check_out": punch.punch_time})
                 punch._mark("processed", "Matched to an open attendance.", attendance=open_attendance)
                 continue
             if punch.direction == "in":
                 if open_attendance:
-                    punch._mark("ignored", "Employee already has an open attendance.")
+                    punch._mark("error", "Employee already has an open attendance.", error_code="open_attendance_exists")
                     continue
                 attendance = attendance_model.create({"employee_id": punch.employee_id.id, "check_in": punch.punch_time})
                 punch._mark("processed", "Created check-in attendance.", attendance=attendance)
                 continue
-            if open_attendance and punch.punch_time > open_attendance.check_in:
+            if open_attendance and punch._is_open_attendance_matchable(open_attendance):
                 open_attendance.write({"check_out": punch.punch_time})
                 punch._mark("processed", "Auto-matched as check-out.", attendance=open_attendance)
+            elif open_attendance:
+                punch._mark("error", "Open attendance is stale or not in the same local day.", error_code="stale_open_attendance")
             else:
                 attendance = attendance_model.create({"employee_id": punch.employee_id.id, "check_in": punch.punch_time})
                 punch._mark("processed", "Auto-created as check-in.", attendance=attendance)
@@ -133,13 +159,10 @@ class IoTAttendancePunch(models.Model):
         retry = self.search(
             [
                 ("state", "=", "error"),
-                ("message", "in", [
-                    "No employee mapping found for this punch.",
-                    "Expected singleton: res.users()",
-                ]),
+                ("error_code", "in", ["no_employee_mapping", "transient_error"]),
             ],
             order="punch_time asc, id asc",
             limit=500,
         )
-        (pending | retry).write({"state": "new", "message": False})
+        (pending | retry).write({"state": "new", "message": False, "error_code": False})
         (pending | retry)._process_punches()

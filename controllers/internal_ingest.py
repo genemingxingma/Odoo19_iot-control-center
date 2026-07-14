@@ -9,6 +9,7 @@ from odoo.http import request
 from ..services.tcp_service import process_ingest_payload
 
 _logger = logging.getLogger(__name__)
+MAX_INTERNAL_BODY_BYTES = 2 * 1024 * 1024
 
 
 class IoTInternalIngestController(http.Controller):
@@ -22,6 +23,8 @@ class IoTInternalIngestController(http.Controller):
 
     def _parse_json(self):
         raw = request.httprequest.data or b"{}"
+        if len(raw) > MAX_INTERNAL_BODY_BYTES:
+            raise ValueError("payload too large")
         return json.loads(raw.decode("utf-8"))
 
     @http.route("/iot_control_center/internal/mqtt_ingest", type="http", auth="none", methods=["POST"], csrf=False)
@@ -34,11 +37,17 @@ class IoTInternalIngestController(http.Controller):
             payload = data.get("payload")
             if not topic or payload is None:
                 return request.make_json_response({"ok": False, "error": "missing topic/payload"}, status=400)
-            request.env["iot.mqtt.message"].sudo().create_from_mqtt(topic, str(payload))
+            request.env["iot.mqtt.message"].sudo().create_from_mqtt(
+                topic,
+                str(payload),
+                retained=bool(data.get("retained")),
+            )
             return request.make_json_response({"ok": True})
+        except ValueError as exc:
+            return request.make_json_response({"ok": False, "error": str(exc)}, status=400)
         except Exception as exc:
             _logger.exception("Internal MQTT ingest failed: %s", exc)
-            return request.make_json_response({"ok": False, "error": str(exc)}, status=500)
+            return request.make_json_response({"ok": False, "error": "internal error"}, status=500)
 
     @http.route("/iot_control_center/internal/th_ingest_json", type="http", auth="none", methods=["POST"], csrf=False)
     def th_ingest_json(self, **kwargs):
@@ -58,9 +67,11 @@ class IoTInternalIngestController(http.Controller):
                 source_port=source_port,
             )
             return request.make_json_response({"ok": True})
+        except ValueError as exc:
+            return request.make_json_response({"ok": False, "error": str(exc)}, status=400)
         except Exception as exc:
             _logger.exception("Internal TH JSON ingest failed: %s", exc)
-            return request.make_json_response({"ok": False, "error": str(exc)}, status=500)
+            return request.make_json_response({"ok": False, "error": "internal error"}, status=500)
 
     @http.route("/iot_control_center/internal/th_ingest_binary", type="http", auth="none", methods=["POST"], csrf=False)
     def th_ingest_binary(self, **kwargs):
@@ -81,9 +92,11 @@ class IoTInternalIngestController(http.Controller):
                 source_port=source_port,
             )
             return request.make_json_response({"ok": True})
+        except ValueError as exc:
+            return request.make_json_response({"ok": False, "error": str(exc)}, status=400)
         except Exception as exc:
             _logger.exception("Internal TH binary ingest failed: %s", exc)
-            return request.make_json_response({"ok": False, "error": str(exc)}, status=500)
+            return request.make_json_response({"ok": False, "error": "internal error"}, status=500)
 
     @http.route("/iot_control_center/internal/openwrt_inventory", type="http", auth="none", methods=["POST"], csrf=False)
     def openwrt_inventory(self, **kwargs):
@@ -95,7 +108,7 @@ class IoTInternalIngestController(http.Controller):
             return request.make_json_response(payload)
         except Exception as exc:
             _logger.exception("Internal OpenWrt inventory failed: %s", exc)
-            return request.make_json_response({"ok": False, "error": str(exc)}, status=500)
+            return request.make_json_response({"ok": False, "error": "internal error"}, status=500)
 
     @http.route("/iot_control_center/internal/openwrt_heartbeat", type="http", auth="none", methods=["POST"], csrf=False)
     def openwrt_heartbeat(self, **kwargs):
@@ -107,6 +120,8 @@ class IoTInternalIngestController(http.Controller):
             if not applied:
                 return request.make_json_response({"ok": False, "error": "ap not found"}, status=404)
             return request.make_json_response({"ok": True})
+        except ValueError as exc:
+            return request.make_json_response({"ok": False, "error": str(exc)}, status=400)
         except Exception as exc:
             _logger.exception("Internal OpenWrt heartbeat failed: %s", exc)
-            return request.make_json_response({"ok": False, "error": str(exc)}, status=500)
+            return request.make_json_response({"ok": False, "error": "internal error"}, status=500)

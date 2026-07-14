@@ -30,6 +30,7 @@ class IoTOpenwrtClient(models.Model):
     connected_seconds = fields.Integer(readonly=True)
     last_seen = fields.Datetime(readonly=True, default=fields.Datetime.now)
 
-    _sql_constraints = [
-        ("iot_openwrt_client_ap_mac_uniq", "unique(ap_id, mac_address)", "AP client MAC must be unique per AP."),
-    ]
+    _ap_mac_uniq = models.Constraint(
+        "UNIQUE(ap_id, mac_address)",
+        "AP client MAC must be unique per AP.",
+    )

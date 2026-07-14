@@ -3,7 +3,7 @@ access_iot_department_user,access.iot.department.user,model_iot_department,iot_c
 access_iot_department_manager,access.iot.department.manager,model_iot_department,iot_control_center.group_iot_manager,1,1,1,1
 access_iot_location_user,access.iot.location.user,model_iot_location,iot_control_center.group_iot_user,1,0,0,0
 access_iot_location_manager,access.iot.location.manager,model_iot_location,iot_control_center.group_iot_manager,1,1,1,1
-access_iot_device_user,access.iot.device.user,model_iot_device,iot_control_center.group_iot_user,1,1,0,0
+access_iot_device_user,access.iot.device.user,model_iot_device,iot_control_center.group_iot_user,1,0,0,0
 access_iot_device_manager,access.iot.device.manager,model_iot_device,iot_control_center.group_iot_manager,1,1,0,0
 access_iot_schedule_user,access.iot.schedule.user,model_iot_schedule,iot_control_center.group_iot_user,1,0,0,0
 access_iot_schedule_manager,access.iot.schedule.manager,model_iot_schedule,iot_control_center.group_iot_manager,1,1,1,1

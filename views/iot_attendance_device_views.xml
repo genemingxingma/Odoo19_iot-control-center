@@ -45,7 +45,7 @@
                             <field name="serial_number"/>
                             <field name="sync_enabled"/>
                             <field name="punch_direction_mode"/>
-                            <field name="timezone"/>
+                            <field name="timezone" readonly="1"/>
                         </group>
                         <group>
                             <field name="host" invisible="protocol != 'zk_tcp'"/>

@@ -1,7 +1,7 @@
 from datetime import timedelta
 
-from odoo import api, fields, models
-from odoo.exceptions import UserError
+from odoo import _, api, fields, models
+from odoo.exceptions import UserError, ValidationError
 
 
 class IoTTHSensor(models.Model):
@@ -50,7 +50,7 @@ class IoTTHSensor(models.Model):
     keep_full_history = fields.Boolean(
         string="Keep Full History",
         default=False,
-        help="If enabled, this node keeps all raw readings and skips historical hourly rollup.",
+        help="If enabled, this node keeps all raw readings and skips historical daily rollup.",
     )
     avg_temperature = fields.Float(compute="_compute_stats")
     avg_humidity = fields.Float(compute="_compute_stats")
@@ -61,13 +61,10 @@ class IoTTHSensor(models.Model):
 
     reading_ids = fields.One2many("iot.th.reading", "sensor_id")
 
-    _sql_constraints = [
-        (
-            "iot_th_sensor_node_probe_uniq",
-            "unique(node_id, probe_code)",
-            "Sensor Channel must be unique by Node ID + Channel.",
-        ),
-    ]
+    _node_probe_uniq = models.Constraint(
+        "UNIQUE(node_id, probe_code)",
+        "Sensor Channel must be unique by Node ID + Channel.",
+    )
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -93,25 +90,25 @@ class IoTTHSensor(models.Model):
     def find_bind_candidates(self, node_id, probe_code=None, require_online=False):
         nid = (node_id or "").strip()
         if not nid:
-            raise UserError("Node ID is required")
+            raise UserError(_("Node ID is required"))
         domain = [("node_id", "=", nid)]
         probe = (probe_code or "").strip()
         if probe:
             domain.append(("probe_code", "=", probe))
         sensors = self.sudo().search(domain, order="last_reported_at desc, id desc")
         if not sensors:
-            raise UserError("No sensor found for this Node ID.")
+            raise UserError(_("No sensor found for this Node ID."))
         if require_online:
-            timeout = int(self.env["ir.config_parameter"].sudo().get_param("iot_control_center.iot_th_online_timeout_sec", 900))
+            timeout = int(self.env["ir.config_parameter"].sudo().get_param("iot_control_center.th_online_timeout_sec", 300))
             now = fields.Datetime.now()
             offline = sensors.filtered(lambda s: not s.last_reported_at or (now - s.last_reported_at) > timedelta(seconds=timeout))
             if offline:
                 if len(sensors) == 1:
-                    raise UserError("Node is offline. Please wait for fresh data before binding.")
+                    raise UserError(_("Node is offline. Please wait for fresh data before binding."))
                 sensors = sensors - offline
                 if not sensors:
-                    raise UserError("All matched sensors are offline. Please wait for fresh data before binding.")
-        return sensors.with_env(self.env)
+                    raise UserError(_("All matched sensors are offline. Please wait for fresh data before binding."))
+        return sensors.sudo()
 
     @api.model
     def bind_by_node(self, node_id, probe_code=None, company=None, location=None, location_detail=None):
@@ -119,7 +116,7 @@ class IoTTHSensor(models.Model):
         target_company = company or self.env.company
         conflict = sensors.filtered(lambda s: s.company_id and s.company_id != target_company)
         if conflict:
-            raise UserError("This node is already bound to another company.")
+            raise UserError(_("This node is already bound to another company."))
         vals = {"company_id": target_company.id}
         if location:
             vals["location_id"] = location.id
@@ -129,50 +126,72 @@ class IoTTHSensor(models.Model):
         return sensors.with_env(self.env)
 
     def action_unbind(self):
-        self.write({"company_id": False, "location_id": False, "location_detail": False})
+        self.write({"company_id": False, "group_id": False, "location_id": False, "location_detail": False})
 
     @api.depends("last_reported_at", "stats_window_hours")
     def _compute_stats(self):
-        reading_model = self.env["iot.th.reading"]
+        now = fields.Datetime.now()
         for rec in self:
-            now = fields.Datetime.now()
-            since = now - timedelta(hours=max(rec.stats_window_hours or 24, 1))
-            rows = reading_model.search_read(
-                [
-                    ("sensor_id", "=", rec.id),
-                    ("reported_at", ">=", since),
-                    "|",
-                    ("temperature", "!=", 0.0),
-                    ("humidity", "!=", 0.0),
-                ],
-                ["temperature", "humidity"],
-                limit=5000,
+            rec.avg_temperature = 0.0
+            rec.avg_humidity = 0.0
+            rec.min_temperature = 0.0
+            rec.max_temperature = 0.0
+            rec.min_humidity = 0.0
+            rec.max_humidity = 0.0
+
+        by_window = {}
+        for rec in self:
+            window = max(rec.stats_window_hours or 24, 1)
+            by_window.setdefault(window, self.env["iot.th.sensor"])
+            by_window[window] |= rec
+
+        for window, records in by_window.items():
+            since = now - timedelta(hours=window)
+            self.env.cr.execute(
+                """
+                SELECT
+                    sensor_id,
+                    AVG(temperature),
+                    MIN(temperature),
+                    MAX(temperature),
+                    AVG(humidity),
+                    MIN(humidity),
+                    MAX(humidity)
+                FROM iot_th_reading
+                WHERE sensor_id = ANY(%s)
+                  AND reported_at >= %s
+                  AND (temperature <> 0 OR humidity <> 0)
+                GROUP BY sensor_id
+                """,
+                [records.ids, since],
             )
-            if not rows:
-                rec.avg_temperature = 0.0
-                rec.avg_humidity = 0.0
-                rec.min_temperature = 0.0
-                rec.max_temperature = 0.0
-                rec.min_humidity = 0.0
-                rec.max_humidity = 0.0
-                continue
-
-            temps = [r["temperature"] for r in rows if r.get("temperature") is not None]
-            hums = [r["humidity"] for r in rows if r.get("humidity") is not None]
-
-            rec.avg_temperature = sum(temps) / len(temps) if temps else 0.0
-            rec.min_temperature = min(temps) if temps else 0.0
-            rec.max_temperature = max(temps) if temps else 0.0
-
-            rec.avg_humidity = sum(hums) / len(hums) if hums else 0.0
-            rec.min_humidity = min(hums) if hums else 0.0
-            rec.max_humidity = max(hums) if hums else 0.0
+            rows = {row[0]: row[1:] for row in self.env.cr.fetchall()}
+            for rec in records:
+                avg_t, min_t, max_t, avg_h, min_h, max_h = rows.get(rec.id, (None, None, None, None, None, None))
+                if avg_t is None and avg_h is None:
+                    continue
+                rec.avg_temperature = avg_t or 0.0
+                rec.min_temperature = min_t or 0.0
+                rec.max_temperature = max_t or 0.0
+                rec.avg_humidity = avg_h or 0.0
+                rec.min_humidity = min_h or 0.0
+                rec.max_humidity = max_h or 0.0
 
     @api.constrains("company_id", "group_id")
     def _check_group_company(self):
         for rec in self:
             if rec.group_id and rec.company_id and rec.group_id.company_id and rec.group_id.company_id != rec.company_id:
-                raise UserError("Sensor Group company must match the sensor company.")
+                raise UserError(_("Sensor Group company must match the sensor company."))
+
+    @api.constrains("temperature_low", "temperature_high", "humidity_low", "humidity_high", "stats_window_hours")
+    def _check_thresholds(self):
+        for rec in self:
+            if rec.temperature_low > rec.temperature_high:
+                raise ValidationError(_("Temperature low limit must not exceed high limit."))
+            if rec.humidity_low > rec.humidity_high:
+                raise ValidationError(_("Humidity low limit must not exceed high limit."))
+            if rec.stats_window_hours <= 0:
+                raise ValidationError(_("Statistics window must be greater than 0 hours."))
 
     def apply_reading(self, temperature, humidity, reported_at, battery_voltage=None):
         alert_model = self.env["iot.th.alert"]
@@ -182,7 +201,11 @@ class IoTTHSensor(models.Model):
             if battery_voltage is not None:
                 rec.last_battery_voltage = battery_voltage
             rec.last_reported_at = reported_at
-            rec.reading_count += 1
+            self.env.cr.execute(
+                "UPDATE iot_th_sensor SET reading_count = COALESCE(reading_count, 0) + 1 WHERE id = %s",
+                [rec.id],
+            )
+            rec.invalidate_recordset(["reading_count"])
 
             t_low, t_high, h_low, h_high = rec._get_effective_threshold_values()
             checks = []

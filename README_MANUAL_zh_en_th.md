@@ -10,7 +10,7 @@
 支持：多公司、按 ID 绑定、定时控制、分组管理、告警、OTA 升级、趋势分析。
 
 ### 2. 安装前置
-1. Odoo Python 依赖：`paho-mqtt`、`pytz`
+1. Odoo Python 依赖：`pytz`；仅在关闭 Rust 中间件并使用 Odoo 内置 MQTT 时才需要 `paho-mqtt`
 2. MQTT Broker 可达（建议端口 `1883`）
 3. 温湿度 TCP 上报端口可达（默认 `9910`）
 4. 安装模块：`IoT Control Center`
@@ -85,7 +85,7 @@
 Features: multi-company, ID binding, scheduling, grouping, alerts, OTA, trend analytics.
 
 ### 2. Prerequisites
-1. Python deps in Odoo runtime: `paho-mqtt`, `pytz`
+1. Python deps in Odoo runtime: `pytz`; install `paho-mqtt` only for legacy in-Odoo MQTT mode
 2. Reachable MQTT broker (recommended port `1883`)
 3. Reachable TH TCP ingest port (default `9910`)
 4. Install module `IoT Control Center`
@@ -160,7 +160,7 @@ Features: multi-company, ID binding, scheduling, grouping, alerts, OTA, trend an
 รองรับหลายบริษัท, ผูกด้วย ID, ตั้งเวลา, จัดกลุ่ม, แจ้งเตือน, OTA, วิเคราะห์แนวโน้ม
 
 ### 2. ข้อกำหนดก่อนใช้งาน
-1. Python dependencies: `paho-mqtt`, `pytz`
+1. Python dependencies: `pytz`; install `paho-mqtt` only for legacy in-Odoo MQTT mode
 2. MQTT broker เข้าถึงได้ (แนะนำพอร์ต `1883`)
 3. พอร์ต TCP ของ TH Gateway เข้าถึงได้ (ค่าเริ่มต้น `9910`)
 4. ติดตั้งโมดูล `IoT Control Center`

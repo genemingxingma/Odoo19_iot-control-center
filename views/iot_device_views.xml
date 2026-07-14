@@ -15,7 +15,10 @@
                 <field name="delay_active" invisible="1"/>
                 <field name="delay_remaining_minutes" string="Delay Remaining" widget="delay_countdown"/>
                 <field name="online"/>
+                <field name="desired_relay_state" string="Requested"/>
+                <field name="relay_command_state" string="Command" widget="badge"/>
                 <field name="firmware_version" string="Firmware"/>
+                <field name="mqtt_route" string="Network" widget="badge"/>
                 <field name="total_on_hours" string="Accumulated ON (Hours)"/>
                 <field name="last_seen"/>
                 <button name="action_turn_on" type="object" string="ON" class="iot_toggle_btn iot_toggle_left iot_toggle_on_active" invisible="relay_state != 'on'"/>
@@ -98,6 +101,7 @@
                     <button name="action_delay_toggle" type="object" string="Delay Switch" class="btn-primary" invisible="delay_active != True"/>
                     <button name="action_delay_toggle" type="object" string="Delay Switch" class="btn-secondary" invisible="delay_active == True"/>
                     <button name="action_reset_uptime" type="object" string="Reset Accumulated Time"/>
+                    <button name="action_sync_network_config" type="object" string="Sync Internal Network"/>
                     <field name="relay_state" widget="statusbar" statusbar_visible="unknown,off,on" readonly="1"/>
                 </header>
                 <sheet>
@@ -116,12 +120,22 @@
                         <group>
                             <field name="online" readonly="1"/>
                             <field name="last_seen" readonly="1"/>
+                            <field name="desired_relay_state" readonly="1"/>
+                            <field name="relay_command_state" readonly="1" widget="badge"/>
+                            <field name="last_command_confirmed_at" readonly="1"/>
+                            <field name="max_continuous_on_minutes"/>
                             <field name="delay_duration_minutes"/>
                             <field name="delay_active" readonly="1"/>
                             <field name="delay_started_at" readonly="1"/>
                             <field name="delay_end_at" readonly="1"/>
                             <field name="delay_remaining_minutes" readonly="1" widget="delay_countdown"/>
                             <field name="firmware_version" readonly="1"/>
+                            <field name="firmware_hardware_profile" readonly="1"/>
+                            <field name="flash_real_size_bytes" readonly="1"/>
+                            <field name="free_heap_bytes" readonly="1"/>
+                            <field name="mqtt_active_host" readonly="1"/>
+                            <field name="mqtt_route" readonly="1" widget="badge"/>
+                            <field name="network_config_dirty" readonly="1"/>
                             <field name="firmware_target_version" readonly="1"/>
                             <field name="firmware_upgrade_state" readonly="1"/>
                             <field name="firmware_upgrade_requested_at" readonly="1"/>
@@ -134,6 +148,7 @@
                     <group>
                         <field name="auth_token" readonly="1" password="True"/>
                         <field name="last_command_at" readonly="1"/>
+                        <field name="last_command_id" readonly="1"/>
                         <field name="last_command_payload" readonly="1"/>
                         <field name="schedule_version" readonly="1"/>
                         <field name="schedule_applied_version" readonly="1"/>

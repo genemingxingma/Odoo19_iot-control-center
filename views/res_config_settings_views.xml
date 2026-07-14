@@ -7,6 +7,29 @@
         <field name="arch" type="xml">
             <xpath expr="//form" position="inside">
                 <app string="IoT Control Center" name="iot_control_center" groups="base.group_system">
+                    <block title="Company Private Network (WireGuard)">
+                        <setting string="Prefer Company Internal Network">
+                            <field name="iot_prefer_internal_network"/>
+                            <div class="text-muted">
+                                Controllers use the company WireGuard route first and fall back to public endpoints when unavailable.
+                            </div>
+                        </setting>
+                        <setting string="Internal Server Host">
+                            <field name="iot_internal_host" placeholder="192.168.10.15"/>
+                            <div class="text-muted">
+                                Company-specific server IP or hostname reachable through WireGuard. Do not include scheme, port, or path.
+                            </div>
+                        </setting>
+                        <setting string="Internal Odoo Port">
+                            <field name="iot_internal_odoo_port"/>
+                        </setting>
+                        <setting string="Internal MQTT Port">
+                            <field name="iot_internal_mqtt_port"/>
+                        </setting>
+                        <setting string="Internal OTA HTTPS Port">
+                            <field name="iot_internal_ota_port"/>
+                        </setting>
+                    </block>
                     <block title="External IoT Middleware">
                         <setting string="Use External IoT Middleware (MQTT + TH TCP)">
                             <field name="iot_middleware_enabled"/>
@@ -133,7 +156,7 @@
                         <setting string="TH Raw Retention (days)">
                             <field name="iot_th_raw_retention_days"/>
                             <div class="text-muted">
-                                Raw node-frequency readings older than this are compressed into hourly averages unless the sensor keeps full history.
+                                Raw node-frequency readings older than this are compressed into daily averages unless the sensor keeps full history.
                             </div>
                         </setting>
                     </block>
@@ -141,7 +164,19 @@
                         <setting string="Attendance ADMS External Port">
                             <field name="iot_attendance_adms_port"/>
                             <div class="text-muted">
-                                Used to generate the ADMS HTTP/HTTPS address shown in attendance devices. Default is 9910.
+                                Used to generate the ADMS HTTP/HTTPS address shown in attendance devices. Default is 8069.
+                            </div>
+                        </setting>
+                        <setting string="Attendance Source IP Allowlist">
+                            <field name="iot_attendance_allowed_ips" placeholder="192.168.10.50, 192.168.10.51"/>
+                            <div class="text-muted">
+                                Optional comma-separated source IPs for ADMS terminals. Blank means any source is accepted only if it matches a bound device SN or host.
+                            </div>
+                        </setting>
+                        <setting string="Max Open Attendance Hours">
+                            <field name="iot_attendance_max_open_hours"/>
+                            <div class="text-muted">
+                                Open attendances older than this are not auto-closed by a new punch, preventing yesterday's punch from leaking into today.
                             </div>
                         </setting>
                         <setting string="Attendance Request Retention (days)">

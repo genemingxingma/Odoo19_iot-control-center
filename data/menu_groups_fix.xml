@@ -61,4 +61,40 @@
     <record id="menu_iot_th_alert" model="ir.ui.menu">
         <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_user')])]"/>
     </record>
+    <record id="menu_iot_th_sensor_group" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_manager')])]"/>
+    </record>
+    <record id="menu_iot_attendance_root" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_user')])]"/>
+    </record>
+    <record id="menu_iot_attendance_device" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_user')])]"/>
+    </record>
+    <record id="menu_iot_attendance_user" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_manager')])]"/>
+    </record>
+    <record id="menu_iot_attendance_punch" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_user')])]"/>
+    </record>
+    <record id="menu_iot_attendance_request" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_manager')])]"/>
+    </record>
+    <record id="menu_iot_openwrt_cards" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_user')])]"/>
+    </record>
+    <record id="menu_iot_openwrt_root" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_user')])]"/>
+    </record>
+    <record id="menu_iot_openwrt_ap" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_user')])]"/>
+    </record>
+    <record id="menu_iot_openwrt_template" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_manager')])]"/>
+    </record>
+    <record id="menu_iot_openwrt_firmware" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_manager')])]"/>
+    </record>
+    <record id="menu_iot_openwrt_job" model="ir.ui.menu">
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_manager')])]"/>
+    </record>
 </odoo>

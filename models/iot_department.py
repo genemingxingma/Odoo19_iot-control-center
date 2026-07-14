@@ -9,6 +9,7 @@ class IoTDepartment(models.Model):
     company_id = fields.Many2one("res.company", required=True, default=lambda self: self.env.company)
     active = fields.Boolean(default=True)
 
-    _sql_constraints = [
-        ("iot_department_company_name_uniq", "unique(name, company_id)", "Department name must be unique per company."),
-    ]
+    _company_name_uniq = models.Constraint(
+        "UNIQUE(name, company_id)",
+        "Department name must be unique per company.",
+    )

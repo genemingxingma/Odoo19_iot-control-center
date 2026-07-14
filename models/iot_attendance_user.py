@@ -1,4 +1,4 @@
-from odoo import api, fields, models
+from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
 
 
@@ -16,9 +16,10 @@ class IoTAttendanceUser(models.Model):
     company_id = fields.Many2one(related="device_id.company_id", store=True, readonly=True)
     last_seen_at = fields.Datetime(readonly=True, copy=False)
 
-    _sql_constraints = [
-        ("iot_attendance_user_unique", "unique(device_id, device_user_id)", "The device user ID must be unique per device."),
-    ]
+    _device_user_unique = models.Constraint(
+        "UNIQUE(device_id, device_user_id)",
+        "The device user ID must be unique per device.",
+    )
 
     @api.depends("device_id.name", "employee_id.name", "device_user_id")
     def _compute_name(self):
@@ -29,4 +30,4 @@ class IoTAttendanceUser(models.Model):
     def _check_device_user_id(self):
         for rec in self:
             if rec.device_user_id and not rec.device_user_id.strip():
-                raise ValidationError("Device User ID cannot be empty.")
+                raise ValidationError(_("Device User ID cannot be empty."))

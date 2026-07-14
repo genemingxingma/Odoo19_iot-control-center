@@ -1,6 +1,7 @@
 /** @odoo-module **/
 
 import { patch } from "@web/core/utils/patch";
+import { _t } from "@web/core/l10n/translation";
 import { GraphRenderer } from "@web/views/graph/graph_renderer";
 import { GraphModel } from "@web/views/graph/graph_model";
 
@@ -199,7 +200,7 @@ patch(GraphModel.prototype, {
                     dataPoints.push({
                         ...common,
                         value: Number(record.temperature),
-                        labels: [...labels, "Temperature"],
+                        labels: [...labels, _t("Temperature")],
                         identifier: JSON.stringify([...rawValues, { metric: "temperature", id: record.id }]),
                         cumulatedStart: 0,
                     });
@@ -208,7 +209,7 @@ patch(GraphModel.prototype, {
                     dataPoints.push({
                         ...common,
                         value: Number(record.humidity),
-                        labels: [...labels, "Humidity"],
+                        labels: [...labels, _t("Humidity")],
                         identifier: JSON.stringify([...rawValues, { metric: "humidity", id: record.id }]),
                         cumulatedStart: 0,
                     });
@@ -281,7 +282,7 @@ patch(GraphModel.prototype, {
                 dataPoints.push({
                     ...common,
                     value: Number(tempVal),
-                    labels: [...labels, "Temperature"],
+                    labels: [...labels, _t("Temperature")],
                     identifier: JSON.stringify([...rawValues, { metric: "temperature" }]),
                     cumulatedStart: 0,
                 });
@@ -293,7 +294,7 @@ patch(GraphModel.prototype, {
                 dataPoints.push({
                     ...common,
                     value: Number(humVal),
-                    labels: [...labels, "Humidity"],
+                    labels: [...labels, _t("Humidity")],
                     identifier: JSON.stringify([...rawValues, { metric: "humidity" }]),
                     cumulatedStart: 0,
                 });

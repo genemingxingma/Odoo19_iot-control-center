@@ -1,4 +1,10 @@
-from odoo import fields, models
+import logging
+from datetime import timedelta
+
+from odoo import _, api, fields, models
+
+
+_logger = logging.getLogger(__name__)
 
 
 class IoTControlBoard(models.Model):
@@ -6,7 +12,7 @@ class IoTControlBoard(models.Model):
     _description = "IoT Control Board Card"
     _order = "sequence, id"
 
-    name = fields.Char(required=True)
+    name = fields.Char(required=True, translate=True)
     key = fields.Selection(
         [
             ("relay", "Relay"),
@@ -18,7 +24,7 @@ class IoTControlBoard(models.Model):
         required=True,
         default="other",
     )
-    description = fields.Text()
+    description = fields.Text(translate=True)
     sequence = fields.Integer(default=10)
     active = fields.Boolean(default=True)
 
@@ -39,6 +45,39 @@ class IoTControlBoard(models.Model):
     metric_1_value = fields.Integer(compute="_compute_metrics")
     metric_2_label = fields.Char(compute="_compute_metrics")
     metric_2_value = fields.Integer(compute="_compute_metrics")
+
+    @api.model
+    def _cleanup_legacy_records(self):
+        legacy_xmlids = [
+            "iot_control_center.cron_iot_run_schedules",
+            "iot_control_center.menu_iot_th_raw_packet",
+            "iot_control_center.action_iot_th_raw_packet",
+            "iot_control_center.view_iot_th_raw_packet_list",
+            "iot_control_center.view_iot_th_raw_packet_form",
+            "iot_control_center.view_iot_th_raw_packet_search",
+            "iot_control_center.rule_iot_th_raw_packet_company",
+            "iot_control_center.access_iot_th_raw_packet_manager",
+            "iot_control_center.access_iot_th_raw_packet_user",
+            "iot_control_center.access_iot_th_raw_packet_admin",
+        ]
+        IrModelData = self.env["ir.model.data"].sudo()
+        for xmlid in legacy_xmlids:
+            module, name = xmlid.split(".", 1)
+            data = IrModelData.search([("module", "=", module), ("name", "=", name)], limit=1)
+            if not data:
+                continue
+            try:
+                with self.env.cr.savepoint():
+                    if data.model in self.env:
+                        record = self.env[data.model].sudo().browse(data.res_id)
+                        if record.exists():
+                            record.unlink()
+                    if data.exists():
+                        data.unlink()
+            except Exception:
+                _logger.debug("Skipped legacy cleanup for XMLID %s", xmlid, exc_info=True)
+        with self.env.cr.savepoint():
+            self.env.cr.execute("DROP TABLE IF EXISTS iot_th_raw_packet CASCADE")
 
     def _safe_window_action(self, xmlid, default_name, default_model, default_view_mode="list,kanban,form"):
         action = {}
@@ -72,45 +111,49 @@ class IoTControlBoard(models.Model):
         return action
 
     def _compute_metrics(self):
-        Device = self.env["iot.device"].sudo()
-        Gateway = self.env["iot.th.gateway"].sudo()
-        Sensor = self.env["iot.th.sensor"].sudo()
-        Alert = self.env["iot.th.alert"].sudo()
-        OpenwrtAP = self.env["iot.openwrt.ap"].sudo()
-        AttendanceDevice = self.env["iot.attendance.device"].sudo()
-        AttendancePunch = self.env["iot.attendance.punch"].sudo()
+        Device = self.env["iot.device"]
+        Gateway = self.env["iot.th.gateway"]
+        Sensor = self.env["iot.th.sensor"]
+        Alert = self.env["iot.th.alert"]
+        OpenwrtAP = self.env["iot.openwrt.ap"]
+        AttendanceDevice = self.env["iot.attendance.device"]
+        AttendancePunch = self.env["iot.attendance.punch"]
+        company_domain = [("company_id", "in", self.env.companies.ids)]
 
         for rec in self:
             if rec.key == "relay":
-                rec.metric_1_label = "Devices"
-                rec.metric_1_value = Device.search_count([("company_id", "!=", False)])
-                rec.metric_2_label = "Online"
-                rec.metric_2_value = Device.search_count([("company_id", "!=", False), ("last_seen", "!=", False)])
+                timeout = int(self.env["ir.config_parameter"].sudo().get_param("iot_control_center.online_timeout_sec", 300))
+                cutoff = fields.Datetime.now() - timedelta(seconds=max(timeout, 1))
+                rec.metric_1_label = _("Devices")
+                rec.metric_1_value = Device.search_count(company_domain)
+                rec.metric_2_label = _("Online")
+                rec.metric_2_value = Device.search_count(company_domain + [("last_seen", ">=", cutoff)])
             elif rec.key == "th":
-                rec.metric_1_label = "Sensors"
-                rec.metric_1_value = Sensor.search_count([("company_id", "!=", False)])
-                rec.metric_2_label = "Open Alerts"
-                rec.metric_2_value = Alert.search_count([("state", "=", "open")])
+                rec.metric_1_label = _("Sensors")
+                rec.metric_1_value = Sensor.search_count(company_domain)
+                rec.metric_2_label = _("Open Alerts")
+                rec.metric_2_value = Alert.search_count(company_domain + [("state", "=", "open")])
             elif rec.key == "openwrt":
-                rec.metric_1_label = "APs"
-                rec.metric_1_value = OpenwrtAP.search_count([("active", "=", True)])
-                rec.metric_2_label = "Online"
+                rec.metric_1_label = _("APs")
+                rec.metric_1_value = OpenwrtAP.search_count(company_domain + [("active", "=", True)])
+                rec.metric_2_label = _("Online")
                 rec.metric_2_value = OpenwrtAP.search_count(
-                    [
+                    company_domain
+                    + [
                         ("active", "=", True),
                         ("status", "=", "online"),
                     ]
                 )
             elif rec.key == "attendance":
-                rec.metric_1_label = "Devices"
-                rec.metric_1_value = AttendanceDevice.search_count([("active", "=", True)])
-                rec.metric_2_label = "Punches"
-                rec.metric_2_value = AttendancePunch.search_count([])
+                rec.metric_1_label = _("Devices")
+                rec.metric_1_value = AttendanceDevice.search_count(company_domain + [("active", "=", True)])
+                rec.metric_2_label = _("Punches")
+                rec.metric_2_value = AttendancePunch.search_count(company_domain)
             else:
-                rec.metric_1_label = "Items"
-                rec.metric_1_value = Gateway.search_count([])
-                rec.metric_2_label = "Open Alerts"
-                rec.metric_2_value = Alert.search_count([("state", "=", "open")])
+                rec.metric_1_label = _("Items")
+                rec.metric_1_value = Gateway.search_count(company_domain)
+                rec.metric_2_label = _("Open Alerts")
+                rec.metric_2_value = Alert.search_count(company_domain + [("state", "=", "open")])
 
     def action_open_module(self):
         self.ensure_one()

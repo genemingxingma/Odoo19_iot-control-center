@@ -5,12 +5,22 @@ import time
 import uuid
 from pathlib import Path
 
-import fcntl
-
-import paho.mqtt.client as mqtt
 import psycopg2
 from odoo import SUPERUSER_ID, api
 from odoo.modules.registry import Registry
+
+try:
+    import fcntl
+except Exception:  # pragma: no cover - only relevant outside Linux.
+    fcntl = None
+
+try:
+    import paho.mqtt.client as mqtt
+except Exception as exc:  # pragma: no cover - optional when external middleware is used.
+    mqtt = None
+    _mqtt_import_error = exc
+else:
+    _mqtt_import_error = None
 
 _logger = logging.getLogger(__name__)
 
@@ -32,6 +42,9 @@ class MQTTService:
         return Path("/tmp") / f"iot_mqtt_subscriber_{safe_dbname}.lock"
 
     def _acquire_singleton_lock(self):
+        if fcntl is None:
+            _logger.warning("fcntl is unavailable; MQTT singleton lock is process-local only.")
+            return True
         if self._singleton_fd:
             return True
         lock_path = self._singleton_lock_path()
@@ -45,6 +58,9 @@ class MQTTService:
         return True
 
     def _release_singleton_lock(self):
+        if fcntl is None:
+            self._singleton_fd = None
+            return
         if not self._singleton_fd:
             return
         try:
@@ -58,6 +74,8 @@ class MQTTService:
         self._singleton_fd = None
 
     def _make_client(self):
+        if mqtt is None:
+            raise RuntimeError("Python package paho-mqtt is not installed; enable middleware or install paho-mqtt.")
         # Use process-unique client_id to avoid cross-worker broker kick-out
         # loops when multiple Odoo workers ensure MQTT service concurrently.
         client_id = f"odoo-iot-{self.dbname}-{os.getpid()}"
@@ -80,7 +98,7 @@ class MQTTService:
 
         def on_message(c, userdata, msg):
             payload_text = msg.payload.decode("utf-8", errors="ignore")
-            self._enqueue_message(msg.topic, payload_text)
+            self._enqueue_message(msg.topic, payload_text, retained=bool(getattr(msg, "retain", False)))
 
         def on_disconnect(c, userdata, rc):
             # Mark as disconnected so next publish will trigger reconnect.
@@ -93,13 +111,17 @@ class MQTTService:
         client.on_disconnect = on_disconnect
         return client
 
-    def _enqueue_message(self, topic, payload_text):
+    def _enqueue_message(self, topic, payload_text, retained=False):
         registry = Registry(self.dbname)
         for attempt in range(3):
             try:
                 with registry.cursor() as cr:
                     env = api.Environment(cr, SUPERUSER_ID, {})
-                    msg = env["iot.mqtt.message"].create_from_mqtt(topic, payload_text)
+                    msg = env["iot.mqtt.message"].create_from_mqtt(
+                        topic,
+                        payload_text,
+                        retained=retained,
+                    )
                     try:
                         msg._process_one()
                     except Exception as exc:
@@ -116,6 +138,9 @@ class MQTTService:
         with self._lock:
             if self._started:
                 return True
+            if mqtt is None:
+                _logger.error("IoT MQTT service disabled because paho-mqtt is unavailable: %s", _mqtt_import_error)
+                return False
             if not self._acquire_singleton_lock():
                 # Another worker/process owns MQTT subscription loop for this DB.
                 return False
@@ -203,6 +228,9 @@ def _load_config(env):
 
 
 def ensure_running(env):
+    if mqtt is None:
+        _logger.info("Skip internal MQTT subscriber: paho-mqtt is not installed.")
+        return None
     dbname = env.cr.dbname
     config = _load_config(env)
     if not config.get("host"):
@@ -225,6 +253,9 @@ def ensure_running(env):
 
 
 def publish_once(env, topic, payload, retain=False):
+    if mqtt is None:
+        _logger.error("IoT MQTT publish skipped because paho-mqtt is unavailable: %s", _mqtt_import_error)
+        return False
     config = _load_config(env)
     host = config.get("host")
     if not host:

@@ -1,5 +1,6 @@
 import json
 import logging
+import ipaddress
 
 from odoo import fields, http
 from odoo.http import request
@@ -9,7 +10,17 @@ _logger = logging.getLogger(__name__)
 
 class IoTAttendanceController(http.Controller):
     def _plain_ok(self, body="OK"):
-        return request.make_response(body, headers=[("Content-Type", "text/plain; charset=utf-8")])
+        return request.make_response(
+            body,
+            headers=[
+                ("Content-Type", "text/plain; charset=utf-8"),
+                # Some attendance terminals keep stale HTTP sessions and only recover after reboot.
+                # Force short-lived responses so every heartbeat/data push uses a fresh connection.
+                ("Connection", "close"),
+                ("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0"),
+                ("Pragma", "no-cache"),
+            ],
+        )
 
     def _headers(self):
         return {key: value for key, value in request.httprequest.headers.items()}
@@ -40,6 +51,25 @@ class IoTAttendanceController(http.Controller):
             if value not in (None, "", False):
                 compact[key] = value
         return compact
+
+    def _source_ip_allowed(self, remote_ip):
+        raw = (request.env["ir.config_parameter"].sudo().get_param("iot_control_center.attendance_allowed_ips") or "").strip()
+        if not raw:
+            return True
+        try:
+            source = ipaddress.ip_address(remote_ip)
+        except Exception:
+            return False
+        for item in [part.strip() for part in raw.split(",") if part.strip()]:
+            try:
+                if "/" in item:
+                    if source in ipaddress.ip_network(item, strict=False):
+                        return True
+                elif source == ipaddress.ip_address(item):
+                    return True
+            except Exception:
+                _logger.warning("Invalid attendance allowed IP entry ignored: %s", item)
+        return False
 
     def _create_request_log(self, endpoint, serial_number="", remote_ip="", payload_text="", device=None, status="received", note=""):
         try:
@@ -84,6 +114,8 @@ class IoTAttendanceController(http.Controller):
     def adms_getrequest(self, **kwargs):
         serial_number = (request.params.get("SN") or request.params.get("sn") or "").strip()
         remote_ip = request.httprequest.remote_addr
+        if not self._source_ip_allowed(remote_ip):
+            return self._plain_ok("OK")
         payload_text = (request.httprequest.data or b"").decode("utf-8", errors="ignore")
         device = request.env["iot.attendance.device"].sudo()._find_adms_device(serial_number, remote_ip=remote_ip)
         log = self._create_request_log(request.httprequest.path, serial_number, remote_ip, payload_text, device if device else None, "matched" if device else "ignored", "Heartbeat / getrequest")
@@ -97,6 +129,8 @@ class IoTAttendanceController(http.Controller):
         serial_number = (request.params.get("SN") or request.params.get("sn") or "").strip()
         table = (request.params.get("table") or request.params.get("Table") or "").strip()
         remote_ip = request.httprequest.remote_addr
+        if not self._source_ip_allowed(remote_ip):
+            return self._plain_ok("OK")
         payload_text = (request.httprequest.data or b"").decode("utf-8", errors="ignore")
         device = request.env["iot.attendance.device"].sudo()._find_adms_device(serial_number, remote_ip=remote_ip)
         log = self._create_request_log(request.httprequest.path, serial_number, remote_ip, payload_text, device if device else None, "matched" if device else "ignored", f"table={table or '-'}")
@@ -122,6 +156,8 @@ class IoTAttendanceController(http.Controller):
     def adms_registry(self, **kwargs):
         serial_number = (request.params.get("SN") or request.params.get("sn") or "").strip()
         remote_ip = request.httprequest.remote_addr
+        if not self._source_ip_allowed(remote_ip):
+            return self._plain_ok("OK")
         payload_text = (request.httprequest.data or b"").decode("utf-8", errors="ignore")
         device = request.env["iot.attendance.device"].sudo()._find_adms_device(serial_number, remote_ip=remote_ip)
         self._create_request_log(request.httprequest.path, serial_number, remote_ip, payload_text, device if device else None, "matched" if device else "ignored", "Registry")
@@ -132,6 +168,8 @@ class IoTAttendanceController(http.Controller):
     def adms_devicecmd(self, **kwargs):
         serial_number = (request.params.get("SN") or request.params.get("sn") or "").strip()
         remote_ip = request.httprequest.remote_addr
+        if not self._source_ip_allowed(remote_ip):
+            return self._plain_ok("OK")
         payload_text = (request.httprequest.data or b"").decode("utf-8", errors="ignore")
         device = request.env["iot.attendance.device"].sudo()._find_adms_device(serial_number, remote_ip=remote_ip)
         self._create_request_log(request.httprequest.path, serial_number, remote_ip, payload_text, device if device else None, "matched" if device else "ignored", "Device command poll")
@@ -143,6 +181,8 @@ class IoTAttendanceController(http.Controller):
         serial_number = (request.params.get("SN") or request.params.get("sn") or "").strip()
         table = (request.params.get("table") or request.params.get("Table") or "").strip()
         remote_ip = request.httprequest.remote_addr
+        if not self._source_ip_allowed(remote_ip):
+            return self._plain_ok("OK")
         payload_text = (request.httprequest.data or b"").decode("utf-8", errors="ignore")
         device = request.env["iot.attendance.device"].sudo()._find_adms_device(serial_number, remote_ip=remote_ip)
         if table.upper() == "ATTPHOTO":

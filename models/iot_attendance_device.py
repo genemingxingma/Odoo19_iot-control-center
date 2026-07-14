@@ -1,6 +1,7 @@
 import logging
 import secrets
 from datetime import datetime
+from urllib.parse import urlsplit
 
 import pytz
 
@@ -29,7 +30,7 @@ class IoTAttendanceDevice(models.Model):
     port = fields.Integer(default=4370, tracking=True)
     password = fields.Char(help="Communication password for devices that require it.")
     serial_number = fields.Char(string="Serial Number", tracking=True, help="Device serial number used by ADMS/PUSH requests.")
-    timezone = fields.Selection(selection=lambda self: [(tz, tz) for tz in pytz.common_timezones], default=lambda self: self.env.user.tz or "UTC", required=True)
+    timezone = fields.Char(string="Company Timezone", compute="_compute_timezone", readonly=True)
     punch_direction_mode = fields.Selection([("device", "Use Device Direction"), ("auto", "Auto Alternate In/Out")], default="device", required=True)
     auto_clear_after_sync = fields.Boolean(string="Clear Device Logs After Sync")
     sync_enabled = fields.Boolean(default=True, tracking=True)
@@ -48,12 +49,33 @@ class IoTAttendanceDevice(models.Model):
     user_count = fields.Integer(compute="_compute_counts")
     request_count = fields.Integer(compute="_compute_counts")
 
-    _sql_constraints = [
-        ("iot_attendance_device_serial_unique", "unique(serial_number)", "Serial number must be unique."),
-    ]
+    _serial_unique = models.Constraint(
+        "UNIQUE(serial_number)",
+        "Serial number must be unique.",
+    )
+
+    @api.depends("company_id.country_id", "company_id.partner_id.country_id", "company_id.partner_id.tz")
+    def _compute_timezone(self):
+        for rec in self:
+            rec.timezone = (rec.company_id or rec.env.company).get_iot_timezone()
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            vals.pop("timezone", None)
+        return super().create(vals_list)
+
+    def write(self, vals):
+        if "timezone" in vals:
+            vals = dict(vals)
+            vals.pop("timezone", None)
+        return super().write(vals)
 
     def _get_base_url(self):
         self.ensure_one()
+        internal_url = self.company_id.get_iot_internal_odoo_base_url()
+        if internal_url:
+            return internal_url
         return self.env["ir.config_parameter"].sudo().get_param("web.base.url", "")
 
     @api.depends("webhook_token", "serial_number", "protocol")
@@ -65,10 +87,18 @@ class IoTAttendanceDevice(models.Model):
                 rec.adms_http_url = False
                 rec.adms_https_url = False
                 continue
-            host_part = base_url.split("://", 1)[1] if "://" in base_url else base_url
+            parsed = urlsplit(base_url if "://" in base_url else f"http://{base_url}")
+            host_part = parsed.hostname or (base_url.split("://", 1)[1] if "://" in base_url else base_url)
+            adms_port_raw = rec.env["ir.config_parameter"].sudo().get_param("iot_control_center.attendance_adms_port", 8069)
+            try:
+                adms_port = int(adms_port_raw)
+            except (TypeError, ValueError):
+                adms_port = 8069
+            if adms_port <= 0:
+                adms_port = 8069
             rec.webhook_url = f"{base_url}/iot_attendance/push/{rec.id}" if rec.id else False
-            rec.adms_http_url = f"http://{host_part}/iclock/"
-            rec.adms_https_url = f"https://{host_part}/iclock/"
+            rec.adms_http_url = f"http://{host_part}:{adms_port}"
+            rec.adms_https_url = f"https://{host_part}:{adms_port}"
 
     @api.depends("punch_ids", "user_mapping_ids", "request_ids")
     def _compute_counts(self):
@@ -129,7 +159,7 @@ class IoTAttendanceDevice(models.Model):
             raise UserError(_("Unable to parse punch timestamp."))
         if local_dt.tzinfo:
             return local_dt.astimezone(pytz.UTC).replace(tzinfo=None)
-        tz = pytz.timezone(self.timezone or "UTC")
+        tz = pytz.timezone(self.company_id.get_iot_timezone())
         return tz.localize(local_dt).astimezone(pytz.UTC).replace(tzinfo=None)
 
     def _resolve_employee(self, device_user_id, device_uid=None):
@@ -171,12 +201,12 @@ class IoTAttendanceDevice(models.Model):
             "punch_time": self._parse_device_datetime(payload.get("punch_time") or payload.get("timestamp") or payload.get("datetime")),
             "direction": self._normalize_direction(payload.get("direction"), payload.get("status")),
             "source": source,
-            "raw_payload": payload,
+            "raw_payload": False,
         }
 
     def ingest_webhook_payload(self, punches):
         self.ensure_one()
-        Punch = self.env["iot.attendance.punch"].sudo()
+        Punch = self.env["iot.attendance.punch"].with_context(iot_attendance_ingest=True).sudo()
         created = 0
         for payload in punches:
             vals = self._prepare_punch_vals(payload, "webhook")
@@ -200,14 +230,11 @@ class IoTAttendanceDevice(models.Model):
             device = self.search(domain + [("host", "=", remote_ip)], limit=1)
             if device:
                 return device
-        devices = self.search(domain + [("active", "=", True), ("sync_enabled", "=", True)], limit=2)
-        if len(devices) == 1:
-            return devices
         return self.env["iot.attendance.device"]
 
     def ingest_adms_payload(self, payload_text, table=None, serial_number=None, remote_ip=None, query_params=None):
         self.ensure_one()
-        Punch = self.env["iot.attendance.punch"].sudo()
+        Punch = self.env["iot.attendance.punch"].with_context(iot_attendance_ingest=True).sudo()
         created = 0
         lines = [line.strip() for line in (payload_text or "").replace("\r", "\n").split("\n") if line.strip()]
         normalized_table = (table or "").upper()
@@ -239,6 +266,19 @@ class IoTAttendanceDevice(models.Model):
             verify = kv.get("Verify") or kv.get("verify")
             if device_user_id and timestamp:
                 return {"device_user_id": device_user_id, "timestamp": timestamp, "status": status, "direction": verify, "raw_line": line}
+        # Fallback parser: some devices push attendance rows over non-ATTLOG tables (e.g., fdata/ATTPHOTO).
+        # If the row looks like "<user>\\t<datetime>\\t...", treat it as a punch event.
+        if len(parts) >= 2:
+            timestamp = parts[1].strip().replace("T", " ")
+            looks_like_dt = "-" in timestamp and ":" in timestamp and len(timestamp) >= 16
+            if looks_like_dt:
+                return {
+                    "device_user_id": parts[0].strip(),
+                    "timestamp": timestamp,
+                    "status": parts[2].strip() if len(parts) > 2 else None,
+                    "direction": parts[3].strip() if len(parts) > 3 else None,
+                    "raw_line": line,
+                }
         if table_name == "ATTLOG" and len(parts) >= 2:
             return {
                 "device_user_id": parts[0].strip(),
@@ -297,7 +337,7 @@ class IoTAttendanceDevice(models.Model):
         self.ensure_one()
         if self.protocol in ("adms_http", "http_push"):
             raise UserError(_("Push devices are passive. Point the device to the ADMS/Webhook URL instead."))
-        Punch = self.env["iot.attendance.punch"].sudo()
+        Punch = self.env["iot.attendance.punch"].with_context(iot_attendance_ingest=True).sudo()
         created = 0
         for payload in self._fetch_zk_punches():
             vals = self._prepare_punch_vals(payload, "device_pull")

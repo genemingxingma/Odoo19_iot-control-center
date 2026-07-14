@@ -32,15 +32,22 @@ class IoTFirmwarePushWizard(models.TransientModel):
             raise UserError(_("No matched devices for push."))
 
         firmware = self.firmware_id
+        if firmware.quarantined or not firmware.image_compatible:
+            raise UserError(
+                firmware.quarantine_reason
+                or _("This firmware is quarantined or incompatible with ESP8266 1MB/DOUT relay hardware.")
+            )
         ok_count = 0
         failed = []
         for device in devices:
             try:
-                url = firmware.build_download_url(device)
+                url, fallback_url = firmware.build_download_urls(device)
                 payload = {
                     "url": url,
                     "version": firmware.version,
                 }
+                if fallback_url:
+                    payload["fallback_url"] = fallback_url
                 # Keep batch push robust: one failure should not abort all devices.
                 published = device._publish_command("upgrade", payload, raise_on_fail=False)
                 if not published:

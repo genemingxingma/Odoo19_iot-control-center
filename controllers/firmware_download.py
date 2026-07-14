@@ -16,6 +16,8 @@ class IoTFirmwareController(http.Controller):
         firmware = request.env["iot.firmware"].sudo().browse(firmware_id)
         if not firmware.exists() or not firmware.file:
             return request.not_found()
+        if firmware.company_id and firmware.company_id != device.company_id:
+            return request.not_found()
 
         content = base64.b64decode(firmware.file)
         headers = [

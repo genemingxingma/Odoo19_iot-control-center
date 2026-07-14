@@ -1,7 +1,6 @@
 from datetime import timedelta
 
 from odoo import api, fields, models
-from odoo.osv import expression
 
 
 class IoTTHReading(models.Model):
@@ -60,6 +59,13 @@ class IoTTHReading(models.Model):
             WHERE COALESCE(is_hourly_rollup, FALSE) = TRUE
             """
         )
+        self.env.cr.execute(
+            """
+            CREATE INDEX IF NOT EXISTS iot_th_reading_graph_daily_idx
+            ON iot_th_reading (company_id, reported_at DESC, sensor_id, id DESC)
+            WHERE COALESCE(is_daily_rollup, FALSE) = TRUE
+            """
+        )
 
     @api.model
     def _is_invalid_zero_pair(self, temperature, humidity):
@@ -107,7 +113,7 @@ class IoTTHReading(models.Model):
         return normalized
 
     def read_group(self, domain, fields, groupby, offset=0, limit=None, orderby=False, lazy=True):
-        safe_domain = expression.AND(
+        safe_domain = fields.Domain.AND(
             [
                 domain or [],
                 ["|", ("temperature", "!=", 0.0), ("humidity", "!=", 0.0)],
@@ -127,11 +133,11 @@ class IoTTHReading(models.Model):
     def _cron_rollup_old_readings(self, retention_days=None, batch_size=500):
         icp = self.env["ir.config_parameter"].sudo()
         if retention_days is None:
-            retention_days = icp.get_param("iot_control_center.th_raw_retention_days", "15")
+            retention_days = icp.get_param("iot_control_center.th_raw_retention_days", "30")
         try:
-            retention_days = max(int(retention_days or 15), 1)
+            retention_days = max(int(retention_days or 30), 1)
         except Exception:
-            retention_days = 15
+            retention_days = 30
         cutoff = fields.Datetime.subtract(fields.Datetime.now(), days=retention_days)
         sensor_model = self.env["iot.th.sensor"].sudo()
         affected_sensor_ids = set()
@@ -140,19 +146,19 @@ class IoTTHReading(models.Model):
         while True:
             self.env.cr.execute(
                 """
-                SELECT sensor_id, bucket_hour
+                SELECT sensor_id, bucket_day
                 FROM (
                     SELECT
                         reading.sensor_id AS sensor_id,
-                        date_trunc('hour', reading.reported_at) AS bucket_hour
+                        date_trunc('day', reading.reported_at) AS bucket_day
                     FROM iot_th_reading reading
                     JOIN iot_th_sensor sensor ON sensor.id = reading.sensor_id
                     WHERE reading.reported_at < %s
-                      AND COALESCE(reading.is_hourly_rollup, FALSE) = FALSE
                       AND COALESCE(reading.is_daily_rollup, FALSE) = FALSE
                       AND COALESCE(sensor.keep_full_history, FALSE) = FALSE
-                    GROUP BY reading.sensor_id, date_trunc('hour', reading.reported_at)
-                    ORDER BY bucket_hour, reading.sensor_id
+                      AND (reading.temperature <> 0 OR reading.humidity <> 0)
+                    GROUP BY reading.sensor_id, date_trunc('day', reading.reported_at)
+                    ORDER BY bucket_day, reading.sensor_id
                     LIMIT %s
                 ) batches
                 """,
@@ -162,8 +168,8 @@ class IoTTHReading(models.Model):
             if not batch_rows:
                 break
 
-            for sensor_id, bucket_hour in batch_rows:
-                bucket_end = bucket_hour + timedelta(hours=1)
+            for sensor_id, bucket_day in batch_rows:
+                bucket_end = bucket_day + timedelta(days=1)
                 self.env.cr.execute(
                     """
                     SELECT
@@ -175,10 +181,10 @@ class IoTTHReading(models.Model):
                     WHERE reading.sensor_id = %s
                       AND reading.reported_at >= %s
                       AND reading.reported_at < %s
-                      AND COALESCE(reading.is_hourly_rollup, FALSE) = FALSE
                       AND COALESCE(reading.is_daily_rollup, FALSE) = FALSE
+                      AND (reading.temperature <> 0 OR reading.humidity <> 0)
                     """,
-                    [sensor_id, bucket_hour, bucket_end],
+                    [sensor_id, bucket_day, bucket_end],
                 )
                 gateway_id, avg_temperature, avg_humidity = self.env.cr.fetchone() or (0, None, None)
                 if not gateway_id or avg_temperature is None or avg_humidity is None:
@@ -191,7 +197,7 @@ class IoTTHReading(models.Model):
                       AND reported_at = %s
                       AND COALESCE(is_hourly_rollup, FALSE) = TRUE
                     """,
-                    [sensor_id, bucket_hour],
+                    [sensor_id, bucket_day],
                 )
                 self.env.cr.execute(
                     """
@@ -200,17 +206,17 @@ class IoTTHReading(models.Model):
                       AND reported_at = %s
                       AND COALESCE(is_daily_rollup, FALSE) = TRUE
                     """,
-                    [sensor_id, bucket_hour],
+                    [sensor_id, bucket_day],
                 )
                 self.sudo().create(
                     {
                         "sensor_id": sensor_id,
                         "gateway_id": gateway_id,
-                        "reported_at": bucket_hour,
+                        "reported_at": bucket_day,
                         "temperature": avg_temperature,
                         "humidity": avg_humidity,
-                        "is_hourly_rollup": True,
-                        "is_daily_rollup": False,
+                        "is_hourly_rollup": False,
+                        "is_daily_rollup": True,
                     }
                 )
                 self.env.cr.execute(
@@ -219,10 +225,9 @@ class IoTTHReading(models.Model):
                     WHERE sensor_id = %s
                       AND reported_at >= %s
                       AND reported_at < %s
-                      AND COALESCE(is_hourly_rollup, FALSE) = FALSE
                       AND COALESCE(is_daily_rollup, FALSE) = FALSE
                     """,
-                    [sensor_id, bucket_hour, bucket_end],
+                    [sensor_id, bucket_day, bucket_end],
                 )
                 affected_sensor_ids.add(sensor_id)
 

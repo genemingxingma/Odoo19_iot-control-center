@@ -11,7 +11,7 @@ class IoTTHSensorBindWizard(models.TransientModel):
     validated = fields.Boolean(readonly=True, default=False)
     validated_node_id = fields.Char(readonly=True)
     validated_probe_code = fields.Char(readonly=True)
-    candidate_sensor_ids = fields.Many2many("iot.th.sensor", string="Matched Sensors", readonly=True)
+    candidate_summary = fields.Char(string="Matched Sensors", readonly=True)
     candidate_count = fields.Integer(readonly=True)
     company_id = fields.Many2one(
         "res.company",
@@ -26,7 +26,7 @@ class IoTTHSensorBindWizard(models.TransientModel):
         self.validated = False
         self.validated_node_id = False
         self.validated_probe_code = False
-        self.candidate_sensor_ids = [(5, 0, 0)]
+        self.candidate_summary = False
         self.candidate_count = 0
 
     def _resolve_company(self):
@@ -69,7 +69,7 @@ class IoTTHSensorBindWizard(models.TransientModel):
                 "validated": True,
                 "validated_node_id": node_id,
                 "validated_probe_code": probe_code.upper(),
-                "candidate_sensor_ids": [(6, 0, sensors.ids)],
+                "candidate_summary": ", ".join(["%s-%s" % (s.node_id, s.probe_code) for s in sensors]),
                 "candidate_count": len(sensors),
             }
         )
@@ -85,8 +85,6 @@ class IoTTHSensorBindWizard(models.TransientModel):
         probe_code = (self.probe_code or "").strip()
         if not node_id:
             node_id = (self.validated_node_id or "").strip()
-        if not node_id and self.candidate_sensor_ids:
-            node_id = (self.candidate_sensor_ids[0].node_id or "").strip()
         if not probe_code and self.validated_probe_code:
             probe_code = (self.validated_probe_code or "").strip()
         if not node_id:
@@ -106,7 +104,7 @@ class IoTTHSensorBindWizard(models.TransientModel):
                 "validated": False,
                 "validated_node_id": False,
                 "validated_probe_code": False,
-                "candidate_sensor_ids": [(5, 0, 0)],
+                "candidate_summary": False,
                 "candidate_count": 0,
             }
         )

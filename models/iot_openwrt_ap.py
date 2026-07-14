@@ -67,7 +67,7 @@ class IoTOpenwrtAP(models.Model):
     download_rate_display = fields.Char(string="Download", readonly=True, compute="_compute_live_telemetry", store=False)
     upload_total_display = fields.Char(string="Uploaded", readonly=True, compute="_compute_live_telemetry", store=False)
     download_total_display = fields.Char(string="Downloaded", readonly=True, compute="_compute_live_telemetry", store=False)
-    live_clients_html = fields.Html(string="Connected Clients", readonly=True, sanitize=False, compute="_compute_live_telemetry", store=False)
+    live_clients_html = fields.Html(string="Connected Clients", readonly=True, compute="_compute_live_telemetry", store=False)
 
     status = fields.Selection(
         [
@@ -94,9 +94,10 @@ class IoTOpenwrtAP(models.Model):
     job_ids = fields.One2many("iot.openwrt.job", "ap_id")
     job_count = fields.Integer(compute="_compute_job_count")
 
-    _sql_constraints = [
-        ("iot_openwrt_ap_host_port_uniq", "unique(host, ssh_port)", "AP host + SSH port must be unique."),
-    ]
+    _host_port_uniq = models.Constraint(
+        "UNIQUE(company_id, host, ssh_port)",
+        "AP host + SSH port must be unique per company.",
+    )
 
     @api.depends("last_seen")
     def _compute_online(self):
@@ -143,7 +144,7 @@ class IoTOpenwrtAP(models.Model):
     def _middleware_private_key_path(self):
         return (self.env["ir.config_parameter"].sudo().get_param("iot_control_center.openwrt_ssh_private_key_path") or "").strip()
 
-    def _call_middleware(self, endpoint, payload, timeout=60):
+    def _call_middleware(self, endpoint, payload, timeout=15):
         headers = {"Content-Type": "application/json"}
         token = self._middleware_token()
         if token:
@@ -191,8 +192,8 @@ class IoTOpenwrtAP(models.Model):
                 for rec in records
             ]
         }
-        response = self._call_middleware("/v1/openwrt/refresh_bulk", payload)
-        data_map = records._get_live_telemetry_map(force=True)
+        response = self._call_middleware("/v1/openwrt/refresh_bulk", payload, timeout=20)
+        data_map = records._get_live_telemetry_map(force=False)
         response["items"] = [
             {
                 "id": rec.id,
@@ -209,9 +210,29 @@ class IoTOpenwrtAP(models.Model):
                 "name": f"{self.name} - {job_type}",
                 "ap_id": self.id,
                 "job_type": job_type,
-                "request_payload": json.dumps(payload, ensure_ascii=False, indent=2),
+                "request_payload": json.dumps(self._scrub_sensitive_payload(payload), ensure_ascii=False, indent=2),
             }
         )
+
+    @api.model
+    def _scrub_sensitive_payload(self, value):
+        if isinstance(value, dict):
+            scrubbed = {}
+            for key, item in value.items():
+                key_lower = str(key).lower()
+                if (
+                    "password" in key_lower
+                    or "token" in key_lower
+                    or "secret" in key_lower
+                    or key_lower in {"key", "key_path", "private_key", "auth_token"}
+                ):
+                    scrubbed[key] = "***"
+                else:
+                    scrubbed[key] = self._scrub_sensitive_payload(item)
+            return scrubbed
+        if isinstance(value, list):
+            return [self._scrub_sensitive_payload(item) for item in value]
+        return value
 
     @api.model
     def _system_no_track_context(self):
@@ -227,7 +248,7 @@ class IoTOpenwrtAP(models.Model):
             {
                 "state": "success" if success else "failed",
                 "completed_at": fields.Datetime.now(),
-                "response_payload": json.dumps(response, ensure_ascii=False, indent=2),
+                "response_payload": json.dumps(self._scrub_sensitive_payload(response), ensure_ascii=False, indent=2),
                 "note": note or "",
             }
         )
@@ -301,8 +322,8 @@ class IoTOpenwrtAP(models.Model):
                         for rec in self
                     ]
                 }
-                self._call_middleware("/v1/openwrt/refresh_bulk", refresh_payload)
-            response = self._call_middleware("/v1/openwrt/cache_bulk", cache_payload)
+                self._call_middleware("/v1/openwrt/refresh_bulk", refresh_payload, timeout=20)
+            response = self._call_middleware("/v1/openwrt/cache_bulk", cache_payload, timeout=2)
             cache_rows = response.get("items") or []
             for item in cache_rows:
                 rec_id = int(item.get("id") or 0)
@@ -677,10 +698,14 @@ class IoTOpenwrtAP(models.Model):
             firmware = rec.upgrade_firmware_id
             if not firmware:
                 raise UserError(_("Please select a firmware package first."))
+            if firmware.company_id and rec.company_id and firmware.company_id != rec.company_id:
+                raise UserError(_("Selected firmware belongs to another company."))
             if rec.model and firmware.model_pattern and firmware.model_pattern.lower() not in rec.model.lower():
                 raise UserError(_("Selected firmware does not match the AP model."))
             payload = rec._base_payload()
             payload["firmware_id"] = firmware.id
+            payload["ap_id"] = rec.id
+            payload["auth_token"] = rec.auth_token
             payload["filename"] = firmware.filename
             payload["expected_version"] = firmware.version or ""
             payload["checksum_sha256"] = firmware.checksum_sha256 or ""
@@ -696,23 +721,11 @@ class IoTOpenwrtAP(models.Model):
                     }
                 )
                 rec._write_job_result(job, response, success=True)
-                rec._probe_after_upgrade(delay_seconds=45)
             except Exception as exc:
                 rec.with_context(**self._system_no_track_context()).write({"status": "error", "last_error": str(exc)})
                 rec._write_job_result(job, {"ok": False}, success=False, note=str(exc))
                 raise
         return True
-
-    def _probe_after_upgrade(self, delay_seconds=25):
-        self.ensure_one()
-        import time
-
-        time.sleep(max(int(delay_seconds or 0), 0))
-        try:
-            self.action_probe()
-        except Exception:
-            # Keep upgrade success state even if immediate reprobe misses the reboot window.
-            pass
 
     def action_open_jobs(self):
         self.ensure_one()

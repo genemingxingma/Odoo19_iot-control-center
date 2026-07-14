@@ -8,7 +8,6 @@
                 <field name="name"/>
                 <field name="group_id"/>
                 <field name="command"/>
-                <field name="timezone"/>
                 <field name="time_float" widget="float_time"/>
                 <field name="active"/>
             </list>
@@ -29,7 +28,6 @@
                             <field name="active"/>
                         </group>
                         <group>
-                            <field name="timezone"/>
                             <field name="time_float" widget="float_time"/>
                         </group>
                     </group>

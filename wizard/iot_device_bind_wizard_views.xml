@@ -7,14 +7,17 @@
             <form string="Bind Switch by ID">
                 <group>
                     <field name="validated" invisible="1"/>
+                    <field name="status_message" invisible="1"/>
                     <field name="serial" placeholder="relay-001"/>
                     <field name="company_id" groups="base.group_multi_company"/>
                     <field name="department_id"/>
                     <field name="location_id"/>
                     <field name="location_detail"/>
                 </group>
-                <group string="Validation" invisible="candidate_device_id == False">
-                    <field name="candidate_device_id"/>
+                <group string="Status" invisible="status_message == False">
+                    <field name="status_message" nolabel="1" readonly="1"/>
+                </group>
+                <group string="Validation" invisible="candidate_switch_id == False">
                     <field name="candidate_switch_id"/>
                     <field name="candidate_last_seen"/>
                 </group>

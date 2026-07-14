@@ -10,6 +10,10 @@
                 <field name="company_id"/>
                 <field name="filename"/>
                 <field name="checksum"/>
+                <field name="image_flash_mode"/>
+                <field name="image_flash_size"/>
+                <field name="image_compatible"/>
+                <field name="quarantined"/>
             </list>
         </field>
     </record>
@@ -33,6 +37,11 @@
                             <field name="filename"/>
                             <field name="file" filename="filename"/>
                             <field name="checksum" readonly="1"/>
+                            <field name="image_flash_mode" readonly="1"/>
+                            <field name="image_flash_size" readonly="1"/>
+                            <field name="image_compatible" readonly="1"/>
+                            <field name="quarantined"/>
+                            <field name="quarantine_reason" invisible="not quarantined"/>
                         </group>
                     </group>
                     <group>

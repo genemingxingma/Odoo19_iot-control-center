@@ -97,6 +97,7 @@ class TCPIngestService:
                     "node_id": node_id,
                     "probe_code": probe_code,
                     "name": canonical_name,
+                    "company_id": False,
                     "stats_window_hours": gateway.statistics_window_hours or 24,
                 }
             )

@@ -1,4 +1,5 @@
-from odoo import fields, models
+from odoo import _, api, fields, models
+from odoo.exceptions import ValidationError
 
 
 class IoTTHSensorGroup(models.Model):
@@ -27,6 +28,14 @@ class IoTTHSensorGroup(models.Model):
     def _compute_sensor_count(self):
         for rec in self:
             rec.sensor_count = len(rec.sensor_ids)
+
+    @api.constrains("temperature_low", "temperature_high", "humidity_low", "humidity_high")
+    def _check_thresholds(self):
+        for rec in self:
+            if rec.temperature_low > rec.temperature_high:
+                raise ValidationError(_("Temperature low limit must not exceed high limit."))
+            if rec.humidity_low > rec.humidity_high:
+                raise ValidationError(_("Humidity low limit must not exceed high limit."))
 
     def action_open_sensors(self):
         self.ensure_one()

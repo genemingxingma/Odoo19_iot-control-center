@@ -1633,3 +1633,1247 @@ msgstr "WPA3-SAE"
 #. module: iot_control_center
 msgid "Firmware applies to AP model names containing this text, case-insensitive."
 msgstr "เฟิร์มแวร์นี้ใช้กับชื่อรุ่น AP ที่มีข้อความนี้อยู่ โดยไม่แยกตัวพิมพ์เล็กใหญ่"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "2.4G"
+msgstr "2.4G"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "2.4G Clients"
+msgstr "ไคลเอนต์ 2.4G"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "5G"
+msgstr "5G"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "5G Clients"
+msgstr "ไคลเอนต์ 5G"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "68C7"
+msgstr "68C7"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "ADMS / Push"
+msgstr "ADMS / พุช"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "ADMS Push"
+msgstr "พุช ADMS"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "ADMS devices do not support pull-based connection tests. Point the device to the ADMS URL instead."
+msgstr "อุปกรณ์ ADMS ไม่รองรับการทดสอบแบบดึงข้อมูล โปรดตั้งค่าอุปกรณ์ให้ชี้ไปที่ URL ของ ADMS"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "ADMS received %s punch(es)."
+msgstr "ADMS ได้รับบันทึกเวลา %s รายการ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Accumulated ON (Hours)"
+msgstr "เวลาเปิดสะสม (ชั่วโมง)"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Accumulated ON time reset by %s. Reason: %s. Previous total: %.2f hours."
+msgstr "%s รีเซ็ตเวลาเปิดสะสม เหตุผล: %s ยอดเดิม: %.2f ชั่วโมง"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "All matched sensors are offline. Please wait for fresh data before binding."
+msgstr "เซ็นเซอร์ที่ตรงกันทั้งหมดออฟไลน์ โปรดรอข้อมูลใหม่ก่อนผูก"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Attendance"
+msgstr "ลงเวลา"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Attendance ADMS"
+msgstr "ADMS ลงเวลา"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Attendance ADMS External Port"
+msgstr "พอร์ตภายนอก ADMS ลงเวลา"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Attendance Device"
+msgstr "อุปกรณ์ลงเวลา"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Attendance Devices"
+msgstr "อุปกรณ์ลงเวลา"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Attendance Mappings"
+msgstr "การจับคู่ลงเวลา"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Attendance Punch Raw Payload Retention (days)"
+msgstr "ระยะเวลาเก็บข้อมูลดิบของการลงเวลา (วัน)"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Attendance Punches"
+msgstr "บันทึกเวลา"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Attendance Request Logs"
+msgstr "บันทึกคำขอลงเวลา"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Attendance Request Retention (days)"
+msgstr "ระยะเวลาเก็บคำขอลงเวลา (วัน)"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Auto"
+msgstr "อัตโนมัติ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Auto Alternate In/Out"
+msgstr "สลับเข้า/ออกอัตโนมัติ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Band"
+msgstr "ย่านความถี่"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Bind Node"
+msgstr "ผูกโหนด"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Biometric Code"
+msgstr "รหัสชีวมิติ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Check In"
+msgstr "เข้างาน"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Check Out"
+msgstr "ออกงาน"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Clear Device Logs After Sync"
+msgstr "ล้างบันทึกอุปกรณ์หลังซิงค์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Client Summary"
+msgstr "สรุปไคลเอนต์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Communication password for devices that require it."
+msgstr "รหัสผ่านสื่อสารสำหรับอุปกรณ์ที่ต้องใช้"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Confirm Reset"
+msgstr "ยืนยันการรีเซ็ต"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Connected"
+msgstr "เชื่อมต่อแล้ว"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Connected Clients"
+msgstr "ไคลเอนต์ที่เชื่อมต่อ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Connection successful. Sample records fetched: %s"
+msgstr "เชื่อมต่อสำเร็จ ดึงข้อมูลตัวอย่างได้: %s"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Connection test"
+msgstr "ทดสอบการเชื่อมต่อ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Current Accumulated Hours"
+msgstr "ชั่วโมงสะสมปัจจุบัน"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Daily Rollup"
+msgstr "สรุปรายวัน"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Delay"
+msgstr "หน่วงเวลา"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Delay Remaining"
+msgstr "เวลาหน่วงที่เหลือ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Delay Switch"
+msgstr "สวิตช์หน่วงเวลา"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Delay mode is active. This action is blocked for: %s"
+msgstr "โหมดหน่วงเวลากำลังทำงาน การกระทำนี้ถูกบล็อกเป็นเวลา: %s"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Delay switch"
+msgstr "สวิตช์หน่วงเวลา"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Device Pull"
+msgstr "ดึงจากอุปกรณ์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Device User ID cannot be empty."
+msgstr "รหัสผู้ใช้อุปกรณ์ต้องไม่ว่าง"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Device serial number used by ADMS/PUSH requests."
+msgstr "หมายเลขซีเรียลอุปกรณ์ที่ใช้กับคำขอ ADMS/PUSH"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Download"
+msgstr "ดาวน์โหลด"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Download Rate"
+msgstr "อัตราดาวน์โหลด"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Download Rate (Mbps)"
+msgstr "อัตราดาวน์โหลด (Mbps)"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Downloaded"
+msgstr "ดาวน์โหลดแล้ว"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Downloaded Bytes"
+msgstr "ไบต์ที่ดาวน์โหลด"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Employee Mapping"
+msgstr "การจับคู่พนักงาน"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Enroll/PIN code used by the attendance device."
+msgstr "รหัสลงทะเบียน/PIN ที่ใช้โดยอุปกรณ์ลงเวลา"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "External IoT Middleware"
+msgstr "มิดเดิลแวร์ IoT ภายนอก"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Facts"
+msgstr "ข้อมูลสำคัญ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Failed"
+msgstr "ล้มเหลว"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Failed to bind node."
+msgstr "ผูกโหนดไม่สำเร็จ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Failed to bind switch."
+msgstr "ผูกสวิตช์ไม่สำเร็จ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Failed: %s"
+msgstr "ล้มเหลว: %s"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Firmware Base URL"
+msgstr "URL พื้นฐานของเฟิร์มแวร์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Firmware Log Payload Retention (days)"
+msgstr "ระยะเวลาเก็บ payload บันทึกเฟิร์มแวร์ (วัน)"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Firmware Log Retention (days)"
+msgstr "ระยะเวลาเก็บบันทึกเฟิร์มแวร์ (วัน)"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Firmware Upgrade Logs"
+msgstr "บันทึกการอัปเกรดเฟิร์มแวร์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Firmware file must be a .bin file."
+msgstr "ไฟล์เฟิร์มแวร์ต้องเป็นไฟล์ .bin"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Full Probe Every N Heartbeats"
+msgstr "ตรวจสอบเต็มรูปแบบทุก N heartbeat"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Generate Token"
+msgstr "สร้างโทเคน"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Generated daily aggregate for historical data retention."
+msgstr "สร้างข้อมูลสรุปรายวันสำหรับการเก็บประวัติแล้ว"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Generated hourly aggregate for historical data retention."
+msgstr "สร้างข้อมูลสรุปรายชั่วโมงสำหรับการเก็บประวัติแล้ว"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Groups"
+msgstr "กลุ่ม"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "HTTP Push"
+msgstr "พุช HTTP"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "HTTP URL"
+msgstr "HTTP URL"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "HTTPS URL"
+msgstr "HTTPS URL"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Headers"
+msgstr "ส่วนหัว"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Heartbeat Interval (sec)"
+msgstr "ช่วง heartbeat (วินาที)"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Host is required for ZKTeco devices."
+msgstr "อุปกรณ์ ZKTeco ต้องระบุโฮสต์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Hostname"
+msgstr "ชื่อโฮสต์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Hour must be between 0 and 23."
+msgstr "ชั่วโมงต้องอยู่ระหว่าง 0 ถึง 23"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Hourly Average"
+msgstr "ค่าเฉลี่ยรายชั่วโมง"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Hourly Rollup"
+msgstr "สรุปรายชั่วโมง"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IP"
+msgstr "IP"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "If enabled, this node keeps all raw readings and skips historical daily rollup."
+msgstr "หากเปิดใช้ โหนดนี้จะเก็บค่าดิบทั้งหมดและข้ามการสรุปรายวันย้อนหลัง"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Ignored"
+msgstr "ละเว้นแล้ว"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Imported %s punch(es)."
+msgstr "นำเข้าบันทึกเวลา %s รายการแล้ว"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Invalid time format. Please use HH:MM."
+msgstr "รูปแบบเวลาไม่ถูกต้อง โปรดใช้ HH:MM"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT - Dedupe Switch Records"
+msgstr "IoT - ลบระเบียนสวิตช์ซ้ำ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT - Purge Firmware Logs"
+msgstr "IoT - ล้างบันทึกเฟิร์มแวร์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT - Purge Old MQTT Messages"
+msgstr "IoT - ล้างข้อความ MQTT เก่า"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT - Purge Stale Unbound Devices"
+msgstr "IoT - ล้างอุปกรณ์ที่ไม่ผูกและหมดอายุ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT - Trim Firmware Log Payloads"
+msgstr "IoT - ตัด payload บันทึกเฟิร์มแวร์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Attendance - Purge Old Requests"
+msgstr "IoT ลงเวลา - ล้างคำขอเก่า"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Attendance - Purge Punch Raw Payloads"
+msgstr "IoT ลงเวลา - ล้าง payload ดิบของบันทึกเวลา"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Attendance Device multi-company"
+msgstr "กฎหลายบริษัทสำหรับอุปกรณ์ลงเวลา IoT"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Attendance Punch multi-company"
+msgstr "กฎหลายบริษัทสำหรับบันทึกเวลา IoT"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Attendance Request multi-company"
+msgstr "กฎหลายบริษัทสำหรับคำขอลงเวลา IoT"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Attendance User multi-company"
+msgstr "กฎหลายบริษัทสำหรับผู้ใช้ลงเวลา IoT"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Attendance Users"
+msgstr "ผู้ใช้ลงเวลา IoT"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Control Board all"
+msgstr "สิทธิ์ทั้งหมดของแผงควบคุม IoT"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Department multi-company"
+msgstr "กฎหลายบริษัทสำหรับแผนก IoT"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Device Group multi-company"
+msgstr "กฎหลายบริษัทสำหรับกลุ่มอุปกรณ์ IoT"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Device multi-company"
+msgstr "กฎหลายบริษัทสำหรับอุปกรณ์ IoT"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Firmware Upgrade Log multi-company"
+msgstr "กฎหลายบริษัทสำหรับบันทึกอัปเกรดเฟิร์มแวร์ IoT"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Firmware multi-company"
+msgstr "กฎหลายบริษัทสำหรับเฟิร์มแวร์ IoT"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Location multi-company"
+msgstr "กฎหลายบริษัทสำหรับตำแหน่ง IoT"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT OpenWrt - Purge Jobs"
+msgstr "IoT OpenWrt - ล้างงาน"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT OpenWrt - Trim Job Payloads"
+msgstr "IoT OpenWrt - ตัด payload ของงาน"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT OpenWrt AP multi-company"
+msgstr "กฎหลายบริษัทสำหรับ AP OpenWrt IoT"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT OpenWrt Client multi-company"
+msgstr "กฎหลายบริษัทสำหรับไคลเอนต์ OpenWrt IoT"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT OpenWrt Firmware multi-company"
+msgstr "กฎหลายบริษัทสำหรับเฟิร์มแวร์ OpenWrt IoT"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT OpenWrt Job multi-company"
+msgstr "กฎหลายบริษัทสำหรับงาน OpenWrt IoT"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT OpenWrt Template multi-company"
+msgstr "กฎหลายบริษัทสำหรับแม่แบบ OpenWrt IoT"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Schedule multi-company"
+msgstr "กฎหลายบริษัทสำหรับตารางเวลา IoT"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT TH - Rollup Old Readings"
+msgstr "IoT อุณหภูมิ/ความชื้น - สรุปค่าที่อ่านเก่า"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT TH Alert multi-company"
+msgstr "กฎหลายบริษัทสำหรับการแจ้งเตือนอุณหภูมิ/ความชื้น IoT"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT TH Gateway multi-company"
+msgstr "กฎหลายบริษัทสำหรับเกตเวย์อุณหภูมิ/ความชื้น IoT"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT TH Reading multi-company"
+msgstr "กฎหลายบริษัทสำหรับค่าที่อ่านอุณหภูมิ/ความชื้น IoT"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT TH Sensor Group multi-company"
+msgstr "กฎหลายบริษัทสำหรับกลุ่มเซ็นเซอร์อุณหภูมิ/ความชื้น IoT"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT TH Sensor multi-company"
+msgstr "กฎหลายบริษัทสำหรับเซ็นเซอร์อุณหภูมิ/ความชื้น IoT"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Keep Full History"
+msgstr "เก็บประวัติทั้งหมด"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Last 5 Days"
+msgstr "5 วันที่ผ่านมา"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "MAC"
+msgstr "MAC"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "MQTT Message Retention (days)"
+msgstr "ระยะเวลาเก็บข้อความ MQTT (วัน)"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "MQTT Telemetry Retention (hours)"
+msgstr "ระยะเวลาเก็บ telemetry MQTT (ชั่วโมง)"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "MQTT Telemetry Sample Window (sec)"
+msgstr "หน้าต่างตัวอย่าง telemetry MQTT (วินาที)"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "MQTT publish failed for some devices, please retry."
+msgstr "เผยแพร่ MQTT ไปยังบางอุปกรณ์ไม่สำเร็จ โปรดลองอีกครั้ง"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Manage OpenWrt AP inventory, wireless templates, and firmware upgrades."
+msgstr "จัดการรายการ AP OpenWrt แม่แบบไร้สาย และการอัปเกรดเฟิร์มแวร์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Manage biometric attendance devices, push logs, and employee punch mapping."
+msgstr "จัดการอุปกรณ์ลงเวลาชีวมิติ บันทึกพุช และการจับคู่บันทึกเวลาพนักงาน"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Manage nodes, trends, and threshold alerts."
+msgstr "จัดการโหนด แนวโน้ม และการแจ้งเตือนตามเกณฑ์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Manage relay devices, schedules, and firmware updates."
+msgstr "จัดการอุปกรณ์รีเลย์ ตารางเวลา และการอัปเดตเฟิร์มแวร์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Manual"
+msgstr "ด้วยตนเอง"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Mappings"
+msgstr "การจับคู่"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Matched"
+msgstr "จับคู่แล้ว"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Matched Sensors"
+msgstr "เซ็นเซอร์ที่ตรงกัน"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Matched Switch"
+msgstr "สวิตช์ที่ตรงกัน"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Matched Switch ID"
+msgstr "ID สวิตช์ที่ตรงกัน"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Middleware Base URL"
+msgstr "URL พื้นฐานของมิดเดิลแวร์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Middleware Base URL is empty."
+msgstr "URL พื้นฐานของมิดเดิลแวร์ว่างอยู่"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Middleware HTTP error: %s"
+msgstr "ข้อผิดพลาด HTTP ของมิดเดิลแวร์: %s"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Middleware Token"
+msgstr "โทเคนมิดเดิลแวร์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Middleware connection failed: %s"
+msgstr "เชื่อมต่อมิดเดิลแวร์ไม่สำเร็จ: %s"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Middleware is enabled but Middleware Base URL is empty."
+msgstr "เปิดใช้มิดเดิลแวร์แล้ว แต่ URL พื้นฐานของมิดเดิลแวร์ว่างอยู่"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Minute must be between 0 and 59."
+msgstr "นาทีต้องอยู่ระหว่าง 0 ถึง 59"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Mismatch"
+msgstr "ไม่ตรงกัน"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Missing Python dependency `pyzk`. Install it in the Odoo runtime first."
+msgstr "ขาด Python dependency `pyzk` โปรดติดตั้งใน runtime ของ Odoo ก่อน"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Missing device user ID in payload %s"
+msgstr "ไม่พบ ID ผู้ใช้อุปกรณ์ใน payload %s"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Module icon"
+msgstr "ไอคอนโมดูล"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "No available company for binding."
+msgstr "ไม่มีบริษัทที่ใช้ผูกได้"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "No connected clients."
+msgstr "ไม่มีไคลเอนต์ที่เชื่อมต่อ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "No sensor found for this Node ID."
+msgstr "ไม่พบเซ็นเซอร์สำหรับ Node ID นี้"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "No switch found for ID: %s"
+msgstr "ไม่พบสวิตช์สำหรับ ID: %s"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "No upgrade command sent successfully. %s"
+msgstr "ไม่มีคำสั่งอัปเกรดที่ส่งสำเร็จ %s"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Node %s is now bound to %s. You can bind next one now."
+msgstr "โหนด %s ถูกผูกกับ %s แล้ว คุณสามารถผูกตัวถัดไปได้"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Node Frequency"
+msgstr "ความถี่ของโหนด"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Node ID is required"
+msgstr "ต้องระบุ Node ID"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Node is offline. Please wait for fresh data before binding."
+msgstr "โหนดออฟไลน์ โปรดรอข้อมูลใหม่ก่อนผูก"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "None"
+msgstr "ไม่มี"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "OFF"
+msgstr "ปิด"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "ON"
+msgstr "เปิด"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Offline"
+msgstr "ออฟไลน์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Offline Failure Threshold"
+msgstr "เกณฑ์ความล้มเหลวออฟไลน์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "OpenWrt Job Payload Retention (days)"
+msgstr "ระยะเวลาเก็บ payload ของงาน OpenWrt (วัน)"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "OpenWrt Job Retention (days)"
+msgstr "ระยะเวลาเก็บงาน OpenWrt (วัน)"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Optional internal UID returned by the device."
+msgstr "UID ภายในที่อุปกรณ์ส่งกลับมา (ไม่บังคับ)"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Parsed"
+msgstr "แยกวิเคราะห์แล้ว"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Please input Node ID first."
+msgstr "โปรดกรอก Node ID ก่อน"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Please input Switch ID first."
+msgstr "โปรดกรอก Switch ID ก่อน"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Please input reset reason..."
+msgstr "โปรดกรอกเหตุผลการรีเซ็ต..."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Please select a firmware package first."
+msgstr "โปรดเลือกแพ็กเกจเฟิร์มแวร์ก่อน"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Please select a template first."
+msgstr "โปรดเลือกแม่แบบก่อน"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Primary employee code used by attendance devices."
+msgstr "รหัสพนักงานหลักที่อุปกรณ์ลงเวลาใช้"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Probe failed."
+msgstr "ตรวจสอบไม่สำเร็จ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Processed"
+msgstr "ประมวลผลแล้ว"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Punch Logs"
+msgstr "บันทึกการลงเวลา"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Punches"
+msgstr "บันทึกเวลา"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Push devices are passive. Point the device to the ADMS/Webhook URL instead."
+msgstr "อุปกรณ์แบบพุชเป็นอุปกรณ์แบบรับคำสั่งไม่ได้ โปรดตั้งค่าให้ชี้ไปที่ URL ของ ADMS/Webhook"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Query Params"
+msgstr "พารามิเตอร์คำขอ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Reboot"
+msgstr "รีบูต"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Received"
+msgstr "ได้รับแล้ว"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Relay Control"
+msgstr "ควบคุมรีเลย์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Request"
+msgstr "คำขอ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Request Logs"
+msgstr "บันทึกคำขอ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Requests"
+msgstr "คำขอ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Reset Reason"
+msgstr "เหตุผลการรีเซ็ต"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Reset reason is required."
+msgstr "ต้องระบุเหตุผลการรีเซ็ต"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Response"
+msgstr "คำตอบ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "SSID Entries"
+msgstr "รายการ SSID"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Schedule must be linked to exactly one target: Device or Group."
+msgstr "ตารางเวลาต้องเชื่อมกับเป้าหมายเพียงหนึ่งรายการ: อุปกรณ์หรือกลุ่ม"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Selected firmware belongs to another company."
+msgstr "เฟิร์มแวร์ที่เลือกเป็นของบริษัทอื่น"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Selected firmware does not match the AP model."
+msgstr "เฟิร์มแวร์ที่เลือกไม่ตรงกับรุ่น AP"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Sensor Channel"
+msgstr "ช่องเซ็นเซอร์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Sensor Channel (Optional)"
+msgstr "ช่องเซ็นเซอร์ (ไม่บังคับ)"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Serial Number"
+msgstr "หมายเลขซีเรียล"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Signal"
+msgstr "สัญญาณ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Success"
+msgstr "สำเร็จ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Switch %s is offline. Please power it on first."
+msgstr "สวิตช์ %s ออฟไลน์ โปรดเปิดเครื่องก่อน"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Switch Cards"
+msgstr "การ์ดสวิตช์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Switch ID"
+msgstr "ID สวิตช์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Switch ID/Serial"
+msgstr "ID/ซีเรียลสวิตช์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Switch ID/Serial is required."
+msgstr "ต้องระบุ ID/ซีเรียลสวิตช์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Switch command"
+msgstr "คำสั่งสวิตช์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Sync Now"
+msgstr "ซิงค์ทันที"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Synchronization complete"
+msgstr "ซิงค์เสร็จสมบูรณ์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "TH Raw Retention (days)"
+msgstr "ระยะเวลาเก็บข้อมูลดิบอุณหภูมิ/ความชื้น (วัน)"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Temp/Humidity Monitoring"
+msgstr "ตรวจสอบอุณหภูมิ/ความชื้น"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Templates"
+msgstr "แม่แบบ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Test Connection"
+msgstr "ทดสอบการเชื่อมต่อ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "This node is already bound to another company."
+msgstr "โหนดนี้ถูกผูกกับบริษัทอื่นแล้ว"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "This switch is already bound to company: %s"
+msgstr "สวิตช์นี้ถูกผูกกับบริษัท: %s แล้ว"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Time"
+msgstr "เวลา"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Time is required."
+msgstr "ต้องระบุเวลา"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Time must be between 00:00 and 23:59."
+msgstr "เวลาต้องอยู่ระหว่าง 00:00 ถึง 23:59"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Timestamps"
+msgstr "เวลา"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Turn Off Group"
+msgstr "ปิดกลุ่ม"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Turn On Group"
+msgstr "เปิดกลุ่ม"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Unable to parse punch timestamp."
+msgstr "ไม่สามารถแยกวิเคราะห์เวลาบันทึกได้"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Unable to read device logs: %s"
+msgstr "ไม่สามารถอ่านบันทึกอุปกรณ์: %s"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Unbind"
+msgstr "ยกเลิกการผูก"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Unbound Device Retention (days)"
+msgstr "ระยะเวลาเก็บอุปกรณ์ที่ยังไม่ผูก (วัน)"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Unknown error"
+msgstr "ข้อผิดพลาดไม่ทราบสาเหตุ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Unsupported punch timestamp: %s"
+msgstr "รูปแบบเวลาบันทึกไม่รองรับ: %s"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Upgrade"
+msgstr "อัปเกรด"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Upgrade Logs"
+msgstr "บันทึกการอัปเกรด"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Upload"
+msgstr "อัปโหลด"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Upload Rate"
+msgstr "อัตราอัปโหลด"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Upload Rate (Mbps)"
+msgstr "อัตราอัปโหลด (Mbps)"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Uploaded"
+msgstr "อัปโหลดแล้ว"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Uploaded Bytes"
+msgstr "ไบต์ที่อัปโหลด"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Use Device Direction"
+msgstr "ใช้ทิศทางจากอุปกรณ์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Use External IoT Middleware (MQTT + TH TCP)"
+msgstr "ใช้มิดเดิลแวร์ IoT ภายนอก (MQTT + TCP อุณหภูมิ/ความชื้น)"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Validation"
+msgstr "การตรวจสอบ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Webhook"
+msgstr "Webhook"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Webhook devices do not require a live socket connection test."
+msgstr "อุปกรณ์ Webhook ไม่ต้องทดสอบการเชื่อมต่อ socket แบบสด"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Webhook imported %s punch(es)."
+msgstr "Webhook นำเข้าบันทึกเวลา %s รายการแล้ว"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "You can only bind to companies you can access."
+msgstr "คุณสามารถผูกกับบริษัทที่คุณมีสิทธิ์เข้าถึงเท่านั้น"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "ZKTeco ADMS HTTP"
+msgstr "ZKTeco ADMS HTTP"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "ZKTeco TCP"
+msgstr "ZKTeco TCP"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "ch01"
+msgstr "ch01"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "http://127.0.0.1:8099"
+msgstr "http://127.0.0.1:8099"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "relay-001"
+msgstr "relay-001"
+
+
+#. module: iot_control_center
+msgid "No upgrade command sent successfully.\n%s"
+msgstr "ไม่มีคำสั่งอัปเกรดที่ส่งสำเร็จ\n%s"
+
+#. module: iot_control_center
+msgid "Delay Countdown"
+msgstr "นับถอยหลังหน่วงเวลา"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Turn on command sent."
+msgstr "?????????????????"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Turn off command sent."
+msgstr "????????????????"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Delay command sent."
+msgstr "??????????????????????"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Temperature low limit must not exceed high limit."
+msgstr "????????????????????????????????????????????"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Humidity low limit must not exceed high limit."
+msgstr "????????????????????????????????????????????"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Statistics window must be greater than 0 hours."
+msgstr "???????????????????????? 0 ???????"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Attendance Source IP Allowlist"
+msgstr "?????? IP ????????????????????????????"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Max Open Attendance Hours"
+msgstr "????????????????????????????????????????"

@@ -13,6 +13,7 @@ class IoTMQTTMessage(models.Model):
     state = fields.Selection([("new", "New"), ("done", "Done"), ("error", "Error")], default="new", required=True, index=True)
     topic = fields.Char(required=True, index=True)
     payload = fields.Text(required=True)
+    retained = fields.Boolean(default=False, index=True)
     error = fields.Text()
     received_at = fields.Datetime(default=fields.Datetime.now, required=True)
     processed_at = fields.Datetime()
@@ -24,6 +25,7 @@ class IoTMQTTMessage(models.Model):
         index=True,
     )
     device_id = fields.Many2one("iot.device")
+    company_id = fields.Many2one(related="device_id.company_id", store=True, readonly=True, index=True)
 
     @api.model
     def init(self):
@@ -144,13 +146,13 @@ class IoTMQTTMessage(models.Model):
         # Prefer exact serial match over module_id match to avoid route ambiguity
         # when legacy rows still carry old serial values.
         device = device_model.search(
-            [("serial", "=ilike", key)],
+            [("active", "=", True), ("serial", "=ilike", key)],
             order="company_id desc, last_seen desc, id desc",
             limit=1,
         )
         if not device:
             device = device_model.search(
-                [("module_id", "=ilike", key)],
+                [("active", "=", True), ("module_id", "=ilike", key)],
                 order="company_id desc, last_seen desc, id desc",
                 limit=1,
             )
@@ -160,24 +162,25 @@ class IoTMQTTMessage(models.Model):
         # Serialize create-per-key to avoid duplicate rows under concurrent cron workers.
         self.env.cr.execute("SELECT pg_advisory_xact_lock(hashtext(%s))", [f"iot.device:{key}"])
         device = device_model.search(
-            [("serial", "=ilike", key)],
+            [("active", "=", True), ("serial", "=ilike", key)],
             order="company_id desc, last_seen desc, id desc",
             limit=1,
         )
         if not device:
             device = device_model.search(
-                [("module_id", "=ilike", key)],
+                [("active", "=", True), ("module_id", "=ilike", key)],
                 order="company_id desc, last_seen desc, id desc",
                 limit=1,
             )
         if device:
             return device
-        return device_model.create({"name": key, "serial": key})
+        return device_model.with_context(iot_auto_discovery=True).create({"name": key, "serial": key, "company_id": False})
 
     @api.model
-    def create_from_mqtt(self, topic, payload_text):
+    def create_from_mqtt(self, topic, payload_text, retained=False):
         serial = False
         msg_type = "unknown"
+        retained = bool(retained)
         parts = (topic or "").split("/")
         if len(parts) >= 3:
             serial = parts[-2]
@@ -191,7 +194,7 @@ class IoTMQTTMessage(models.Model):
             now_value = fields.Datetime.now()
             duplicate = self._find_recent_duplicate(serial_key, msg_type, topic, payload_text, now_value)
             if duplicate:
-                duplicate.sudo().write({"received_at": now_value})
+                duplicate.sudo().write({"received_at": now_value, "retained": retained})
                 return duplicate
             if msg_type == "telemetry":
                 slot = self._find_recent_telemetry_slot(serial_key, topic, now_value)
@@ -199,6 +202,7 @@ class IoTMQTTMessage(models.Model):
                     slot.sudo().write(
                         {
                             "payload": payload_text,
+                            "retained": retained,
                             "received_at": now_value,
                             "state": "new",
                             "processed_at": False,
@@ -209,6 +213,7 @@ class IoTMQTTMessage(models.Model):
         vals = {
             "topic": topic,
             "payload": payload_text,
+            "retained": retained,
             "device_serial": serial,
             "message_type": msg_type,
         }
@@ -227,20 +232,42 @@ class IoTMQTTMessage(models.Model):
     def _parse_reported_at(self, payload):
         value = payload.get("reported_at") if isinstance(payload, dict) else None
         if not value:
-            return fields.Datetime.now()
+            return self.received_at or fields.Datetime.now()
         try:
             return datetime.fromisoformat(value.replace("Z", "+00:00")).replace(tzinfo=None)
         except Exception:
-            return fields.Datetime.now()
+            return self.received_at or fields.Datetime.now()
+
+    @api.model
+    def _find_device_by_reported_identity(self, module_id):
+        key = self._normalize_device_key(module_id)
+        if not key:
+            return self.env["iot.device"].browse()
+        return self.env["iot.device"].sudo().search(
+            [
+                ("active", "=", True),
+                "|",
+                ("module_id", "=ilike", key),
+                ("serial", "=ilike", key),
+            ],
+            order="company_id desc, last_seen desc, id desc",
+            limit=1,
+        )
 
     def _process_one(self, preloaded_device=None):
         self.ensure_one()
         payload = self._parse_payload()
         device_model = self.env["iot.device"]
         no_track_ctx = device_model._system_no_track_context()
-        device = preloaded_device or device_model.browse()
+        module_id = payload.get("module_id") if isinstance(payload, dict) else None
+        # The hardware module ID is authoritative. Legacy MQTT topics may still
+        # contain an old alias, so resolve the reported identity before creating
+        # an auto-discovered row for the topic key.
+        device = self._find_device_by_reported_identity(module_id)
+        if not device:
+            device = preloaded_device or device_model.browse()
         if not device and self.device_serial:
-            device = self._find_or_create_device_by_key(self.device_serial)
+            device = self._find_or_create_device_by_key(module_id or self.device_serial)
         done_vals = {
             "state": "done",
             "processed_at": fields.Datetime.now(),
@@ -252,15 +279,29 @@ class IoTMQTTMessage(models.Model):
             ota_state = payload.get("ota_state") if isinstance(payload, dict) else None
             ota_note = payload.get("ota_note") if isinstance(payload, dict) else None
             reported_at = self._parse_reported_at(payload)
+            if self.retained:
+                vals = {}
+                module_id = payload.get("module_id") if isinstance(payload, dict) else None
+                if module_id and device.module_id != str(module_id):
+                    vals["module_id"] = str(module_id)
+                fw = payload.get("firmware_version") if isinstance(payload, dict) else None
+                if fw and device.firmware_version != fw:
+                    vals["firmware_version"] = fw
+                if vals:
+                    device.write(vals)
+                self.with_context(**no_track_ctx).write(done_vals)
+                return
             if state in ("on", "off", "unknown"):
                 device.apply_state_report(state, reported_at=reported_at)
+                device.apply_command_ack(payload, reported_at=reported_at)
             else:
-                device.last_seen = fields.Datetime.now()
+                device.last_seen = reported_at
 
             fw = payload.get("firmware_version") if isinstance(payload, dict) else None
             if fw:
                 device.apply_firmware_report(fw, reported_at=reported_at, ota_state=ota_state)
-            module_id = payload.get("module_id") if isinstance(payload, dict) else None
+            if isinstance(payload, dict):
+                device.apply_runtime_report(payload, reported_at=reported_at)
             if module_id:
                 device.apply_identity_report(str(module_id), reported_at=reported_at)
             if isinstance(payload, dict) and "manual_override" in payload:
@@ -290,8 +331,11 @@ class IoTMQTTMessage(models.Model):
                 """
                 SELECT id
                 FROM iot_device
-                WHERE lower(serial) = ANY(%s)
-                   OR lower(module_id) = ANY(%s)
+                WHERE active IS TRUE
+                  AND (
+                    lower(serial) = ANY(%s)
+                    OR lower(module_id) = ANY(%s)
+                  )
                 """,
                 (list(key_set), list(key_set)),
             )
@@ -300,7 +344,7 @@ class IoTMQTTMessage(models.Model):
             devices = self.env["iot.device"].browse()
             for key in key_set:
                 dev = device_model.search(
-                    ["|", ("serial", "=ilike", key), ("module_id", "=ilike", key)],
+                    [("active", "=", True), "|", ("serial", "=ilike", key), ("module_id", "=ilike", key)],
                     order="last_seen desc, id desc",
                     limit=1,
                 )
@@ -321,21 +365,28 @@ class IoTMQTTMessage(models.Model):
             # Always prefer serial-key match for topic key routing.
             device_map[key] = serial_map.get(key) or module_map.get(key)
 
-        missing = [k for k in key_set if not device_map.get(k)]
-        if missing:
-            for key in missing:
-                dev = self._find_or_create_device_by_key(key)
-                device_map[key] = dev
+        # Do not create devices in bulk here. _process_one first resolves the
+        # payload's module_id, preventing legacy topic aliases from creating a
+        # second row that later collides with an existing hardware identity.
         return device_map
 
     @api.model
     def _cron_process_new_messages(self, limit=500):
         no_track_ctx = self.env["iot.device"]._system_no_track_context()
-        messages = self.with_context(**no_track_ctx).search(
-            [("state", "=", "new")],
-            limit=limit,
-            order="id asc",
+        # Multiple Odoo workers or an administrator-triggered run may overlap.
+        # Lock only this worker's rows and let concurrent processors skip them.
+        self.env.cr.execute(
+            """
+            SELECT id
+              FROM iot_mqtt_message
+             WHERE state = 'new'
+             ORDER BY id ASC
+             FOR UPDATE SKIP LOCKED
+             LIMIT %s
+            """,
+            [int(limit)],
         )
+        messages = self.with_context(**no_track_ctx).browse([row[0] for row in self.env.cr.fetchall()])
         if not messages:
             return
 
@@ -363,8 +414,13 @@ class IoTMQTTMessage(models.Model):
         device_map = self._preload_devices(serials)
         for msg in selected:
             try:
-                key = self._normalize_device_key(msg.device_serial)
-                msg._process_one(preloaded_device=device_map.get(key))
+                # ORM writes are deferred until flush. Keep each message in its
+                # own savepoint so a late constraint error cannot roll back the
+                # entire MQTT batch, as happened with identity collisions.
+                with self.env.cr.savepoint():
+                    key = self._normalize_device_key(msg.device_serial)
+                    msg._process_one(preloaded_device=device_map.get(key))
+                    self.env.flush_all()
             except Exception as exc:
                 msg.with_context(**no_track_ctx).write(
                     {

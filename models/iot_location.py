@@ -10,6 +10,7 @@ class IoTLocation(models.Model):
     department_id = fields.Many2one("iot.department", domain="[('company_id', '=', company_id)]")
     active = fields.Boolean(default=True)
 
-    _sql_constraints = [
-        ("iot_location_company_name_uniq", "unique(name, company_id)", "Location name must be unique per company."),
-    ]
+    _company_name_uniq = models.Constraint(
+        "UNIQUE(name, company_id)",
+        "Location name must be unique per company.",
+    )

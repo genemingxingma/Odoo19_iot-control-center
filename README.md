@@ -12,7 +12,7 @@ Manage ESP8266 relay modules (Wi-Fi + MQTT + OTA).
 - Temperature/Humidity sensors connected through TCP gateway, with data logging, analysis, trends, and threshold alerts.
 
 ## Odoo Dependencies
-- Python: `paho-mqtt`, `pytz`
+- Python: `pytz` (`paho-mqtt` only if you disable the Rust middleware and use legacy in-Odoo MQTT)
 
 ## MQTT Topic Convention
 - Odoo -> device command: `{topic_root}/{serial}/command`
@@ -70,7 +70,7 @@ Server behavior:
 
 ## Installation
 1. Add `iot_control_center` to Odoo addons path.
-2. Install Python dependencies: `pip install paho-mqtt pytz`
+2. Install Python dependencies: `pip install pytz  # add paho-mqtt only for legacy in-Odoo MQTT mode`
 3. Update Apps list and install this module.
 4. Configure MQTT settings in system settings.
 5. Create departments/locations and register devices (`serial` must match firmware).

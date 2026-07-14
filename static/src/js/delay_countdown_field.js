@@ -1,6 +1,7 @@
 /** @odoo-module **/
 
 import { registry } from "@web/core/registry";
+import { _t } from "@web/core/l10n/translation";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import { Component, onMounted, onWillUnmount, onWillUpdateProps, useState } from "@odoo/owl";
 
@@ -69,7 +70,6 @@ export class DelayCountdownField extends Component {
 
 registry.category("fields").add("delay_countdown", {
     component: DelayCountdownField,
-    displayName: "Delay Countdown",
+    displayName: _t("Delay Countdown"),
     supportedTypes: ["float", "integer"],
 });
-

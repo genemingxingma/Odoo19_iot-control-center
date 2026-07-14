@@ -1,3 +1,4 @@
+from . import res_company
 from . import iot_department
 from . import iot_location
 from . import iot_device_group

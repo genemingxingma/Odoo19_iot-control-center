@@ -1,6 +1,6 @@
 import json
 
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class IoTOpenwrtTemplate(models.Model):
@@ -9,12 +9,12 @@ class IoTOpenwrtTemplate(models.Model):
 
     name = fields.Char(required=True, translate=True)
     active = fields.Boolean(default=True)
-    company_id = fields.Many2one("res.company", index=True)
+    company_id = fields.Many2one("res.company", index=True, default=lambda self: self.env.company)
     notes = fields.Text(translate=True)
 
-    country_code = fields.Char(default="TH")
+    country_code = fields.Char(string="Company Country", compute="_compute_company_location", readonly=True)
     system_hostname = fields.Char()
-    timezone_name = fields.Char(default="Asia/Bangkok")
+    timezone_name = fields.Char(string="Company Timezone", compute="_compute_company_location", readonly=True)
 
     ssid_entry_ids = fields.One2many("iot.openwrt.template.ssid", "template_id", string="SSID Entries")
     wifi24_ssid_count = fields.Integer(compute="_compute_ssid_counts")
@@ -51,6 +51,27 @@ class IoTOpenwrtTemplate(models.Model):
     wifi5_key = fields.Char(string="5G Password")
     wifi5_hidden = fields.Boolean(string="5G Hidden SSID")
     wifi5_channel = fields.Char(string="5G Channel", default="auto")
+
+    @api.depends("company_id.country_id", "company_id.partner_id.country_id", "company_id.partner_id.tz")
+    def _compute_company_location(self):
+        for rec in self:
+            company = rec.company_id or rec.env.company
+            rec.country_code = company.get_iot_country_code()
+            rec.timezone_name = company.get_iot_timezone()
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            vals.pop("country_code", None)
+            vals.pop("timezone_name", None)
+        return super().create(vals_list)
+
+    def write(self, vals):
+        if "country_code" in vals or "timezone_name" in vals:
+            vals = dict(vals)
+            vals.pop("country_code", None)
+            vals.pop("timezone_name", None)
+        return super().write(vals)
 
     def _compute_ssid_counts(self):
         for rec in self:
@@ -110,10 +131,11 @@ class IoTOpenwrtTemplate(models.Model):
 
     def to_middleware_payload(self):
         self.ensure_one()
+        company = self.company_id or self.env.company
         return {
-            "country_code": (self.country_code or "").strip() or None,
+            "country_code": company.get_iot_country_code(),
             "system_hostname": (self.system_hostname or "").strip() or None,
-            "timezone_name": (self.timezone_name or "").strip() or None,
+            "timezone_name": company.get_iot_timezone(),
             "wifi24": {
                 "enabled": bool(self.wifi24_enabled),
                 "channel": (self.wifi24_channel or "").strip() or None,

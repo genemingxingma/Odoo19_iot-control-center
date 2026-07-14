@@ -14,7 +14,7 @@
                 </group>
                 <group string="Validation" invisible="candidate_count == 0">
                     <field name="candidate_count"/>
-                    <field name="candidate_sensor_ids" widget="many2many_tags"/>
+                    <field name="candidate_summary"/>
                 </group>
                 <footer>
                     <button string="Search ID" type="object" name="action_search_id" class="btn-secondary"/>

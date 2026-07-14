@@ -1,5 +1,8 @@
-use std::net::SocketAddr;
 use std::collections::HashMap;
+use std::fs::{self, OpenOptions};
+use std::io::{BufRead, BufReader, Write};
+use std::net::SocketAddr;
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -9,16 +12,16 @@ use axum::http::{HeaderMap, StatusCode};
 use axum::routing::post;
 use axum::{Json, Router};
 use base64::Engine as _;
-use sha2::{Digest, Sha256};
 use reqwest::Client;
 use rumqttc::{AsyncClient, Event, EventLoop, Incoming, MqttOptions, QoS};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
+use sha2::{Digest, Sha256};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::process::Command;
+use tokio::sync::{Mutex, RwLock};
 use tokio::task::JoinSet;
-use tokio::sync::RwLock;
 use tracing::{error, info, warn};
 
 #[derive(Clone)]
@@ -33,6 +36,18 @@ struct Forwarder {
     http: Client,
     odoo_base_url: String,
     token: String,
+}
+
+#[derive(Clone)]
+struct DurableQueue {
+    path: Arc<PathBuf>,
+    lock: Arc<Mutex<()>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct QueuedPost {
+    path: String,
+    body: Value,
 }
 
 #[derive(Debug, Deserialize)]
@@ -125,6 +140,8 @@ struct Config {
     odoo_base_url: String,
     middleware_token: String,
     openwrt_ssh_key_path: Option<String>,
+    mqtt_client_id: String,
+    queue_path: String,
 }
 
 impl Config {
@@ -142,8 +159,21 @@ impl Config {
             .context("IOT_BRIDGE_MQTT_KEEPALIVE must be a valid integer")?;
         let mqtt_topic_root = env_or("IOT_BRIDGE_MQTT_TOPIC_ROOT", "iot/relay");
         let odoo_base_url = env_or("IOT_BRIDGE_ODOO_BASE_URL", "http://127.0.0.1:8069");
-        let middleware_token = env_or("IOT_BRIDGE_TOKEN", "imytest-middleware-token");
+        let middleware_token = env_or("IOT_BRIDGE_TOKEN", "");
         let openwrt_ssh_key_path = env_opt("IOT_BRIDGE_OPENWRT_SSH_KEY_PATH");
+        let mqtt_client_id = env_or(
+            "IOT_BRIDGE_MQTT_CLIENT_ID",
+            &format!(
+                "iot_bridge_{}_{}",
+                sanitize_client_id(&mqtt_host),
+                std::process::id()
+            ),
+        );
+        let default_queue_path = std::env::temp_dir()
+            .join("iot_bridge_forward_queue.jsonl")
+            .to_string_lossy()
+            .to_string();
+        let queue_path = env_or("IOT_BRIDGE_QUEUE_PATH", &default_queue_path);
 
         Ok(Self {
             api_listen,
@@ -157,6 +187,8 @@ impl Config {
             odoo_base_url,
             middleware_token,
             openwrt_ssh_key_path,
+            mqtt_client_id,
+            queue_path,
         })
     }
 }
@@ -206,6 +238,10 @@ struct OpenwrtUpgradeRequest {
     firmware_url: Option<String>,
     #[serde(default)]
     firmware_id: Option<i64>,
+    #[serde(default)]
+    ap_id: Option<i64>,
+    #[serde(default)]
+    auth_token: Option<String>,
     filename: String,
     #[serde(default)]
     expected_version: Option<String>,
@@ -250,7 +286,11 @@ async fn main() -> anyhow::Result<()> {
         cfg.api_listen, cfg.th_tcp_listen, cfg.mqtt_host, cfg.mqtt_port, cfg.mqtt_topic_root
     );
 
-    let mut mqtt_options = MqttOptions::new("iot_bridge", cfg.mqtt_host.clone(), cfg.mqtt_port);
+    let mut mqtt_options = MqttOptions::new(
+        cfg.mqtt_client_id.clone(),
+        cfg.mqtt_host.clone(),
+        cfg.mqtt_port,
+    );
     mqtt_options.set_keep_alive(Duration::from_secs(cfg.mqtt_keepalive_sec));
     if let Some(user) = cfg.mqtt_username.as_deref() {
         mqtt_options.set_credentials(user, cfg.mqtt_password.as_deref().unwrap_or(""));
@@ -268,9 +308,16 @@ async fn main() -> anyhow::Result<()> {
         odoo_base_url: cfg.odoo_base_url.clone().trim_end_matches('/').to_string(),
         token: cfg.middleware_token.clone(),
     });
+    let forward_queue = Arc::new(DurableQueue::new(PathBuf::from(cfg.queue_path.clone())));
+    let queue_loop_forwarder = forwarder.clone();
+    let queue_loop_queue = forward_queue.clone();
+    tokio::spawn(async move {
+        run_forward_queue_loop(queue_loop_forwarder, queue_loop_queue).await;
+    });
 
     let mqtt_topic_root = cfg.mqtt_topic_root.clone();
     let mqtt_forwarder = forwarder.clone();
+    let mqtt_queue = forward_queue.clone();
     let mqtt_subscriber_client = mqtt_client.clone();
     tokio::spawn(async move {
         run_mqtt_loop(
@@ -278,14 +325,16 @@ async fn main() -> anyhow::Result<()> {
             event_loop,
             mqtt_topic_root,
             mqtt_forwarder,
+            mqtt_queue,
         )
         .await;
     });
 
     let th_tcp_listen = cfg.th_tcp_listen.clone();
     let th_forwarder = forwarder.clone();
+    let th_queue = forward_queue.clone();
     tokio::spawn(async move {
-        if let Err(err) = run_th_tcp_server(&th_tcp_listen, th_forwarder).await {
+        if let Err(err) = run_th_tcp_server(&th_tcp_listen, th_forwarder, th_queue).await {
             error!("th tcp server exited: {err:#}");
         }
     });
@@ -294,7 +343,8 @@ async fn main() -> anyhow::Result<()> {
     let openwrt_key_path = cfg.openwrt_ssh_key_path.clone();
     let openwrt_cache_for_loop = openwrt_cache.clone();
     tokio::spawn(async move {
-        run_openwrt_heartbeat_loop(openwrt_forwarder, openwrt_key_path, openwrt_cache_for_loop).await;
+        run_openwrt_heartbeat_loop(openwrt_forwarder, openwrt_key_path, openwrt_cache_for_loop)
+            .await;
     });
 
     let app = Router::new()
@@ -329,8 +379,10 @@ async fn healthz() -> Json<ApiResponse> {
 async fn switch_command(
     State(state): State<AppState>,
     Path(serial): Path<String>,
+    headers: HeaderMap,
     Json(req): Json<CommandRequest>,
 ) -> Result<Json<ApiResponse>, (StatusCode, Json<ApiResponse>)> {
+    ensure_switch_api_token(&headers)?;
     let mut body = Map::<String, Value>::new();
     body.insert("command".to_string(), Value::String(req.command));
     if let Some(payload) = req.payload {
@@ -370,7 +422,14 @@ async fn openwrt_probe(
     let response = perform_openwrt_probe(&req.host, req.port, &req.username, &key_path)
         .await
         .map_err(openwrt_internal_err)?;
-    cache_openwrt_probe(&state.openwrt_cache, &req.host, req.port, &req.username, &response).await;
+    cache_openwrt_probe(
+        &state.openwrt_cache,
+        &req.host,
+        req.port,
+        &req.username,
+        &response,
+    )
+    .await;
     Ok(Json(response))
 }
 
@@ -433,7 +492,14 @@ async fn openwrt_refresh_bulk(
             };
             match perform_openwrt_probe(&item.host, item.port, &item.username, &key_path).await {
                 Ok(result) => {
-                    cache_openwrt_probe(&state.openwrt_cache, &item.host, item.port, &item.username, &result).await;
+                    cache_openwrt_probe(
+                        &state.openwrt_cache,
+                        &item.host,
+                        item.port,
+                        &item.username,
+                        &result,
+                    )
+                    .await;
                     let _ = state_for_heartbeat_writeback(
                         &state,
                         &OpenwrtHeartbeatPayload {
@@ -487,7 +553,8 @@ async fn perform_openwrt_probe(
     username: &str,
     key_path: &str,
 ) -> anyhow::Result<OpenwrtActionResponse> {
-    let board_raw = run_ssh_command(host, port, username, key_path, "ubus call system board").await?;
+    let board_raw =
+        run_ssh_command(host, port, username, key_path, "ubus call system board").await?;
     let hostname = run_ssh_command(
         host,
         port,
@@ -496,9 +563,15 @@ async fn perform_openwrt_probe(
         "uci -q get system.@system[0].hostname || cat /proc/sys/kernel/hostname",
     )
     .await?;
-    let wireless_status_raw = run_ssh_command(host, port, username, key_path, "ubus call network.wireless status")
-        .await
-        .unwrap_or_else(|_| "{}".to_string());
+    let wireless_status_raw = run_ssh_command(
+        host,
+        port,
+        username,
+        key_path,
+        "ubus call network.wireless status",
+    )
+    .await
+    .unwrap_or_else(|_| "{}".to_string());
     let hostapd_list_raw = run_ssh_command(
         host,
         port,
@@ -508,15 +581,30 @@ async fn perform_openwrt_probe(
     )
     .await
     .unwrap_or_default();
-    let ip_neigh_raw = run_ssh_command(host, port, username, key_path, "ip neigh show 2>/dev/null || true")
-        .await
-        .unwrap_or_default();
-    let dhcp_leases_raw = run_ssh_command(host, port, username, key_path, "cat /tmp/dhcp.leases 2>/dev/null || true")
-        .await
-        .unwrap_or_default();
+    let ip_neigh_raw = run_ssh_command(
+        host,
+        port,
+        username,
+        key_path,
+        "ip neigh show 2>/dev/null || true",
+    )
+    .await
+    .unwrap_or_default();
+    let dhcp_leases_raw = run_ssh_command(
+        host,
+        port,
+        username,
+        key_path,
+        "cat /tmp/dhcp.leases 2>/dev/null || true",
+    )
+    .await
+    .unwrap_or_default();
     let mut facts: Value = serde_json::from_str(&board_raw)?;
     if let Some(obj) = facts.as_object_mut() {
-        obj.insert("hostname".to_string(), Value::String(hostname.trim().to_string()));
+        obj.insert(
+            "hostname".to_string(),
+            Value::String(hostname.trim().to_string()),
+        );
     }
     let iface_bands = parse_wireless_interface_bands(&wireless_status_raw);
     let ip_map = parse_ip_neigh(&ip_neigh_raw);
@@ -526,7 +614,17 @@ async fn perform_openwrt_probe(
         .map(|line| line.trim().to_string())
         .filter(|line| !line.is_empty())
         .collect();
-    let clients = collect_openwrt_clients(host, port, username, key_path, &hostapd_ifaces, &iface_bands, &ip_map, &lease_map).await?;
+    let clients = collect_openwrt_clients(
+        host,
+        port,
+        username,
+        key_path,
+        &hostapd_ifaces,
+        &iface_bands,
+        &ip_map,
+        &lease_map,
+    )
+    .await?;
     let summary = summarize_clients(&clients);
     Ok(OpenwrtActionResponse {
         ok: true,
@@ -558,7 +656,10 @@ async fn cache_openwrt_probe(
                 Some(Value::Array(items)) => items,
                 _ => Vec::new(),
             },
-            summary: response.summary.clone().unwrap_or_else(|| serde_json::json!({})),
+            summary: response
+                .summary
+                .clone()
+                .unwrap_or_else(|| serde_json::json!({})),
         },
     );
 }
@@ -572,7 +673,7 @@ async fn state_for_heartbeat_writeback(
         odoo_base_url: env_or("IOT_BRIDGE_ODOO_BASE_URL", "http://127.0.0.1:8069")
             .trim_end_matches('/')
             .to_string(),
-        token: env_or("IOT_BRIDGE_TOKEN", "imytest-middleware-token"),
+        token: env_or("IOT_BRIDGE_TOKEN", ""),
     });
     forwarder
         .post_json(
@@ -677,10 +778,23 @@ async fn openwrt_upgrade(
         .map_err(openwrt_bad_request)?;
     let filename = sanitize_filename(&req.filename);
     let firmware_url = if let Some(firmware_id) = req.firmware_id {
+        let ap_id = req
+            .ap_id
+            .ok_or_else(|| openwrt_bad_request("ap_id is required when firmware_id is used"))?;
+        let auth_token = req
+            .auth_token
+            .as_deref()
+            .map(str::trim)
+            .filter(|value| !value.is_empty())
+            .ok_or_else(|| {
+                openwrt_bad_request("auth_token is required when firmware_id is used")
+            })?;
         format!(
-            "{}/iot_control_center/openwrt/firmware/{}/download",
+            "{}/iot_control_center/openwrt/firmware/{}/download?ap_id={}&token={}",
             cfg.odoo_base_url.trim_end_matches('/'),
-            firmware_id
+            firmware_id,
+            ap_id,
+            url_encode_component(auth_token)
         )
     } else {
         req.firmware_url
@@ -816,7 +930,14 @@ async fn complete_openwrt_upgrade_after_disconnect(
     .await
     {
         Ok(response) => {
-            cache_openwrt_probe(&state.openwrt_cache, &req.host, req.port, &req.username, &response).await;
+            cache_openwrt_probe(
+                &state.openwrt_cache,
+                &req.host,
+                req.port,
+                &req.username,
+                &response,
+            )
+            .await;
             let version_note = extract_openwrt_release_version(&response).unwrap_or_default();
             let message = if version_note.is_empty() {
                 "device rebooted during sysupgrade and came back online".to_string()
@@ -868,7 +989,9 @@ async fn verify_openwrt_upgrade(
             }
         }
     }
-    Err(anyhow::anyhow!("device did not come back with expected firmware version"))
+    Err(anyhow::anyhow!(
+        "device did not come back with expected firmware version"
+    ))
 }
 
 fn extract_openwrt_release_version(response: &OpenwrtActionResponse) -> Option<String> {
@@ -882,11 +1005,131 @@ fn extract_openwrt_release_version(response: &OpenwrtActionResponse) -> Option<S
         .filter(|value| !value.is_empty())
 }
 
+impl DurableQueue {
+    fn new(path: PathBuf) -> Self {
+        Self {
+            path: Arc::new(path),
+            lock: Arc::new(Mutex::new(())),
+        }
+    }
+
+    async fn push(&self, item: QueuedPost) -> anyhow::Result<()> {
+        let _guard = self.lock.lock().await;
+        if let Some(parent) = self.path.parent() {
+            if !parent.as_os_str().is_empty() {
+                fs::create_dir_all(parent)
+                    .with_context(|| format!("create queue directory {}", parent.display()))?;
+            }
+        }
+        let line = serde_json::to_string(&item).context("encode queued post")?;
+        let mut file = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(self.path.as_ref())
+            .with_context(|| format!("open queue file {}", self.path.display()))?;
+        file.write_all(line.as_bytes())
+            .context("append queue line")?;
+        file.write_all(b"\n").context("append queue newline")?;
+        Ok(())
+    }
+
+    async fn take_batch(&self, limit: usize) -> anyhow::Result<Vec<QueuedPost>> {
+        let _guard = self.lock.lock().await;
+        if !self.path.exists() {
+            return Ok(Vec::new());
+        }
+        let file = OpenOptions::new()
+            .read(true)
+            .open(self.path.as_ref())
+            .with_context(|| format!("read queue file {}", self.path.display()))?;
+        let reader = BufReader::new(file);
+        let mut taken = Vec::new();
+        let mut remaining = Vec::new();
+        for line in reader.lines() {
+            let line = line.context("read queue line")?;
+            if line.trim().is_empty() {
+                continue;
+            }
+            if taken.len() < limit {
+                match serde_json::from_str::<QueuedPost>(&line) {
+                    Ok(item) => taken.push(item),
+                    Err(err) => warn!("dropping invalid queue line: {err}"),
+                }
+            } else {
+                remaining.push(line);
+            }
+        }
+        let tmp_path = self.path.with_extension("jsonl.tmp");
+        {
+            let mut tmp = OpenOptions::new()
+                .create(true)
+                .write(true)
+                .truncate(true)
+                .open(&tmp_path)
+                .with_context(|| format!("open queue tmp file {}", tmp_path.display()))?;
+            for line in remaining {
+                tmp.write_all(line.as_bytes())
+                    .context("rewrite queue line")?;
+                tmp.write_all(b"\n").context("rewrite queue newline")?;
+            }
+        }
+        fs::rename(&tmp_path, self.path.as_ref()).with_context(|| {
+            format!(
+                "replace queue file {} with {}",
+                self.path.display(),
+                tmp_path.display()
+            )
+        })?;
+        Ok(taken)
+    }
+}
+
+async fn forward_or_queue(forwarder: &Forwarder, queue: &DurableQueue, path: &str, body: &Value) {
+    if let Err(err) = forwarder.post_json(path, body).await {
+        warn!("forward {} failed, queued for retry: {err}", path);
+        if let Err(queue_err) = queue
+            .push(QueuedPost {
+                path: path.to_string(),
+                body: body.clone(),
+            })
+            .await
+        {
+            error!("failed to persist queued post for {}: {queue_err}", path);
+        }
+    }
+}
+
+async fn run_forward_queue_loop(forwarder: Arc<Forwarder>, queue: Arc<DurableQueue>) {
+    loop {
+        match queue.take_batch(200).await {
+            Ok(items) if items.is_empty() => {}
+            Ok(items) => {
+                let mut failed = 0_usize;
+                for item in items {
+                    if let Err(err) = forwarder.post_json(&item.path, &item.body).await {
+                        failed += 1;
+                        warn!("queued forward {} failed again: {err}", item.path);
+                        if let Err(queue_err) = queue.push(item).await {
+                            error!("failed to requeue post: {queue_err}");
+                        }
+                    }
+                }
+                if failed == 0 {
+                    info!("forward queue drained successfully");
+                }
+            }
+            Err(err) => warn!("forward queue drain failed: {err:#}"),
+        }
+        tokio::time::sleep(Duration::from_secs(5)).await;
+    }
+}
+
 async fn run_mqtt_loop(
     mqtt_client: AsyncClient,
     mut event_loop: EventLoop,
     topic_root: String,
     forwarder: Arc<Forwarder>,
+    queue: Arc<DurableQueue>,
 ) {
     let status_pattern = format!("{}/+/status", topic_root);
     let telemetry_pattern = format!("{}/+/telemetry", topic_root);
@@ -913,13 +1156,15 @@ async fn run_mqtt_loop(
                 let body = serde_json::json!({
                     "topic": p.topic,
                     "payload": payload,
+                    "retained": p.retain,
                 });
-                if let Err(err) = forwarder
-                    .post_json("/iot_control_center/internal/mqtt_ingest", &body)
-                    .await
-                {
-                    warn!("forward mqtt message failed: {err}");
-                }
+                forward_or_queue(
+                    &forwarder,
+                    &queue,
+                    "/iot_control_center/internal/mqtt_ingest",
+                    &body,
+                )
+                .await;
             }
             Ok(_) => {}
             Err(err) => {
@@ -930,14 +1175,19 @@ async fn run_mqtt_loop(
     }
 }
 
-async fn run_th_tcp_server(listen: &str, forwarder: Arc<Forwarder>) -> anyhow::Result<()> {
+async fn run_th_tcp_server(
+    listen: &str,
+    forwarder: Arc<Forwarder>,
+    queue: Arc<DurableQueue>,
+) -> anyhow::Result<()> {
     let listener = TcpListener::bind(listen).await?;
     info!("th tcp listening on {}", listen);
     loop {
         let (socket, remote) = listener.accept().await?;
         let forwarder_clone = forwarder.clone();
+        let queue_clone = queue.clone();
         tokio::spawn(async move {
-            if let Err(err) = handle_th_socket(socket, remote, forwarder_clone).await {
+            if let Err(err) = handle_th_socket(socket, remote, forwarder_clone, queue_clone).await {
                 warn!("th connection {} error: {err:#}", remote);
             }
         });
@@ -948,6 +1198,7 @@ async fn handle_th_socket(
     mut socket: TcpStream,
     remote: SocketAddr,
     forwarder: Arc<Forwarder>,
+    queue: Arc<DurableQueue>,
 ) -> anyhow::Result<()> {
     let mut buf = vec![0_u8; 4096];
     let mut frame_buf = Vec::<u8>::new();
@@ -958,7 +1209,7 @@ async fn handle_th_socket(
             break;
         }
         frame_buf.extend_from_slice(&buf[..n]);
-        process_mixed_buffer(&mut frame_buf, remote, &forwarder).await?;
+        process_mixed_buffer(&mut frame_buf, remote, &forwarder, &queue).await?;
     }
     Ok(())
 }
@@ -967,6 +1218,7 @@ async fn process_mixed_buffer(
     buffer: &mut Vec<u8>,
     remote: SocketAddr,
     forwarder: &Forwarder,
+    queue: &DurableQueue,
 ) -> anyhow::Result<()> {
     loop {
         if buffer.is_empty() {
@@ -984,9 +1236,13 @@ async fn process_mixed_buffer(
                         "source_ip": remote.ip().to_string(),
                         "source_port": remote.port(),
                     });
-                    let _ = forwarder
-                        .post_json("/iot_control_center/internal/th_ingest_json", &body)
-                        .await;
+                    forward_or_queue(
+                        forwarder,
+                        queue,
+                        "/iot_control_center/internal/th_ingest_json",
+                        &body,
+                    )
+                    .await;
                 }
                 continue;
             }
@@ -1027,9 +1283,13 @@ async fn process_mixed_buffer(
             "source_ip": remote.ip().to_string(),
             "source_port": remote.port(),
         });
-        let _ = forwarder
-            .post_json("/iot_control_center/internal/th_ingest_binary", &body)
-            .await;
+        forward_or_queue(
+            forwarder,
+            queue,
+            "/iot_control_center/internal/th_ingest_binary",
+            &body,
+        )
+        .await;
     }
 }
 
@@ -1078,7 +1338,11 @@ async fn run_openwrt_heartbeat_loop(
                                 id: item.id,
                                 auth_token: item.auth_token.clone(),
                                 ok: false,
-                                mode: if full_probe { "probe".to_string() } else { "heartbeat".to_string() },
+                                mode: if full_probe {
+                                    "probe".to_string()
+                                } else {
+                                    "heartbeat".to_string()
+                                },
                                 error: Some(err.to_string()),
                                 facts: None,
                             }),
@@ -1089,9 +1353,11 @@ async fn run_openwrt_heartbeat_loop(
             };
 
             let payload = if full_probe {
-                match perform_openwrt_probe(&item.host, item.port, &item.username, &key_path).await {
+                match perform_openwrt_probe(&item.host, item.port, &item.username, &key_path).await
+                {
                     Ok(result) => {
-                        cache_openwrt_probe(&cache, &item.host, item.port, &item.username, &result).await;
+                        cache_openwrt_probe(&cache, &item.host, item.port, &item.username, &result)
+                            .await;
                         OpenwrtHeartbeatPayload {
                             id: item.id,
                             auth_token: item.auth_token.clone(),
@@ -1111,7 +1377,9 @@ async fn run_openwrt_heartbeat_loop(
                     },
                 }
             } else {
-                match run_ssh_command(&item.host, item.port, &item.username, &key_path, "true").await {
+                match run_ssh_command(&item.host, item.port, &item.username, &key_path, "true")
+                    .await
+                {
                     Ok(_) => OpenwrtHeartbeatPayload {
                         id: item.id,
                         auth_token: item.auth_token.clone(),
@@ -1138,7 +1406,10 @@ async fn run_openwrt_heartbeat_loop(
                 )
                 .await
             {
-                warn!("openwrt heartbeat writeback failed for ap {}: {err}", item.id);
+                warn!(
+                    "openwrt heartbeat writeback failed for ap {}: {err}",
+                    item.id
+                );
             }
         }
 
@@ -1205,7 +1476,9 @@ impl Forwarder {
             .context("post_json_read request failed")?
             .error_for_status()
             .context("post_json_read status failed")?;
-        resp.json::<T>().await.context("post_json_read decode failed")
+        resp.json::<T>()
+            .await
+            .context("post_json_read decode failed")
     }
 }
 
@@ -1217,6 +1490,27 @@ fn internal_err<E: std::fmt::Display>(err: E) -> (StatusCode, Json<ApiResponse>)
             message: err.to_string(),
         }),
     )
+}
+
+fn ensure_switch_api_token(headers: &HeaderMap) -> Result<(), (StatusCode, Json<ApiResponse>)> {
+    let expected = env_or("IOT_BRIDGE_TOKEN", "");
+    let provided = headers
+        .get("X-IoT-Middleware-Token")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("")
+        .trim()
+        .to_string();
+    if !expected.is_empty() && provided == expected {
+        Ok(())
+    } else {
+        Err((
+            StatusCode::UNAUTHORIZED,
+            Json(ApiResponse {
+                ok: false,
+                message: "unauthorized".to_string(),
+            }),
+        ))
+    }
 }
 
 fn openwrt_internal_err<E: std::fmt::Display>(err: E) -> (StatusCode, Json<OpenwrtActionResponse>) {
@@ -1246,14 +1540,14 @@ fn openwrt_bad_request<E: std::fmt::Display>(err: E) -> (StatusCode, Json<Openwr
 }
 
 fn ensure_api_token(headers: &HeaderMap) -> Result<(), (StatusCode, Json<OpenwrtActionResponse>)> {
-    let expected = env_or("IOT_BRIDGE_TOKEN", "imytest-middleware-token");
+    let expected = env_or("IOT_BRIDGE_TOKEN", "");
     let provided = headers
         .get("X-IoT-Middleware-Token")
         .and_then(|v| v.to_str().ok())
         .unwrap_or("")
         .trim()
         .to_string();
-    if expected.is_empty() || provided == expected {
+    if !expected.is_empty() && provided == expected {
         Ok(())
     } else {
         Err((
@@ -1300,7 +1594,7 @@ async fn run_ssh_command(
         .arg("-o")
         .arg("BatchMode=yes")
         .arg("-o")
-        .arg("StrictHostKeyChecking=no")
+        .arg("StrictHostKeyChecking=accept-new")
         .arg("-p")
         .arg(port.to_string())
         .arg(format!("{}@{}", username, host))
@@ -1354,7 +1648,7 @@ async fn upload_to_remote_once(
         .arg("-o")
         .arg("BatchMode=yes")
         .arg("-o")
-        .arg("StrictHostKeyChecking=no")
+        .arg("StrictHostKeyChecking=accept-new")
         .arg("-p")
         .arg(port.to_string())
         .arg(format!("{}@{}", username, host))
@@ -1423,10 +1717,17 @@ fn parse_wireless_interface_bands(raw: &str) -> HashMap<String, String> {
             .and_then(Value::as_str)
             .map(normalize_band_label)
             .or_else(|| {
-                radio.get("config")
+                radio
+                    .get("config")
                     .and_then(|v| v.get("channel"))
                     .and_then(Value::as_u64)
-                    .map(|channel| if channel <= 14 { "2.4g".to_string() } else { "5g".to_string() })
+                    .map(|channel| {
+                        if channel <= 14 {
+                            "2.4g".to_string()
+                        } else {
+                            "5g".to_string()
+                        }
+                    })
             })
             .unwrap_or_else(|| "other".to_string());
         if let Some(interfaces) = radio.get("interfaces").and_then(Value::as_array) {
@@ -1648,7 +1949,11 @@ fn summarize_clients(clients: &[Value]) -> Value {
     let mut upload_bytes = 0.0_f64;
     let mut download_bytes = 0.0_f64;
     for client in clients {
-        match client.get("band").and_then(Value::as_str).unwrap_or("other") {
+        match client
+            .get("band")
+            .and_then(Value::as_str)
+            .unwrap_or("other")
+        {
             "2.4g" => count_24 += 1,
             "5g" => count_5 += 1,
             _ => {}
@@ -1699,6 +2004,19 @@ fn sanitize_filename(filename: &str) -> String {
         .collect()
 }
 
+fn url_encode_component(value: &str) -> String {
+    let mut encoded = String::new();
+    for byte in value.as_bytes() {
+        match *byte {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                encoded.push(*byte as char)
+            }
+            _ => encoded.push_str(&format!("%{:02X}", *byte)),
+        }
+    }
+    encoded
+}
+
 fn default_true() -> bool {
     true
 }
@@ -1718,6 +2036,15 @@ fn json_string(value: &Value, key: &str) -> Option<String> {
 fn build_apply_template_script(template: &Value) -> anyhow::Result<String> {
     let mut lines = vec![
         "set -e".to_string(),
+        "IOT_WIRELESS_BACKUP=\"/tmp/iot_wireless_backup.$$\"".to_string(),
+        "uci export wireless > \"$IOT_WIRELESS_BACKUP\"".to_string(),
+        "rollback_wifi() {".to_string(),
+        "  echo 'rolling back wireless config' >&2".to_string(),
+        "  uci import wireless < \"$IOT_WIRELESS_BACKUP\" || true".to_string(),
+        "  uci commit wireless || true".to_string(),
+        "  wifi reload || wifi || true".to_string(),
+        "}".to_string(),
+        "trap rollback_wifi ERR".to_string(),
         "find_device_by_band() {".to_string(),
         "  desired=\"$1\"".to_string(),
         "  for dev in $(uci -q show wireless | sed -n \"s/^wireless\\.\\([^.=]*\\)=wifi-device$/\\1/p\"); do".to_string(),
@@ -1770,13 +2097,14 @@ fn build_apply_template_script(template: &Value) -> anyhow::Result<String> {
     lines.push("uci commit wireless".to_string());
     lines.push("uci commit system || true".to_string());
     lines.push("wifi reload || wifi".to_string());
+    lines.push("trap - ERR".to_string());
+    lines.push("rm -f \"$IOT_WIRELESS_BACKUP\"".to_string());
     Ok(lines.join("\n"))
 }
 
 fn build_locate_script(enable: bool, duration_sec: u32) -> anyhow::Result<String> {
     if !enable {
-        return Ok(
-            r#"#!/bin/sh
+        return Ok(r#"#!/bin/sh
 STATE_DIR=/tmp/iot_cc_locate
 PID_FILE="$STATE_DIR/blink.pid"
 STATE_FILE="$STATE_DIR/state"
@@ -1797,8 +2125,7 @@ restore_leds
 rm -f "$STATE_FILE" "$STATE_DIR/restore.sh"
 echo stopped
 "#
-            .to_string(),
-        );
+        .to_string());
     }
 
     Ok(format!(
@@ -1895,17 +2222,33 @@ fn append_wifi_apply_lines(
         .unwrap_or_default();
     if entries.is_empty() {
         lines.push(format!("  {iface_var}=$(uci add wireless wifi-iface)"));
-        lines.push(format!("  uci set wireless.${{{iface_var}}}.device=${{{dev_var}}}"));
-        lines.push("  uci set wireless.${wifi_iface}.mode='ap'".replace("${wifi_iface}", &format!("${{{iface_var}}}")));
-        lines.push("  uci set wireless.${wifi_iface}.network='lan'".replace("${wifi_iface}", &format!("${{{iface_var}}}")));
+        lines.push(format!(
+            "  uci set wireless.${{{iface_var}}}.device=${{{dev_var}}}"
+        ));
+        lines.push(
+            "  uci set wireless.${wifi_iface}.mode='ap'"
+                .replace("${wifi_iface}", &format!("${{{iface_var}}}")),
+        );
+        lines.push(
+            "  uci set wireless.${wifi_iface}.network='lan'"
+                .replace("${wifi_iface}", &format!("${{{iface_var}}}")),
+        );
         append_wifi_entry_lines(lines, &iface_var, obj)?;
     } else {
         for entry in entries {
             if let Some(entry_obj) = entry.as_object() {
                 lines.push(format!("  {iface_var}=$(uci add wireless wifi-iface)"));
-                lines.push(format!("  uci set wireless.${{{iface_var}}}.device=${{{dev_var}}}"));
-                lines.push("  uci set wireless.${wifi_iface}.mode='ap'".replace("${wifi_iface}", &format!("${{{iface_var}}}")));
-                lines.push("  uci set wireless.${wifi_iface}.network='lan'".replace("${wifi_iface}", &format!("${{{iface_var}}}")));
+                lines.push(format!(
+                    "  uci set wireless.${{{iface_var}}}.device=${{{dev_var}}}"
+                ));
+                lines.push(
+                    "  uci set wireless.${wifi_iface}.mode='ap'"
+                        .replace("${wifi_iface}", &format!("${{{iface_var}}}")),
+                );
+                lines.push(
+                    "  uci set wireless.${wifi_iface}.network='lan'"
+                        .replace("${wifi_iface}", &format!("${{{iface_var}}}")),
+                );
                 append_wifi_entry_lines(lines, &iface_var, entry_obj)?;
             }
         }
@@ -1974,7 +2317,9 @@ fn append_wifi_entry_lines(
         .map(|s| s.trim())
         == Some("none")
     {
-        lines.push(format!("  uci -q delete wireless.${{{iface_var}}}.key || true"));
+        lines.push(format!(
+            "  uci -q delete wireless.${{{iface_var}}}.key || true"
+        ));
     }
     if let Some(hidden) = obj.get("hidden").and_then(|v| v.as_bool()) {
         lines.push(format!(
@@ -1998,4 +2343,20 @@ fn env_opt(key: &str) -> Option<String> {
             Some(vv)
         }
     })
+}
+
+fn sanitize_client_id(value: &str) -> String {
+    let mut out = String::new();
+    for ch in value.chars() {
+        if ch.is_ascii_alphanumeric() {
+            out.push(ch);
+        } else {
+            out.push('_');
+        }
+    }
+    if out.is_empty() {
+        "default".to_string()
+    } else {
+        out
+    }
 }

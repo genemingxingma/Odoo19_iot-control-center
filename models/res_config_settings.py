@@ -15,6 +15,15 @@ _logger = logging.getLogger(__name__)
 class ResConfigSettings(models.TransientModel):
     _inherit = "res.config.settings"
 
+    iot_prefer_internal_network = fields.Boolean(
+        related="company_id.iot_prefer_internal_network",
+        readonly=False,
+    )
+    iot_internal_host = fields.Char(related="company_id.iot_internal_host", readonly=False)
+    iot_internal_odoo_port = fields.Integer(related="company_id.iot_internal_odoo_port", readonly=False)
+    iot_internal_mqtt_port = fields.Integer(related="company_id.iot_internal_mqtt_port", readonly=False)
+    iot_internal_ota_port = fields.Integer(related="company_id.iot_internal_ota_port", readonly=False)
+
     iot_mqtt_host = fields.Char(config_parameter="iot_control_center.mqtt_host", default="iot.imytest.com")
     iot_mqtt_port = fields.Integer(config_parameter="iot_control_center.mqtt_port", default=1883)
     iot_mqtt_username = fields.Char(config_parameter="iot_control_center.mqtt_username", default="imytest")
@@ -47,11 +56,14 @@ class ResConfigSettings(models.TransientModel):
     iot_th_online_timeout_sec = fields.Integer(config_parameter="iot_control_center.th_online_timeout_sec", default=300)
     iot_th_raw_retention_days = fields.Integer(
         config_parameter="iot_control_center.th_raw_retention_days",
-        default=15,
+        default=30,
     )
-    iot_middleware_enabled = fields.Boolean(config_parameter="iot_control_center.middleware_enabled", default=False)
+    iot_middleware_enabled = fields.Boolean(config_parameter="iot_control_center.middleware_enabled", default=True)
     iot_middleware_base_url = fields.Char(config_parameter="iot_control_center.middleware_base_url", default="http://127.0.0.1:8099")
-    iot_middleware_token = fields.Char(config_parameter="iot_control_center.middleware_token", default="imytest-middleware-token")
+    iot_middleware_token = fields.Char(
+        config_parameter="iot_control_center.middleware_token",
+        default=lambda self: secrets.token_urlsafe(24),
+    )
     iot_openwrt_ssh_private_key_path = fields.Char(
         config_parameter="iot_control_center.openwrt_ssh_private_key_path",
         readonly=True,
@@ -79,6 +91,14 @@ class ResConfigSettings(models.TransientModel):
     iot_attendance_adms_port = fields.Integer(
         config_parameter="iot_control_center.attendance_adms_port",
         default=8069,
+    )
+    iot_attendance_allowed_ips = fields.Char(
+        config_parameter="iot_control_center.attendance_allowed_ips",
+        help="Comma-separated ADMS source IP allowlist. Leave blank to allow any source that matches a bound device.",
+    )
+    iot_attendance_max_open_hours = fields.Integer(
+        config_parameter="iot_control_center.attendance_max_open_hours",
+        default=16,
     )
     iot_attendance_request_retention_days = fields.Integer(
         config_parameter="iot_control_center.attendance_request_retention_days",

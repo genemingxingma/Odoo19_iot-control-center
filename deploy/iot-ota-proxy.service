@@ -1,0 +1,24 @@
+[Unit]
+Description=IoT LAN Firmware OTA Proxy
+After=network-online.target odoo.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=odoo
+Group=odoo
+Environment=OTA_PROXY_BIND=192.168.10.15
+Environment=OTA_PROXY_PORT=8443
+Environment=OTA_UPSTREAM_HOST=192.168.10.15
+Environment=OTA_UPSTREAM_PORT=8069
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/usr/bin/python3 /opt/odoo/custom_addons/iot_control_center/deploy/lan_ota_proxy.py
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+
+[Install]
+WantedBy=multi-user.target

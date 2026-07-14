@@ -1,7 +1,7 @@
 {
     "name": "IoT Control Center",
     "summary": "ESP8266 relay management via MQTT",
-    "version": "19.0.1.0.7",
+    "version": "19.0.1.0.17",
     "category": "IoT",
     "author": "mamingxing",
     "maintainer": "mamingxing",
@@ -44,7 +44,7 @@
         "data/control_board_data.xml",
         "data/visibility_binding_fix.xml",
         "data/menu_groups_fix.xml",
-        "data/remove_raw_packet_legacy.xml",
+        "data/legacy_cleanup.xml",
     ],
     "assets": {
         "web.assets_backend": [
@@ -55,13 +55,12 @@
             "iot_control_center/static/src/js/delay_countdown_field.js",
             "iot_control_center/static/src/xml/th_reading_graph_lock.xml",
             "iot_control_center/static/src/js/th_reading_graph_lock.js",
-            "iot_control_center/static/src/js/openwrt_ap_list_live_refresh.js",
         ],
     },
     "installable": True,
     "application": True,
     "pre_init_hook": "pre_init_check",
     "external_dependencies": {
-        "python": ["paho-mqtt", "pytz"],
+        "python": ["paho.mqtt.client", "pytz"],
     },
 }

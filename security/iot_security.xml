@@ -21,35 +21,35 @@
         <field name="name">IoT Device multi-company</field>
         <field name="model_id" ref="model_iot_device"/>
         <field name="global" eval="True"/>
-        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
     </record>
 
     <record id="rule_iot_department_company" model="ir.rule">
         <field name="name">IoT Department multi-company</field>
         <field name="model_id" ref="model_iot_department"/>
         <field name="global" eval="True"/>
-        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
     </record>
 
     <record id="rule_iot_location_company" model="ir.rule">
         <field name="name">IoT Location multi-company</field>
         <field name="model_id" ref="model_iot_location"/>
         <field name="global" eval="True"/>
-        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
     </record>
 
     <record id="rule_iot_device_group_company" model="ir.rule">
         <field name="name">IoT Device Group multi-company</field>
         <field name="model_id" ref="model_iot_device_group"/>
         <field name="global" eval="True"/>
-        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
     </record>
 
     <record id="rule_iot_schedule_company" model="ir.rule">
         <field name="name">IoT Schedule multi-company</field>
         <field name="model_id" ref="model_iot_schedule"/>
         <field name="global" eval="True"/>
-        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
     </record>
 
     <record id="rule_iot_firmware_company" model="ir.rule">
@@ -63,7 +63,14 @@
         <field name="name">IoT Firmware Upgrade Log multi-company</field>
         <field name="model_id" ref="model_iot_firmware_upgrade_log"/>
         <field name="global" eval="True"/>
-        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
+    </record>
+
+    <record id="rule_iot_mqtt_message_company" model="ir.rule">
+        <field name="name">IoT MQTT Message multi-company</field>
+        <field name="model_id" ref="model_iot_mqtt_message"/>
+        <field name="global" eval="True"/>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
     </record>
 
     <record id="rule_iot_control_board_all" model="ir.rule">
@@ -77,70 +84,70 @@
         <field name="name">IoT Attendance Device multi-company</field>
         <field name="model_id" ref="model_iot_attendance_device"/>
         <field name="global" eval="True"/>
-        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
     </record>
 
     <record id="rule_iot_attendance_user_company" model="ir.rule">
         <field name="name">IoT Attendance User multi-company</field>
         <field name="model_id" ref="model_iot_attendance_user"/>
         <field name="global" eval="True"/>
-        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
     </record>
 
     <record id="rule_iot_attendance_punch_company" model="ir.rule">
         <field name="name">IoT Attendance Punch multi-company</field>
         <field name="model_id" ref="model_iot_attendance_punch"/>
         <field name="global" eval="True"/>
-        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
     </record>
 
     <record id="rule_iot_attendance_request_company" model="ir.rule">
         <field name="name">IoT Attendance Request multi-company</field>
         <field name="model_id" ref="model_iot_attendance_request"/>
         <field name="global" eval="True"/>
-        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
     </record>
 
     <record id="rule_iot_th_gateway_company" model="ir.rule">
         <field name="name">IoT TH Gateway multi-company</field>
         <field name="model_id" ref="model_iot_th_gateway"/>
         <field name="global" eval="True"/>
-        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
     </record>
 
     <record id="rule_iot_th_sensor_company" model="ir.rule">
         <field name="name">IoT TH Sensor multi-company</field>
         <field name="model_id" ref="model_iot_th_sensor"/>
         <field name="global" eval="True"/>
-        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
     </record>
 
     <record id="rule_iot_th_sensor_group_company" model="ir.rule">
         <field name="name">IoT TH Sensor Group multi-company</field>
         <field name="model_id" ref="model_iot_th_sensor_group"/>
         <field name="global" eval="True"/>
-        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
     </record>
 
     <record id="rule_iot_th_reading_company" model="ir.rule">
         <field name="name">IoT TH Reading multi-company</field>
         <field name="model_id" ref="model_iot_th_reading"/>
         <field name="global" eval="True"/>
-        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
     </record>
 
     <record id="rule_iot_th_alert_company" model="ir.rule">
         <field name="name">IoT TH Alert multi-company</field>
         <field name="model_id" ref="model_iot_th_alert"/>
         <field name="global" eval="True"/>
-        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
     </record>
 
     <record id="rule_iot_openwrt_ap_company" model="ir.rule">
         <field name="name">IoT OpenWrt AP multi-company</field>
         <field name="model_id" ref="model_iot_openwrt_ap"/>
         <field name="global" eval="True"/>
-        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
     </record>
 
     <record id="rule_iot_openwrt_template_company" model="ir.rule">
@@ -161,14 +168,14 @@
         <field name="name">IoT OpenWrt Job multi-company</field>
         <field name="model_id" ref="model_iot_openwrt_job"/>
         <field name="global" eval="True"/>
-        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
     </record>
 
     <record id="rule_iot_openwrt_client_company" model="ir.rule">
         <field name="name">IoT OpenWrt Client multi-company</field>
         <field name="model_id" ref="model_iot_openwrt_client"/>
         <field name="global" eval="True"/>
-        <field name="domain_force">['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]</field>
+        <field name="domain_force">[('company_id', 'in', company_ids)]</field>
     </record>
 
 </odoo>
