@@ -185,6 +185,12 @@
                                 High-frequency ADMS request logs older than this many days are purged automatically to keep the database lean.
                             </div>
                         </setting>
+                        <setting string="Attendance Heartbeat Log Interval (seconds)">
+                            <field name="iot_attendance_heartbeat_log_interval_seconds"/>
+                            <div class="text-muted">
+                                Successful ADMS heartbeats are sampled at this interval. Punch, error, and unknown-device requests are still logged individually. Set to 0 to keep every heartbeat.
+                            </div>
+                        </setting>
                         <setting string="Attendance Punch Raw Payload Retention (days)">
                             <field name="iot_attendance_punch_raw_retention_days"/>
                             <div class="text-muted">

@@ -29,19 +29,20 @@ class IoTAttendanceController(http.Controller):
         if not device:
             return
         try:
-            now = fields.Datetime.now()
-            values = {}
-            # Throttle heartbeat writes to reduce transaction conflicts under high request bursts.
-            if not device.adms_last_seen_at or (now - device.adms_last_seen_at).total_seconds() >= 15:
-                values["adms_last_seen_at"] = now
-            if payload_text and (not device.adms_last_payload or device.adms_last_payload[:10000] != payload_text[:10000]):
-                values["adms_last_payload"] = payload_text[:10000]
-            if serial_number and not device.serial_number:
-                values["serial_number"] = serial_number
-            if values:
-                device.write(values)
+            with request.env.cr.savepoint():
+                now = fields.Datetime.now()
+                values = {}
+                # Throttle heartbeat writes to reduce contention under high request bursts.
+                if not device.adms_last_seen_at or (now - device.adms_last_seen_at).total_seconds() >= 15:
+                    values["adms_last_seen_at"] = now
+                if payload_text and (not device.adms_last_payload or device.adms_last_payload[:10000] != payload_text[:10000]):
+                    values["adms_last_payload"] = payload_text[:10000]
+                if serial_number and not device.serial_number:
+                    values["serial_number"] = serial_number
+                if values:
+                    device.write(values)
         except Exception as exc:
-            _logger.warning("IoT attendance device touch skipped due to DB conflict: %s", exc)
+            _logger.warning("IoT attendance device update skipped: %s", exc)
 
     def _compact_query_params(self):
         keep_keys = ("SN", "sn", "table", "Table", "Stamp", "stamp", "OpStamp", "ErrorDelay")
@@ -71,10 +72,21 @@ class IoTAttendanceController(http.Controller):
                 _logger.warning("Invalid attendance allowed IP entry ignored: %s", item)
         return False
 
-    def _create_request_log(self, endpoint, serial_number="", remote_ip="", payload_text="", device=None, status="received", note=""):
+    def _create_request_log(
+        self,
+        endpoint,
+        serial_number="",
+        remote_ip="",
+        payload_text="",
+        device=None,
+        status="received",
+        note="",
+        sample_seconds=0,
+    ):
         try:
-            return request.env["iot.attendance.request"].sudo().create(
-                {
+            with request.env.cr.savepoint():
+                request_model = request.env["iot.attendance.request"].sudo()
+                values = {
                     "endpoint": endpoint,
                     "method": request.httprequest.method,
                     "serial_number": serial_number or False,
@@ -86,10 +98,10 @@ class IoTAttendanceController(http.Controller):
                     "query_params": json.dumps(self._compact_query_params(), ensure_ascii=True, sort_keys=True) or False,
                     "headers": False,
                 }
-            )
+                return request_model.create_sampled(values, sample_seconds=sample_seconds)
         except Exception as exc:
-            # Never block attendance ingest because of request-log write contention.
-            _logger.warning("IoT attendance request log skipped due to DB conflict: %s", exc)
+            # Never block attendance ingest because auxiliary request logging failed.
+            _logger.warning("IoT attendance request log write skipped: %s", exc)
             return False
 
     @http.route("/iot_attendance/push/<int:device_id>", type="http", auth="none", methods=["POST"], csrf=False)
@@ -118,7 +130,17 @@ class IoTAttendanceController(http.Controller):
             return self._plain_ok("OK")
         payload_text = (request.httprequest.data or b"").decode("utf-8", errors="ignore")
         device = request.env["iot.attendance.device"].sudo()._find_adms_device(serial_number, remote_ip=remote_ip)
-        log = self._create_request_log(request.httprequest.path, serial_number, remote_ip, payload_text, device if device else None, "matched" if device else "ignored", "Heartbeat / getrequest")
+        request_model = request.env["iot.attendance.request"].sudo()
+        log = self._create_request_log(
+            request.httprequest.path,
+            serial_number,
+            remote_ip,
+            payload_text,
+            device if device else None,
+            "matched" if device else "ignored",
+            "Heartbeat / getrequest",
+            sample_seconds=request_model._heartbeat_sample_seconds() if device else 0,
+        )
         self._touch_device(device, serial_number, payload_text)
         if device and log and not log.device_id:
             log.device_id = device.id

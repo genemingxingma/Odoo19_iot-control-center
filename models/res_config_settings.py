@@ -104,6 +104,11 @@ class ResConfigSettings(models.TransientModel):
         config_parameter="iot_control_center.attendance_request_retention_days",
         default=7,
     )
+    iot_attendance_heartbeat_log_interval_seconds = fields.Integer(
+        string="Attendance Heartbeat Log Interval (seconds)",
+        config_parameter="iot_control_center.attendance_heartbeat_log_interval_seconds",
+        default=600,
+    )
     iot_attendance_punch_raw_retention_days = fields.Integer(
         config_parameter="iot_control_center.attendance_punch_raw_retention_days",
         default=7,
