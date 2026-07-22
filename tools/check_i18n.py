@@ -19,6 +19,16 @@ SUSPICIOUS_MARKERS = ("???", "Ã", "Â", "�", "â€", "à¸", "à¹", "ðŸ")
 PLACEHOLDER_RE = re.compile(
     r"%(?:\([^)]+\))?[#0 +\-]?(?:\d+|\*)?(?:\.\d+|\.\*)?[diouxXeEfFgGcrs%]|\{[^{}]+\}"
 )
+SOURCE_TERM_RENAMES = {
+    "Ap": "AP",
+    "Ip Address": "IP Address",
+    "Mac Address": "MAC Address",
+    "Remote Ip": "Remote IP",
+    "Ssh Port": "SSH Port",
+    "Ssh User": "SSH User",
+    "Switch Id Display": "Switch ID",
+    "Tcp Token": "TCP Token",
+}
 
 
 # Terms absent from older catalogs plus wording overrides found during review.
@@ -124,7 +134,6 @@ TRANSLATIONS = {
         "连续心跳失败达到此次数后，AP 将标记为离线。",
         "AP จะถูกระบุว่าออฟไลน์เมื่อ heartbeat ล้มเหลวติดต่อกันครบจำนวนนี้",
     ),
-    "Ap": ("AP", "AP"),
     "Attendance Heartbeat Log Interval (seconds)": ("考勤心跳日志间隔（秒）", "ช่วงเวลาบันทึก heartbeat ของเครื่องลงเวลา (วินาที)"),
     "Attendance Source IP Allowlist": ("考勤来源 IP 白名单", "รายการ IP ต้นทางที่อนุญาตสำหรับเครื่องลงเวลา"),
     "Bind TH Node/Sensor Channel by ID": ("按 ID 绑定温湿度节点/探头通道", "เชื่อมโยงโหนด/ช่องเซ็นเซอร์อุณหภูมิและความชื้นด้วย ID"),
@@ -278,7 +287,6 @@ TRANSLATIONS = {
     "Iot Openwrt Ssh Private Key Path": ("OpenWrt SSH 私钥路径", "พาธคีย์ส่วนตัว SSH ของ OpenWrt"),
     "Iot Openwrt Ssh Public Key": ("OpenWrt SSH 公钥", "คีย์สาธารณะ SSH ของ OpenWrt"),
     "Iot Th Raw Retention Days": ("温湿度原始数据保留天数", "ระยะเวลาเก็บข้อมูลดิบอุณหภูมิ/ความชื้น (วัน)"),
-    "Ip Address": ("IP 地址", "ที่อยู่ IP"),
     "Items": ("条目", "รายการ"),
     "Job": ("任务", "งาน"),
     "Job Count": ("任务数量", "จำนวนงาน"),
@@ -296,7 +304,6 @@ TRANSLATIONS = {
     "Last Sync At": ("最近同步时间", "เวลาซิงก์ล่าสุด"),
     "Last Sync Message": ("最近同步消息", "ข้อความซิงก์ล่าสุด"),
     "Last Upgrade At": ("最近升级时间", "เวลาอัปเกรดล่าสุด"),
-    "Mac Address": ("MAC 地址", "ที่อยู่ MAC"),
     "Manual Override": ("手动覆盖", "ควบคุมแทนด้วยตนเอง"),
     "Max Open Attendance Hours": ("考勤记录最长未签退时长（小时）", "ระยะเวลาสูงสุดของรายการลงเวลาที่ยังไม่ปิด (ชั่วโมง)"),
     "Maximum Continuous ON (Minutes)": ("最长连续开启时间（分钟）", "เวลาเปิดต่อเนื่องสูงสุด (นาที)"),
@@ -385,7 +392,6 @@ TRANSLATIONS = {
         "在此窗口内，同一设备和主题的继电器遥测数据将合并为一条队列记录，以减少数据库增长。",
         "ข้อมูล telemetry ของรีเลย์จากอุปกรณ์และหัวข้อเดียวกันภายในช่วงเวลานี้จะถูกรวมเป็นหนึ่งรายการคิวเพื่อลดการเติบโตของฐานข้อมูล",
     ),
-    "Remote Ip": ("远程 IP", "IP ต้นทาง"),
     "Reported Version": ("上报版本", "เวอร์ชันที่รายงาน"),
     "Request Count": ("请求数量", "จำนวนคำขอ"),
     "Request Payload": ("请求数据", "ข้อมูลคำขอ"),
@@ -409,8 +415,6 @@ TRANSLATIONS = {
     "Sensors": ("探头", "เซ็นเซอร์"),
     "Signal Dbm": ("信号强度（dBm）", "ความแรงสัญญาณ (dBm)"),
     "Source": ("来源", "แหล่งที่มา"),
-    "Ssh Port": ("SSH 端口", "พอร์ต SSH"),
-    "Ssh User": ("SSH 用户", "ผู้ใช้ SSH"),
     "Ssid": ("SSID", "SSID"),
     "Statistics Period": ("统计时段", "ช่วงเวลาสถิติ"),
     "Statistics Window": ("统计时段", "ช่วงเวลาสถิติ"),
@@ -422,7 +426,6 @@ TRANSLATIONS = {
         "heartbeat ของ ADMS ที่สำเร็จจะถูกบันทึกตามช่วงเวลานี้ ส่วนการลงเวลา ข้อผิดพลาด และคำขอจากอุปกรณ์ที่ไม่รู้จักยังคงบันทึกทุกรายการ ตั้งเป็น 0 เพื่อเก็บ heartbeat ทุกครั้ง",
     ),
     "Switch ID:": ("开关 ID：", "ID สวิตช์:"),
-    "Switch Id Display": ("开关显示 ID", "ID สวิตช์ที่แสดง"),
     "Sync Enabled": ("启用同步", "เปิดใช้การซิงก์"),
     "Sync Internal Network": ("同步内网配置", "ซิงก์การตั้งค่าเครือข่ายภายใน"),
     "System Hostname": ("系统主机名", "ชื่อโฮสต์ระบบ"),
@@ -684,9 +687,27 @@ def _entry(po: polib.POFile, msgid: str) -> polib.POEntry:
     return entry
 
 
+def _normalize_source_terms(po: polib.POFile) -> None:
+    generic_occurrence = ("code:addons/iot_control_center", "0")
+    for old_msgid, new_msgid in SOURCE_TERM_RENAMES.items():
+        old_entry = po.find(old_msgid)
+        if not old_entry or old_entry.obsolete:
+            continue
+        new_entry = _entry(po, new_msgid)
+        occurrences = set(old_entry.occurrences) | set(new_entry.occurrences)
+        if len(occurrences) > 1:
+            occurrences.discard(generic_occurrence)
+        new_entry.occurrences = sorted(occurrences)
+        new_entry.flags = sorted(set(old_entry.flags) | set(new_entry.flags))
+        po.remove(old_entry)
+
+
 def synchronize() -> None:
     pot = polib.pofile(str(I18N / "iot_control_center.pot"), encoding="utf-8")
     catalogs = {name: polib.pofile(str(I18N / name), encoding="utf-8") for name in CATALOGS}
+    _normalize_source_terms(pot)
+    for catalog in catalogs.values():
+        _normalize_source_terms(catalog)
     official_entries = {entry.msgid: entry for entry in pot if not entry.obsolete and entry.msgid}
     required = source_terms() | set(official_entries)
 
@@ -734,6 +755,9 @@ def validate() -> None:
     pot_entries = {entry.msgid: entry for entry in pot if not entry.obsolete and entry.msgid}
     pot_ids = set(pot_entries)
     required = source_terms() | pot_ids
+    deprecated = sorted(set(SOURCE_TERM_RENAMES) & pot_ids)
+    if deprecated:
+        errors.append(f"POT contains deprecated source terms: {deprecated}")
     missing_pot = sorted(required - pot_ids)
     if missing_pot:
         errors.append(f"POT missing {len(missing_pot)} source terms")

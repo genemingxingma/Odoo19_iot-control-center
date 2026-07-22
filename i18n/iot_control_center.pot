@@ -341,12 +341,6 @@ msgid ""
 msgstr ""
 
 #. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_client__ap_id
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_job__ap_id
-msgid "Ap"
-msgstr ""
-
-#. module: iot_control_center
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_openwrt_job__job_type__apply_template
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_openwrt_ap_form
 msgid "Apply Template"
@@ -1926,11 +1920,6 @@ msgid "IoT internal ports must be between 1 and 65535."
 msgstr ""
 
 #. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_client__ip_address
-msgid "Ip Address"
-msgstr ""
-
-#. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_attendance_device__message_is_follower
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device__message_is_follower
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__message_is_follower
@@ -2267,11 +2256,6 @@ msgstr ""
 #. odoo-python
 #: code:addons/iot_control_center/models/iot_device.py:0
 msgid "MQTT publish failed for some devices, please retry."
-msgstr ""
-
-#. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_client__mac_address
-msgid "Mac Address"
 msgstr ""
 
 #. module: iot_control_center
@@ -3252,11 +3236,6 @@ msgid ""
 msgstr ""
 
 #. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_attendance_request__remote_ip
-msgid "Remote Ip"
-msgstr ""
-
-#. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__reported_at
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_reading_search
 msgid "Reported At"
@@ -3572,16 +3551,6 @@ msgid "Source"
 msgstr ""
 
 #. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__ssh_port
-msgid "Ssh Port"
-msgstr ""
-
-#. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__ssh_user
-msgid "Ssh User"
-msgstr ""
-
-#. module: iot_control_center
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_openwrt_job__job_type__locate_start
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_openwrt_ap_form
 msgid "Start Locate"
@@ -3692,6 +3661,7 @@ msgid "Switch Cards"
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__switch_id_display
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_form
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_tree
 msgid "Switch ID"
@@ -3706,11 +3676,6 @@ msgstr ""
 #. odoo-python
 #: code:addons/iot_control_center/models/iot_device.py:0
 msgid "Switch ID/Serial is required."
-msgstr ""
-
-#. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__switch_id_display
-msgid "Switch Id Display"
 msgstr ""
 
 #. module: iot_control_center
@@ -3789,11 +3754,6 @@ msgstr ""
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_upgrade_log__target_version
 msgid "Target Version"
-msgstr ""
-
-#. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__tcp_token
-msgid "Tcp Token"
 msgstr ""
 
 #. module: iot_control_center
@@ -4366,7 +4326,8 @@ msgid "web.base.url is not configured."
 msgstr ""
 
 #. module: iot_control_center
-#: code:addons/iot_control_center:0
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_client__ap_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_job__ap_id
 msgid "AP"
 msgstr ""
 
@@ -4406,31 +4367,31 @@ msgid "Switch ID:"
 msgstr ""
 
 #. module: iot_control_center
-#: code:addons/iot_control_center:0
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_client__ip_address
 msgid "IP Address"
 msgstr ""
 
 #. module: iot_control_center
-#: code:addons/iot_control_center:0
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_client__mac_address
 msgid "MAC Address"
 msgstr ""
 
 #. module: iot_control_center
-#: code:addons/iot_control_center:0
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_attendance_request__remote_ip
 msgid "Remote IP"
 msgstr ""
 
 #. module: iot_control_center
-#: code:addons/iot_control_center:0
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__ssh_port
 msgid "SSH Port"
 msgstr ""
 
 #. module: iot_control_center
-#: code:addons/iot_control_center:0
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__ssh_user
 msgid "SSH User"
 msgstr ""
 
 #. module: iot_control_center
-#: code:addons/iot_control_center:0
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__tcp_token
 msgid "TCP Token"
 msgstr ""

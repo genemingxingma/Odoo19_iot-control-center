@@ -72,7 +72,7 @@ COPY (
 1. Record the exact Git commit and create checksums for the module artifact.
 2. Back up the database and current module directory; verify both artifacts are readable.
 3. Stop the IoT bridge and Odoo so no readings arrive during schema migration.
-4. Install the exact tested artifact and run the non-HTTP Odoo module upgrade with `--stop-after-init`.
+4. Install the exact tested artifact and run the non-HTTP Odoo module upgrade with `--stop-after-init --i18n-overwrite` so reviewed translations replace older database values.
 5. Start Odoo, then the IoT bridge, and verify service health before accepting the upgrade.
 
 ## Post-upgrade gates

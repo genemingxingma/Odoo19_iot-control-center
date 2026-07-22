@@ -1422,11 +1422,6 @@ msgid "TH Online Timeout (sec)"
 msgstr "หมดเวลาออนไลน์ TH (วินาที)"
 
 #. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__tcp_token
-msgid "Tcp Token"
-msgstr "โทเคน TCP"
-
-#. module: iot_control_center
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_mqtt_message__message_type__telemetry
 msgid "Telemetry"
 msgstr "เทเลเมทรี"
@@ -3006,6 +3001,7 @@ msgid "Switch Cards"
 msgstr "การ์ดสวิตช์"
 
 #. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__switch_id_display
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_form
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_tree
 msgid "Switch ID"
@@ -3337,12 +3333,6 @@ msgstr "เวลาที่พบ ADMS ล่าสุด"
 msgid ""
 "After this many consecutive heartbeat failures, the AP is marked offline."
 msgstr "AP จะถูกระบุว่าออฟไลน์เมื่อ heartbeat ล้มเหลวติดต่อกันครบจำนวนนี้"
-
-#. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_client__ap_id
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_job__ap_id
-msgid "Ap"
-msgstr "AP"
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_attendance_heartbeat_log_interval_seconds
@@ -3925,11 +3915,6 @@ msgid "Iot Th Raw Retention Days"
 msgstr "ระยะเวลาเก็บข้อมูลดิบอุณหภูมิ/ความชื้น (วัน)"
 
 #. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_client__ip_address
-msgid "Ip Address"
-msgstr "ที่อยู่ IP"
-
-#. module: iot_control_center
 #: code:addons/iot_control_center/models/iot_control_board.py:0
 msgid "Items"
 msgstr "รายการ"
@@ -4003,11 +3988,6 @@ msgstr "ข้อความซิงก์ล่าสุด"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__last_upgrade_at
 msgid "Last Upgrade At"
 msgstr "เวลาอัปเกรดล่าสุด"
-
-#. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_client__mac_address
-msgid "Mac Address"
-msgstr "ที่อยู่ MAC"
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device__manual_override
@@ -4316,11 +4296,6 @@ msgstr ""
 "ของรีเลย์จากอุปกรณ์และหัวข้อเดียวกันภายในช่วงเวลานี้จะถูกรวมเป็นหนึ่งรายการคิวเพื่อลดการเติบโตของฐานข้อมูล"
 
 #. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_attendance_request__remote_ip
-msgid "Remote Ip"
-msgstr "IP ต้นทาง"
-
-#. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_upgrade_log__reported_version
 msgid "Reported Version"
 msgstr "เวอร์ชันที่รายงาน"
@@ -4393,16 +4368,6 @@ msgid "Source"
 msgstr "แหล่งที่มา"
 
 #. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__ssh_port
-msgid "Ssh Port"
-msgstr "พอร์ต SSH"
-
-#. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__ssh_user
-msgid "Ssh User"
-msgstr "ผู้ใช้ SSH"
-
-#. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Ssid"
 msgstr "SSID"
@@ -4437,11 +4402,6 @@ msgstr ""
 #: code:addons/iot_control_center:0
 msgid "Switch ID:"
 msgstr "ID สวิตช์:"
-
-#. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__switch_id_display
-msgid "Switch Id Display"
-msgstr "ID สวิตช์ที่แสดง"
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_attendance_device__sync_enabled
@@ -4723,7 +4683,8 @@ msgid "<span>Switch ID: </span>"
 msgstr "<span>ID สวิตช์: </span>"
 
 #. module: iot_control_center
-#: code:addons/iot_control_center:0
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_client__ap_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_job__ap_id
 msgid "AP"
 msgstr "AP"
 
@@ -4904,31 +4865,31 @@ msgid "iot.imytest.com"
 msgstr "iot.imytest.com"
 
 #. module: iot_control_center
-#: code:addons/iot_control_center:0
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_client__ip_address
 msgid "IP Address"
 msgstr "ที่อยู่ IP"
 
 #. module: iot_control_center
-#: code:addons/iot_control_center:0
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_client__mac_address
 msgid "MAC Address"
 msgstr "ที่อยู่ MAC"
 
 #. module: iot_control_center
-#: code:addons/iot_control_center:0
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_attendance_request__remote_ip
 msgid "Remote IP"
 msgstr "IP ต้นทาง"
 
 #. module: iot_control_center
-#: code:addons/iot_control_center:0
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__ssh_port
 msgid "SSH Port"
 msgstr "พอร์ต SSH"
 
 #. module: iot_control_center
-#: code:addons/iot_control_center:0
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__ssh_user
 msgid "SSH User"
 msgstr "ผู้ใช้ SSH"
 
 #. module: iot_control_center
-#: code:addons/iot_control_center:0
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__tcp_token
 msgid "TCP Token"
 msgstr "โทเค็น TCP"

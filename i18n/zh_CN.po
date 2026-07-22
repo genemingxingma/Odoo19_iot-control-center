@@ -1422,11 +1422,6 @@ msgid "TH Online Timeout (sec)"
 msgstr "温湿度在线超时（秒）"
 
 #. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__tcp_token
-msgid "Tcp Token"
-msgstr "TCP令牌"
-
-#. module: iot_control_center
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_mqtt_message__message_type__telemetry
 msgid "Telemetry"
 msgstr "遥测"
@@ -2997,6 +2992,7 @@ msgid "Switch Cards"
 msgstr "开关卡片"
 
 #. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__switch_id_display
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_form
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_tree
 msgid "Switch ID"
@@ -3416,12 +3412,6 @@ msgstr "ADMS 最近在线时间"
 msgid ""
 "After this many consecutive heartbeat failures, the AP is marked offline."
 msgstr "连续心跳失败达到此次数后，AP 将标记为离线。"
-
-#. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_client__ap_id
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_job__ap_id
-msgid "Ap"
-msgstr "AP"
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_attendance_heartbeat_log_interval_seconds
@@ -3977,11 +3967,6 @@ msgid "Iot Th Raw Retention Days"
 msgstr "温湿度原始数据保留天数"
 
 #. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_client__ip_address
-msgid "Ip Address"
-msgstr "IP 地址"
-
-#. module: iot_control_center
 #: code:addons/iot_control_center/models/iot_control_board.py:0
 msgid "Items"
 msgstr "条目"
@@ -4050,11 +4035,6 @@ msgstr "最近同步消息"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__last_upgrade_at
 msgid "Last Upgrade At"
 msgstr "最近升级时间"
-
-#. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_client__mac_address
-msgid "Mac Address"
-msgstr "MAC 地址"
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device__manual_override
@@ -4311,11 +4291,6 @@ msgid ""
 msgstr "在此窗口内，同一设备和主题的继电器遥测数据将合并为一条队列记录，以减少数据库增长。"
 
 #. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_attendance_request__remote_ip
-msgid "Remote Ip"
-msgstr "远程 IP"
-
-#. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_upgrade_log__reported_version
 msgid "Reported Version"
 msgstr "上报版本"
@@ -4383,16 +4358,6 @@ msgid "Source"
 msgstr "来源"
 
 #. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__ssh_port
-msgid "Ssh Port"
-msgstr "SSH 端口"
-
-#. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__ssh_user
-msgid "Ssh User"
-msgstr "SSH 用户"
-
-#. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Ssid"
 msgstr "SSID"
@@ -4424,11 +4389,6 @@ msgstr "成功的 ADMS 心跳按此间隔抽样记录；打卡、错误和未知
 #: code:addons/iot_control_center:0
 msgid "Switch ID:"
 msgstr "开关 ID："
-
-#. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__switch_id_display
-msgid "Switch Id Display"
-msgstr "开关显示 ID"
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_attendance_device__sync_enabled
@@ -4683,7 +4643,8 @@ msgid "<span>Switch ID: </span>"
 msgstr "<span>开关 ID：</span>"
 
 #. module: iot_control_center
-#: code:addons/iot_control_center:0
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_client__ap_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_job__ap_id
 msgid "AP"
 msgstr "AP"
 
@@ -4864,31 +4825,31 @@ msgid "iot.imytest.com"
 msgstr "iot.imytest.com"
 
 #. module: iot_control_center
-#: code:addons/iot_control_center:0
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_client__ip_address
 msgid "IP Address"
 msgstr "IP 地址"
 
 #. module: iot_control_center
-#: code:addons/iot_control_center:0
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_client__mac_address
 msgid "MAC Address"
 msgstr "MAC 地址"
 
 #. module: iot_control_center
-#: code:addons/iot_control_center:0
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_attendance_request__remote_ip
 msgid "Remote IP"
 msgstr "来源 IP"
 
 #. module: iot_control_center
-#: code:addons/iot_control_center:0
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__ssh_port
 msgid "SSH Port"
 msgstr "SSH 端口"
 
 #. module: iot_control_center
-#: code:addons/iot_control_center:0
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__ssh_user
 msgid "SSH User"
 msgstr "SSH 用户"
 
 #. module: iot_control_center
-#: code:addons/iot_control_center:0
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__tcp_token
 msgid "TCP Token"
 msgstr "TCP 令牌"
