@@ -3,7 +3,7 @@ import logging
 import socketserver
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 
 from odoo import SUPERUSER_ID, api, fields
 from odoo.modules.registry import Registry
@@ -57,7 +57,10 @@ class TCPIngestService:
         if not value:
             return fields.Datetime.now()
         try:
-            return datetime.fromisoformat(str(value).replace("Z", "+00:00")).replace(tzinfo=None)
+            parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+            if parsed.tzinfo:
+                parsed = parsed.astimezone(timezone.utc).replace(tzinfo=None)
+            return parsed
         except Exception:
             return fields.Datetime.now()
 
@@ -85,17 +88,19 @@ class TCPIngestService:
 
     def _ensure_sensor(self, env, gateway, node_id, probe_code):
         sensor_model = env["iot.th.sensor"].sudo()
-        canonical_name = f"{node_id}-{str(probe_code or '').strip().lower()}"
+        normalized_node_id = str(node_id or "unknown").strip().upper()
+        normalized_probe_code = str(probe_code or "").strip().upper()
+        canonical_name = f"{normalized_node_id}-{normalized_probe_code.lower()}"
         sensor = sensor_model.search(
-            [("node_id", "=", node_id), ("probe_code", "=", probe_code)],
+            [("node_id", "=", normalized_node_id), ("probe_code", "=", normalized_probe_code)],
             limit=1,
         )
         if not sensor:
             sensor = sensor_model.create(
                 {
                     "gateway_id": gateway.id,
-                    "node_id": node_id,
-                    "probe_code": probe_code,
+                    "node_id": normalized_node_id,
+                    "probe_code": normalized_probe_code,
                     "name": canonical_name,
                     "company_id": False,
                     "stats_window_hours": gateway.statistics_window_hours or 24,
@@ -105,7 +110,7 @@ class TCPIngestService:
             vals = {}
             if sensor.gateway_id != gateway:
                 vals["gateway_id"] = gateway.id
-            if sensor.name != canonical_name:
+            if not (sensor.name or "").strip():
                 vals["name"] = canonical_name
             if vals:
                 sensor.write(vals)
@@ -136,7 +141,8 @@ class TCPIngestService:
                         cr.commit()
                         return
 
-                    gateway.last_seen = reported_at
+                    if not gateway.last_seen or reported_at >= gateway.last_seen:
+                        gateway.last_seen = reported_at
 
                     for m in measurements:
                         probe_code = m.get("probe_code")
@@ -161,7 +167,7 @@ class TCPIngestService:
                             sensor_node_id = "unknown"
 
                         sensor = self._ensure_sensor(env, gateway, sensor_node_id, probe_code)
-                        reading_model.create(
+                        reading = reading_model.create(
                             {
                                 "sensor_id": sensor.id,
                                 "gateway_id": gateway.id,
@@ -170,7 +176,8 @@ class TCPIngestService:
                                 "humidity": h_val,
                             }
                         )
-                        sensor.apply_reading(t_val, h_val, reported_at, battery_voltage=battery_voltage)
+                        if reading:
+                            sensor.apply_reading(t_val, h_val, reported_at, battery_voltage=battery_voltage)
 
                     cr.commit()
                     return

@@ -2877,3 +2877,93 @@ msgstr "???? IP ???"
 #: code:addons/iot_control_center:0
 msgid "Max Open Attendance Hours"
 msgstr "????????"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Chart Label"
+msgstr "图表标签"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Daily Overview"
+msgstr "每日概览"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Last 30 Days"
+msgstr "最近 30 天"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Raw Samples"
+msgstr "原始采样"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Samples"
+msgstr "样本数"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Sensor Location"
+msgstr "探头位置"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Technical Code"
+msgstr "技术编号"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Trend"
+msgstr "趋势图"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Trend - %s"
+msgstr "趋势图 - %s"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Unnamed Sensor"
+msgstr "未命名探头"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Temperature (C)"
+msgstr "温度 (°C)"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Relative Humidity (%RH)"
+msgstr "相对湿度 (%RH)"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Minimum Temperature (C)"
+msgstr "最低温度 (°C)"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Maximum Temperature (C)"
+msgstr "最高温度 (°C)"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Minimum Humidity (%RH)"
+msgstr "最低湿度 (%RH)"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Maximum Humidity (%RH)"
+msgstr "最高湿度 (%RH)"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Probe Name"
+msgstr "探头名称"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Friendly name used in charts; the technical code is stored separately."
+msgstr "图表中显示的易读名称；技术编号会单独保留。"

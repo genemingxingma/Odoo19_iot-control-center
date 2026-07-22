@@ -6,13 +6,21 @@
         <field name="arch" type="xml">
             <list>
                 <field name="reported_at"/>
-                <field name="node_id"/>
                 <field name="sensor_id"/>
-                <field name="sensor_code"/>
-                <field name="is_hourly_rollup"/>
-                <field name="is_daily_rollup"/>
+                <field name="sensor_location_id"/>
+                <field name="sensor_location_detail" optional="show"/>
+                <field name="sensor_group_id" optional="show"/>
+                <field name="node_id" optional="hide"/>
+                <field name="sensor_code" optional="hide"/>
                 <field name="temperature"/>
                 <field name="humidity"/>
+                <field name="temperature_min" optional="hide"/>
+                <field name="temperature_max" optional="hide"/>
+                <field name="humidity_min" optional="hide"/>
+                <field name="humidity_max" optional="hide"/>
+                <field name="sample_count" optional="hide"/>
+                <field name="is_hourly_rollup" optional="hide"/>
+                <field name="is_daily_rollup" optional="show"/>
             </list>
         </field>
     </record>
@@ -39,6 +47,11 @@
                 <field name="sensor_id" type="row"/>
                 <field name="temperature" type="measure" operator="avg"/>
                 <field name="humidity" type="measure" operator="avg"/>
+                <field name="temperature_min" type="measure" operator="min"/>
+                <field name="temperature_max" type="measure" operator="max"/>
+                <field name="humidity_min" type="measure" operator="min"/>
+                <field name="humidity_max" type="measure" operator="max"/>
+                <field name="sample_count" type="measure" operator="sum"/>
             </pivot>
         </field>
     </record>
@@ -51,11 +64,32 @@
                 <field name="node_id"/>
                 <field name="sensor_id"/>
                 <field name="sensor_code"/>
+                <field name="sensor_location_id"/>
+                <field name="sensor_location_detail"/>
+                <field name="sensor_group_id"/>
+                <field name="gateway_id"/>
+                <filter name="iot_reported_at" string="Reported At" date="reported_at"/>
                 <separator/>
                 <filter name="iot_last_5_days" string="Last 5 Days"
                         domain="[('reported_at', '>=', (context_today() - datetime.timedelta(days=5)).strftime('%Y-%m-%d 00:00:00'))]"/>
-                <filter name="iot_hourly_avg" string="Hourly Average" domain="[]" context="{'iot_time_mode': 'hour'}"/>
-                <filter name="iot_node_frequency" string="Node Frequency" domain="[]" context="{'iot_time_mode': 'raw'}"/>
+                <filter name="iot_last_30_days" string="Last 30 Days"
+                        domain="[('reported_at', '>=', (context_today() - datetime.timedelta(days=30)).strftime('%Y-%m-%d 00:00:00'))]"/>
+                <separator/>
+                <filter name="iot_hourly_avg" string="Hourly Average"
+                        domain="[('is_hourly_rollup', '=', False), ('is_daily_rollup', '=', False)]"
+                        context="{'iot_time_mode': 'hour'}"/>
+                <filter name="iot_daily_avg" string="Daily Overview"
+                        domain="[('is_hourly_rollup', '=', False)]"
+                        context="{'iot_time_mode': 'day'}"/>
+                <filter name="iot_node_frequency" string="Raw Samples"
+                        domain="[('is_hourly_rollup', '=', False), ('is_daily_rollup', '=', False)]"
+                        context="{'iot_time_mode': 'raw'}"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_sensor" string="Sensor" context="{'group_by': 'sensor_id'}"/>
+                    <filter name="group_location" string="Location" context="{'group_by': 'sensor_location_id'}"/>
+                    <filter name="group_sensor_group" string="Sensor Group" context="{'group_by': 'sensor_group_id'}"/>
+                    <filter name="group_gateway" string="Gateway" context="{'group_by': 'gateway_id'}"/>
+                </group>
             </search>
         </field>
     </record>

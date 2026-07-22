@@ -4,20 +4,27 @@
         <field name="name">iot.th.sensor.list</field>
         <field name="model">iot.th.sensor</field>
         <field name="arch" type="xml">
-            <list create="0">
-                <field name="name"/>
-                <field name="node_id"/>
-                <field name="probe_code"/>
+            <list create="0"
+                  decoration-muted="not online"
+                  decoration-danger="online and (last_temperature &lt; effective_temperature_low or last_temperature &gt; effective_temperature_high or last_humidity &lt; effective_humidity_low or last_humidity &gt; effective_humidity_high)">
+                <field name="display_name" string="Chart Label"/>
+                <field name="name" optional="show"/>
+                <field name="technical_code"/>
                 <field name="group_id"/>
                 <field name="company_id"/>
                 <field name="location_id"/>
                 <field name="location_detail"/>
+                <field name="online"/>
                 <field name="last_temperature"/>
                 <field name="last_humidity"/>
                 <field name="last_battery_voltage"/>
                 <field name="last_reported_at"/>
                 <field name="reading_count"/>
                 <field name="keep_full_history"/>
+                <field name="effective_temperature_low" column_invisible="1"/>
+                <field name="effective_temperature_high" column_invisible="1"/>
+                <field name="effective_humidity_low" column_invisible="1"/>
+                <field name="effective_humidity_high" column_invisible="1"/>
             </list>
         </field>
     </record>
@@ -28,14 +35,17 @@
         <field name="arch" type="xml">
             <form>
                 <header>
+                    <button name="action_open_readings" type="object" string="Trend" class="btn-primary"/>
                     <button name="action_unbind" type="object" string="Unbind" class="btn-secondary" confirm="Unbind this node from current company?"/>
                 </header>
                 <sheet>
                     <group>
                         <group>
                             <field name="name"/>
-                            <field name="node_id" readonly="1"/>
-                            <field name="probe_code" readonly="1"/>
+                            <field name="display_name" string="Chart Label" readonly="1"/>
+                            <field name="technical_code" readonly="1"/>
+                            <field name="node_id" readonly="1" invisible="1"/>
+                            <field name="probe_code" readonly="1" invisible="1"/>
                             <field name="company_id" groups="base.group_multi_company" readonly="1"/>
                             <field name="group_id"/>
                             <field name="location_id"/>
@@ -44,6 +54,7 @@
                             <field name="keep_full_history"/>
                         </group>
                         <group>
+                            <field name="online" readonly="1"/>
                             <field name="last_temperature" readonly="1"/>
                             <field name="last_humidity" readonly="1"/>
                             <field name="last_battery_voltage" readonly="1"/>

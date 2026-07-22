@@ -125,7 +125,7 @@ patch(GraphModel.prototype, {
         }
         const { domain, fields, groupBy, resModel } = metaData;
         const timeMode = (this.searchParams?.context?.iot_time_mode || metaData?.context?.iot_time_mode || "hour").toLowerCase();
-        const targetInterval = "hour";
+        const targetInterval = timeMode === "day" ? "day" : "hour";
         const effectiveGroupBy = (groupBy || []).map((gb) => {
             const isStringGroupBy = typeof gb === "string";
             const rawSpec = isStringGroupBy ? gb : (gb?.spec || "");
@@ -154,10 +154,24 @@ patch(GraphModel.prototype, {
         const useHumidity = selectedMeasures.includes("humidity");
         const numbering = {};
         if (timeMode === "raw") {
+            const rawFieldNames = new Set([
+                "id",
+                "reported_at",
+                "temperature",
+                "humidity",
+                "sensor_id",
+                "node_id",
+                "sensor_code",
+            ]);
+            for (const gb of effectiveGroupBy) {
+                if (fields[gb.fieldName]) {
+                    rawFieldNames.add(gb.fieldName);
+                }
+            }
             const descendingRecords = await this.orm.searchRead(
                 resModel,
                 domain,
-                ["id", "reported_at", "temperature", "humidity", "sensor_id", "node_id", "sensor_code"],
+                [...rawFieldNames],
                 {
                     context: { ...this.searchParams.context },
                     order: "reported_at desc,id desc",
@@ -200,7 +214,7 @@ patch(GraphModel.prototype, {
                     dataPoints.push({
                         ...common,
                         value: Number(record.temperature),
-                        labels: [...labels, _t("Temperature")],
+                        labels: [...labels, `${_t("Temperature")} (\u00b0C)`],
                         identifier: JSON.stringify([...rawValues, { metric: "temperature", id: record.id }]),
                         cumulatedStart: 0,
                     });
@@ -209,7 +223,7 @@ patch(GraphModel.prototype, {
                     dataPoints.push({
                         ...common,
                         value: Number(record.humidity),
-                        labels: [...labels, _t("Humidity")],
+                        labels: [...labels, `${_t("Humidity")} (%RH)`],
                         identifier: JSON.stringify([...rawValues, { metric: "humidity", id: record.id }]),
                         cumulatedStart: 0,
                     });
@@ -279,25 +293,25 @@ patch(GraphModel.prototype, {
             if (useTemperature) {
                 const tempVal = group["temperature:avg"];
                 if (tempVal !== false && tempVal !== null && tempVal !== undefined) {
-                dataPoints.push({
-                    ...common,
-                    value: Number(tempVal),
-                    labels: [...labels, _t("Temperature")],
-                    identifier: JSON.stringify([...rawValues, { metric: "temperature" }]),
-                    cumulatedStart: 0,
-                });
+                    dataPoints.push({
+                        ...common,
+                        value: Number(tempVal),
+                        labels: [...labels, `${_t("Temperature")} (\u00b0C)`],
+                        identifier: JSON.stringify([...rawValues, { metric: "temperature" }]),
+                        cumulatedStart: 0,
+                    });
                 }
             }
             if (useHumidity) {
                 const humVal = group["humidity:avg"];
                 if (humVal !== false && humVal !== null && humVal !== undefined) {
-                dataPoints.push({
-                    ...common,
-                    value: Number(humVal),
-                    labels: [...labels, _t("Humidity")],
-                    identifier: JSON.stringify([...rawValues, { metric: "humidity" }]),
-                    cumulatedStart: 0,
-                });
+                    dataPoints.push({
+                        ...common,
+                        value: Number(humVal),
+                        labels: [...labels, `${_t("Humidity")} (%RH)`],
+                        identifier: JSON.stringify([...rawValues, { metric: "humidity" }]),
+                        cumulatedStart: 0,
+                    });
                 }
             }
         }

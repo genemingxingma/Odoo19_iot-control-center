@@ -7,9 +7,15 @@ from odoo.exceptions import UserError, ValidationError
 class IoTTHSensor(models.Model):
     _name = "iot.th.sensor"
     _description = "Node Sensor Channel (Temp+Humidity)"
+    _rec_names_search = ["name", "technical_code", "node_id", "probe_code", "location_detail"]
 
-    name = fields.Char(required=True)
+    name = fields.Char(
+        string="Probe Name",
+        required=True,
+        help="Friendly name used in charts; the technical code is stored separately.",
+    )
     probe_code = fields.Char(string="Sensor Channel", required=True, index=True)
+    technical_code = fields.Char(compute="_compute_technical_code", store=True, index=True)
     active = fields.Boolean(default=True)
 
     gateway_id = fields.Many2one("iot.th.gateway", required=True, ondelete="cascade")
@@ -44,6 +50,7 @@ class IoTTHSensor(models.Model):
     last_humidity = fields.Float()
     last_battery_voltage = fields.Float(string="Battery Voltage (V)")
     last_reported_at = fields.Datetime()
+    online = fields.Boolean(compute="_compute_online")
     reading_count = fields.Integer(default=0)
 
     stats_window_hours = fields.Integer(default=24)
@@ -65,6 +72,39 @@ class IoTTHSensor(models.Model):
         "UNIQUE(node_id, probe_code)",
         "Sensor Channel must be unique by Node ID + Channel.",
     )
+
+    @api.depends("node_id", "probe_code")
+    def _compute_technical_code(self):
+        for rec in self:
+            parts = [part for part in ((rec.node_id or "").strip(), (rec.probe_code or "").strip()) if part]
+            rec.technical_code = "-".join(parts)
+
+    @api.depends("name", "technical_code", "location_id.name", "location_detail")
+    @api.depends_context("lang")
+    def _compute_display_name(self):
+        for rec in self:
+            technical = (rec.technical_code or "").strip()
+            configured_name = (rec.name or "").strip()
+            canonical_names = {
+                technical.casefold(),
+                f"{(rec.node_id or '').strip()}-{(rec.probe_code or '').strip().lower()}".casefold(),
+            }
+            if configured_name and configured_name.casefold() not in canonical_names:
+                label = configured_name
+            else:
+                location = rec.location_id.name if rec.location_id else ""
+                detail = (rec.location_detail or "").strip()
+                label = " / ".join(part for part in (location, detail) if part) or configured_name or technical
+            if technical and technical.casefold() not in label.casefold():
+                label = f"{label} [{technical}]"
+            rec.display_name = label or _("Unnamed Sensor")
+
+    @api.depends("last_reported_at")
+    def _compute_online(self):
+        timeout = int(self.env["ir.config_parameter"].sudo().get_param("iot_control_center.th_online_timeout_sec", 300))
+        now = fields.Datetime.now()
+        for rec in self:
+            rec.online = bool(rec.last_reported_at and (now - rec.last_reported_at) <= timedelta(seconds=timeout))
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -88,11 +128,11 @@ class IoTTHSensor(models.Model):
 
     @api.model
     def find_bind_candidates(self, node_id, probe_code=None, require_online=False):
-        nid = (node_id or "").strip()
+        nid = (node_id or "").strip().upper()
         if not nid:
             raise UserError(_("Node ID is required"))
         domain = [("node_id", "=", nid)]
-        probe = (probe_code or "").strip()
+        probe = (probe_code or "").strip().upper()
         if probe:
             domain.append(("probe_code", "=", probe))
         sensors = self.sudo().search(domain, order="last_reported_at desc, id desc")
@@ -128,6 +168,26 @@ class IoTTHSensor(models.Model):
     def action_unbind(self):
         self.write({"company_id": False, "group_id": False, "location_id": False, "location_detail": False})
 
+    def action_open_readings(self):
+        self.ensure_one()
+        action = self.env["ir.actions.actions"]._for_xml_id("iot_control_center.action_iot_th_reading")
+        action.update(
+            {
+                "name": _("Trend - %s") % self.display_name,
+                "domain": [("sensor_id", "=", self.id)],
+                "context": {
+                    "graph_mode": "line",
+                    "graph_measure": "temperature",
+                    "graph_stacked": False,
+                    "graph_cumulated": False,
+                    "iot_time_mode": "hour",
+                    "search_default_iot_hourly_avg": 1,
+                    "search_default_iot_last_5_days": 1,
+                },
+            }
+        )
+        return action
+
     @api.depends("last_reported_at", "stats_window_hours")
     def _compute_stats(self):
         now = fields.Datetime.now()
@@ -151,16 +211,19 @@ class IoTTHSensor(models.Model):
                 """
                 SELECT
                     sensor_id,
-                    AVG(temperature),
-                    MIN(temperature),
-                    MAX(temperature),
-                    AVG(humidity),
-                    MIN(humidity),
-                    MAX(humidity)
+                    SUM(temperature * GREATEST(COALESCE(sample_count, 1), 1))
+                        / NULLIF(SUM(GREATEST(COALESCE(sample_count, 1), 1)), 0),
+                    MIN(COALESCE(temperature_min, temperature)),
+                    MAX(COALESCE(temperature_max, temperature)),
+                    SUM(humidity * GREATEST(COALESCE(sample_count, 1), 1))
+                        / NULLIF(SUM(GREATEST(COALESCE(sample_count, 1), 1)), 0),
+                    MIN(COALESCE(humidity_min, humidity)),
+                    MAX(COALESCE(humidity_max, humidity))
                 FROM iot_th_reading
                 WHERE sensor_id = ANY(%s)
                   AND reported_at >= %s
                   AND (temperature <> 0 OR humidity <> 0)
+                  AND COALESCE(is_hourly_rollup, FALSE) = FALSE
                 GROUP BY sensor_id
                 """,
                 [records.ids, since],
@@ -196,16 +259,18 @@ class IoTTHSensor(models.Model):
     def apply_reading(self, temperature, humidity, reported_at, battery_voltage=None):
         alert_model = self.env["iot.th.alert"]
         for rec in self:
-            rec.last_temperature = temperature
-            rec.last_humidity = humidity
-            if battery_voltage is not None:
-                rec.last_battery_voltage = battery_voltage
-            rec.last_reported_at = reported_at
             self.env.cr.execute(
                 "UPDATE iot_th_sensor SET reading_count = COALESCE(reading_count, 0) + 1 WHERE id = %s",
                 [rec.id],
             )
             rec.invalidate_recordset(["reading_count"])
+            if rec.last_reported_at and reported_at < rec.last_reported_at:
+                continue
+            rec.last_temperature = temperature
+            rec.last_humidity = humidity
+            if battery_voltage is not None:
+                rec.last_battery_voltage = battery_voltage
+            rec.last_reported_at = reported_at
 
             t_low, t_high, h_low, h_high = rec._get_effective_threshold_values()
             checks = []
