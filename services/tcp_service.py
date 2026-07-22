@@ -5,6 +5,8 @@ import threading
 import time
 from datetime import datetime, timezone
 
+from psycopg2.extensions import ISOLATION_LEVEL_READ_COMMITTED
+
 from odoo import SUPERUSER_ID, api, fields
 from odoo.modules.registry import Registry
 
@@ -74,6 +76,10 @@ class TCPIngestService:
         cause_pgcode = getattr(cause, "pgcode", None)
         return cause_pgcode == "40001"
 
+    @staticmethod
+    def _configure_ingest_cursor(cr):
+        cr.connection.set_isolation_level(ISOLATION_LEVEL_READ_COMMITTED)
+
     def _ensure_gateway(self, env, serial):
         gateway_model = env["iot.th.gateway"].sudo()
         gateway = gateway_model.search([("serial", "=", serial)], limit=1)
@@ -91,10 +97,16 @@ class TCPIngestService:
         normalized_node_id = str(node_id or "unknown").strip().upper()
         normalized_probe_code = str(probe_code or "").strip().upper()
         canonical_name = f"{normalized_node_id}-{normalized_probe_code.lower()}"
-        sensor = sensor_model.search(
-            [("node_id", "=", normalized_node_id), ("probe_code", "=", normalized_probe_code)],
-            limit=1,
-        )
+        domain = [("node_id", "=", normalized_node_id), ("probe_code", "=", normalized_probe_code)]
+        sensor = sensor_model.search(domain, limit=1)
+        if not sensor:
+            # Under READ COMMITTED, the second lookup sees a sensor created by
+            # another request after waiting for this identity lock.
+            env.cr.execute(
+                "SELECT pg_advisory_xact_lock(hashtext(%s))",
+                [f"iot.th.sensor:{normalized_node_id}:{normalized_probe_code}"],
+            )
+            sensor = sensor_model.search(domain, limit=1)
         if not sensor:
             sensor = sensor_model.create(
                 {
@@ -129,6 +141,10 @@ class TCPIngestService:
         for attempt in range(1, MAX_INGEST_RETRIES + 1):
             try:
                 with registry.cursor() as cr:
+                    # High-frequency frames update the same gateway and sensor
+                    # rows. READ COMMITTED waits for the latest row instead of
+                    # raising a serialization failure from a stale snapshot.
+                    self._configure_ingest_cursor(cr)
                     env = api.Environment(cr, SUPERUSER_ID, {})
                     reading_model = env["iot.th.reading"].sudo()
 
@@ -141,8 +157,19 @@ class TCPIngestService:
                         cr.commit()
                         return
 
-                    if not gateway.last_seen or reported_at >= gateway.last_seen:
-                        gateway.last_seen = reported_at
+                    cr.execute(
+                        """
+                        UPDATE iot_th_gateway
+                           SET last_seen = CASE
+                               WHEN last_seen IS NULL OR last_seen <= %(reported_at)s
+                               THEN %(reported_at)s
+                               ELSE last_seen
+                           END
+                         WHERE id = %(gateway_id)s
+                        """,
+                        {"reported_at": reported_at, "gateway_id": gateway.id},
+                    )
+                    gateway.invalidate_recordset(["last_seen"])
 
                     for m in measurements:
                         probe_code = m.get("probe_code")

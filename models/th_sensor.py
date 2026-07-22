@@ -260,17 +260,52 @@ class IoTTHSensor(models.Model):
         alert_model = self.env["iot.th.alert"]
         for rec in self:
             self.env.cr.execute(
-                "UPDATE iot_th_sensor SET reading_count = COALESCE(reading_count, 0) + 1 WHERE id = %s",
-                [rec.id],
+                """
+                UPDATE iot_th_sensor
+                   SET reading_count = COALESCE(reading_count, 0) + 1,
+                       last_temperature = CASE
+                           WHEN last_reported_at IS NULL OR last_reported_at <= %(reported_at)s
+                           THEN %(temperature)s
+                           ELSE last_temperature
+                       END,
+                       last_humidity = CASE
+                           WHEN last_reported_at IS NULL OR last_reported_at <= %(reported_at)s
+                           THEN %(humidity)s
+                           ELSE last_humidity
+                       END,
+                       last_battery_voltage = CASE
+                           WHEN last_reported_at IS NULL OR last_reported_at <= %(reported_at)s
+                           THEN COALESCE(%(battery_voltage)s, last_battery_voltage)
+                           ELSE last_battery_voltage
+                       END,
+                       last_reported_at = CASE
+                           WHEN last_reported_at IS NULL OR last_reported_at <= %(reported_at)s
+                           THEN %(reported_at)s
+                           ELSE last_reported_at
+                       END
+                 WHERE id = %(sensor_id)s
+             RETURNING last_reported_at = %(reported_at)s
+                """,
+                {
+                    "sensor_id": rec.id,
+                    "reported_at": reported_at,
+                    "temperature": temperature,
+                    "humidity": humidity,
+                    "battery_voltage": battery_voltage,
+                },
             )
-            rec.invalidate_recordset(["reading_count"])
-            if rec.last_reported_at and reported_at < rec.last_reported_at:
+            is_latest = bool(self.env.cr.fetchone()[0])
+            rec.invalidate_recordset(
+                [
+                    "reading_count",
+                    "last_temperature",
+                    "last_humidity",
+                    "last_battery_voltage",
+                    "last_reported_at",
+                ]
+            )
+            if not is_latest:
                 continue
-            rec.last_temperature = temperature
-            rec.last_humidity = humidity
-            if battery_voltage is not None:
-                rec.last_battery_voltage = battery_voltage
-            rec.last_reported_at = reported_at
 
             t_low, t_high, h_low, h_high = rec._get_effective_threshold_values()
             checks = []

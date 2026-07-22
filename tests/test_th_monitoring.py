@@ -1,6 +1,8 @@
 import uuid
 from datetime import datetime, timedelta
+from unittest.mock import Mock
 
+from psycopg2.extensions import ISOLATION_LEVEL_READ_COMMITTED
 from odoo import fields
 from odoo.tests import tagged
 from odoo.tests.common import TransactionCase
@@ -77,6 +79,15 @@ class TestTHMonitoring(TransactionCase):
 
         self.assertEqual(parsed, datetime(2026, 7, 22, 5, 30, 0))
 
+    def test_ingest_uses_read_committed_transaction(self):
+        service = TCPIngestService(self.env.cr.dbname, {})
+        cursor = Mock()
+        cursor.connection = Mock()
+
+        service._configure_ingest_cursor(cursor)
+
+        cursor.connection.set_isolation_level.assert_called_once_with(ISOLATION_LEVEL_READ_COMMITTED)
+
     def test_duplicate_sensor_timestamp_is_idempotent(self):
         reported_at = fields.Datetime.now()
 
@@ -150,4 +161,5 @@ class TestTHMonitoring(TransactionCase):
         self.assertEqual(self.sensor.last_temperature, 6.0)
         self.assertEqual(self.sensor.last_humidity, 60.0)
         self.assertEqual(self.sensor.last_battery_voltage, 3.2)
+        self.assertEqual(self.sensor.reading_count, 2)
         self.assertFalse(self.env["iot.th.alert"].search([("sensor_id", "=", self.sensor.id)]))

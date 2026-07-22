@@ -15,7 +15,7 @@ Status: prepared only. Do not run on `imytestth` without explicit production app
 Run these queries against the target database before stopping services:
 
 ```sql
-SELECT installed_version
+SELECT state, latest_version
 FROM ir_module_module
 WHERE name = 'iot_control_center';
 
@@ -78,7 +78,7 @@ COPY (
 ## Post-upgrade gates
 
 ```sql
-SELECT installed_version
+SELECT state, latest_version
 FROM ir_module_module
 WHERE name = 'iot_control_center';
 
