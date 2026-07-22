@@ -26,7 +26,7 @@ class IoTDevice(models.Model):
     name = fields.Char(required=True, tracking=True)
     serial = fields.Char(required=True, tracking=True)
     module_id = fields.Char(tracking=True, index=True)
-    switch_id_display = fields.Char(compute="_compute_switch_id_display", store=False)
+    switch_id_display = fields.Char(string="Switch ID", compute="_compute_switch_id_display", store=False)
     active = fields.Boolean(default=True)
 
     company_id = fields.Many2one(

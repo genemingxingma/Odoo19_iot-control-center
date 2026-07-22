@@ -31,8 +31,8 @@ class IoTOpenwrtAP(models.Model):
     name = fields.Char(required=True, tracking=True)
     active = fields.Boolean(default=True)
     host = fields.Char(required=True, tracking=True)
-    ssh_port = fields.Integer(default=22, required=True, tracking=True)
-    ssh_user = fields.Char(default="root", required=True, tracking=True)
+    ssh_port = fields.Integer(string="SSH Port", default=22, required=True, tracking=True)
+    ssh_user = fields.Char(string="SSH User", default="root", required=True, tracking=True)
     auth_token = fields.Char(required=True, default=lambda self: uuid.uuid4().hex)
 
     company_id = fields.Many2one("res.company", index=True, tracking=True)

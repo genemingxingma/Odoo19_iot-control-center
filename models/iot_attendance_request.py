@@ -14,7 +14,7 @@ class IoTAttendanceRequest(models.Model):
     endpoint = fields.Char(required=True, index=True)
     method = fields.Char(required=True, index=True)
     serial_number = fields.Char(index=True)
-    remote_ip = fields.Char(index=True)
+    remote_ip = fields.Char(string="Remote IP", index=True)
     query_params = fields.Text()
     headers = fields.Text()
     payload_text = fields.Text()

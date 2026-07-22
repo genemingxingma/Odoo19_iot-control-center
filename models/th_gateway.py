@@ -18,7 +18,7 @@ class IoTTHGateway(models.Model):
     location_id = fields.Many2one("stock.location", domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]")
     location_detail = fields.Char(string="Location Detail", translate=True)
 
-    tcp_token = fields.Char(help="Optional token for gateway payload authentication.")
+    tcp_token = fields.Char(string="TCP Token", help="Optional token for gateway payload authentication.")
     sampling_interval_min = fields.Integer(default=5, help="Recommended gateway upload interval in minutes.")
     statistics_window_hours = fields.Integer(default=24, help="Default analysis window in hours.")
 

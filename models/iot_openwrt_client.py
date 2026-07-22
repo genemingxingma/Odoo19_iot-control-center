@@ -6,11 +6,11 @@ class IoTOpenwrtClient(models.Model):
     _description = "OpenWrt AP Client"
     _order = "band asc, ip_address asc, mac_address asc, id asc"
 
-    ap_id = fields.Many2one("iot.openwrt.ap", required=True, ondelete="cascade", index=True)
+    ap_id = fields.Many2one("iot.openwrt.ap", string="AP", required=True, ondelete="cascade", index=True)
     company_id = fields.Many2one(related="ap_id.company_id", store=True, index=True)
     hostname = fields.Char(readonly=True)
-    ip_address = fields.Char(readonly=True, index=True)
-    mac_address = fields.Char(required=True, readonly=True, index=True)
+    ip_address = fields.Char(string="IP Address", readonly=True, index=True)
+    mac_address = fields.Char(string="MAC Address", required=True, readonly=True, index=True)
     band = fields.Selection(
         [
             ("2.4g", "2.4G"),

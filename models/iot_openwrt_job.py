@@ -9,7 +9,7 @@ class IoTOpenwrtJob(models.Model):
     _order = "requested_at desc, id desc"
 
     name = fields.Char(required=True)
-    ap_id = fields.Many2one("iot.openwrt.ap", required=True, ondelete="cascade", index=True)
+    ap_id = fields.Many2one("iot.openwrt.ap", string="AP", required=True, ondelete="cascade", index=True)
     company_id = fields.Many2one(related="ap_id.company_id", store=True, index=True)
     job_type = fields.Selection(
         [

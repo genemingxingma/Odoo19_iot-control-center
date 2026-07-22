@@ -470,6 +470,89 @@ TRANSLATIONS = {
     "Webhook Url": ("Webhook URL", "URL Webhook"),
     "Wifi24 Ssid Count": ("2.4 GHz SSID 数量", "จำนวน SSID ย่าน 2.4 GHz"),
     "Wifi5 Ssid Count": ("5 GHz SSID 数量", "จำนวน SSID ย่าน 5 GHz"),
+    "<span>Accumulated ON (Hours): </span>": (
+        "<span>累计开启时间（小时）：</span>",
+        "<span>เวลาเปิดสะสม (ชั่วโมง): </span>",
+    ),
+    "<span>Delay Active: </span>": ("<span>延时状态：</span>", "<span>สถานะการหน่วงเวลา: </span>"),
+    "<span>Delay Remaining: </span>": ("<span>剩余延时：</span>", "<span>เวลาหน่วงที่เหลือ: </span>"),
+    "<span>Firmware: </span>": ("<span>固件：</span>", "<span>เฟิร์มแวร์: </span>"),
+    "<span>Online: </span>": ("<span>在线：</span>", "<span>ออนไลน์: </span>"),
+    "<span>Status: </span>": ("<span>状态：</span>", "<span>สถานะ: </span>"),
+    "<span>Switch ID: </span>": ("<span>开关 ID：</span>", "<span>ID สวิตช์: </span>"),
+    "AP": ("AP", "AP"),
+    "AP client MAC must be unique per AP.": (
+        "每个 AP 的客户端 MAC 必须唯一。",
+        "MAC ของไคลเอนต์ต้องไม่ซ้ำกันภายใน AP เดียวกัน",
+    ),
+    "AP host + SSH port must be unique per company.": (
+        "同一公司内 AP 主机与 SSH 端口的组合必须唯一。",
+        "โฮสต์ AP และพอร์ต SSH ต้องไม่ซ้ำกันภายในบริษัทเดียวกัน",
+    ),
+    "IP Address": ("IP 地址", "ที่อยู่ IP"),
+    "MAC Address": ("MAC 地址", "ที่อยู่ MAC"),
+    "Activities": ("活动", "กิจกรรม"),
+    "Activity Exception Decoration": ("活动异常标记", "รูปแบบแสดงข้อยกเว้นของกิจกรรม"),
+    "Activity State": ("活动状态", "สถานะกิจกรรม"),
+    "Activity Type Icon": ("活动类型图标", "ไอคอนประเภทกิจกรรม"),
+    "Companies": ("公司", "บริษัท"),
+    "Company Private Network (WireGuard)": ("公司内网（WireGuard）", "เครือข่ายภายในบริษัท (WireGuard)"),
+    "Department name must be unique per company.": (
+        "同一公司内的部门名称必须唯一。",
+        "ชื่อแผนกต้องไม่ซ้ำกันภายในบริษัทเดียวกัน",
+    ),
+    "Font awesome icon e.g. fa-tasks": (
+        "Font Awesome 图标，例如 fa-tasks",
+        "ไอคอน Font Awesome เช่น fa-tasks",
+    ),
+    "Icon": ("图标", "ไอคอน"),
+    "Icon to indicate an exception activity.": (
+        "用于标识异常活动的图标。",
+        "ไอคอนที่ใช้ระบุกิจกรรมที่มีข้อยกเว้น",
+    ),
+    "Location name must be unique per company.": (
+        "同一公司内的位置名称必须唯一。",
+        "ชื่อสถานที่ต้องไม่ซ้ำกันภายในบริษัทเดียวกัน",
+    ),
+    "My Activity Deadline": ("我的活动截止日期", "กำหนดส่งกิจกรรมของฉัน"),
+    "Next Activity Calendar Event": ("下一个活动日历事件", "กิจกรรมปฏิทินถัดไป"),
+    "Next Activity Deadline": ("下一活动截止日期", "กำหนดส่งกิจกรรมถัดไป"),
+    "Next Activity Summary": ("下一活动摘要", "สรุปกิจกรรมถัดไป"),
+    "Next Activity Type": ("下一活动类型", "ประเภทกิจกรรมถัดไป"),
+    "Ratings": ("评分", "การให้คะแนน"),
+    "Remote IP": ("来源 IP", "IP ต้นทาง"),
+    "Responsible User": ("负责人", "ผู้รับผิดชอบ"),
+    "Sensor Channel must be unique by Node ID + Channel.": (
+        "节点 ID 与探头通道的组合必须唯一。",
+        "ช่องเซ็นเซอร์ต้องไม่ซ้ำกันในแต่ละ Node ID",
+    ),
+    "Serial must be unique.": ("序列号必须唯一。", "หมายเลขซีเรียลต้องไม่ซ้ำกัน"),
+    "Serial number must be unique.": ("设备序列号必须唯一。", "หมายเลขซีเรียลของอุปกรณ์ต้องไม่ซ้ำกัน"),
+    "SMS Delivery error": ("SMS 发送错误", "ข้อผิดพลาดในการส่ง SMS"),
+    "SSH Port": ("SSH 端口", "พอร์ต SSH"),
+    "SSH User": ("SSH 用户", "ผู้ใช้ SSH"),
+    "Status based on activities\nOverdue: Due date is already passed\nToday: Activity date is today\nPlanned: Future activities.": (
+        "基于活动的状态\n逾期：截止日期已过\n今天：活动日期为今天\n计划：未来活动。",
+        "สถานะตามกิจกรรม\nเกินกำหนด: วันที่ครบกำหนดผ่านไปแล้ว\nวันนี้: วันที่ของกิจกรรมคือวันนี้\nวางแผน: กิจกรรมในอนาคต",
+    ),
+    "The device user ID must be unique per device.": (
+        "每台设备内的用户 ID 必须唯一。",
+        "ID ผู้ใช้อุปกรณ์ต้องไม่ซ้ำกันภายในอุปกรณ์เดียวกัน",
+    ),
+    "The same punch cannot be imported twice.": (
+        "同一条打卡记录不能重复导入。",
+        "ไม่สามารถนำเข้ารายการลงเวลาเดียวกันซ้ำได้",
+    ),
+    "Switch ID": ("开关 ID", "ID สวิตช์"),
+    "TCP Token": ("TCP 令牌", "โทเค็น TCP"),
+    "Type of the exception activity on record.": (
+        "记录中异常活动的类型。",
+        "ประเภทกิจกรรมที่มีข้อยกเว้นในระเบียน",
+    ),
+    "Website Messages": ("网站消息", "ข้อความจากเว็บไซต์"),
+    "Website communication history": ("网站沟通记录", "ประวัติการสื่อสารผ่านเว็บไซต์"),
+    "ap_id": ("AP ID", "AP ID"),
+    "iot.imytest.com": ("iot.imytest.com", "iot.imytest.com"),
 }
 
 
@@ -602,16 +685,22 @@ def _entry(po: polib.POFile, msgid: str) -> polib.POEntry:
 
 
 def synchronize() -> None:
-    required = source_terms()
     pot = polib.pofile(str(I18N / "iot_control_center.pot"), encoding="utf-8")
     catalogs = {name: polib.pofile(str(I18N / name), encoding="utf-8") for name in CATALOGS}
+    official_entries = {entry.msgid: entry for entry in pot if not entry.obsolete and entry.msgid}
+    required = source_terms() | set(official_entries)
 
     missing_manual: list[str] = []
     for msgid in sorted(required):
-        _entry(pot, msgid)
-        _entry(catalogs["en_US.po"], msgid).msgstr = msgid
+        pot_entry = _entry(pot, msgid)
+        english_entry = _entry(catalogs["en_US.po"], msgid)
+        english_entry.msgstr = msgid
+        english_entry.occurrences = list(pot_entry.occurrences)
+        english_entry.flags = list(pot_entry.flags)
         for name, language_index in (("zh_CN.po", 0), ("th.po", 1), ("th_TH.po", 1)):
             entry = _entry(catalogs[name], msgid)
+            entry.occurrences = list(pot_entry.occurrences)
+            entry.flags = list(pot_entry.flags)
             if msgid in TRANSLATIONS:
                 entry.msgstr = TRANSLATIONS[msgid][language_index]
             elif not entry.msgstr or any(marker in entry.msgstr for marker in SUSPICIOUS_MARKERS):
@@ -638,12 +727,13 @@ def _placeholders(value: str) -> list[str]:
 
 
 def validate() -> None:
-    required = source_terms()
     pot = polib.pofile(str(I18N / "iot_control_center.pot"), encoding="utf-8")
     catalogs = {name: polib.pofile(str(I18N / name), encoding="utf-8") for name in CATALOGS}
     errors: list[str] = []
 
-    pot_ids = {entry.msgid for entry in pot if not entry.obsolete and entry.msgid}
+    pot_entries = {entry.msgid: entry for entry in pot if not entry.obsolete and entry.msgid}
+    pot_ids = set(pot_entries)
+    required = source_terms() | pot_ids
     missing_pot = sorted(required - pot_ids)
     if missing_pot:
         errors.append(f"POT missing {len(missing_pot)} source terms")
@@ -656,6 +746,9 @@ def validate() -> None:
         missing = sorted(required - set(entries))
         if missing:
             errors.append(f"{name} missing {len(missing)} source terms")
+        for msgid in sorted(pot_ids & set(entries)):
+            if set(entries[msgid].occurrences) != set(pot_entries[msgid].occurrences):
+                errors.append(f"{name}: source references differ for {msgid!r}")
         for msgid in sorted(entries):
             msgstr = entries[msgid].msgstr
             if not msgstr:
