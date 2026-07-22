@@ -84,12 +84,11 @@
                 <filter name="iot_node_frequency" string="Raw Samples"
                         domain="[('is_hourly_rollup', '=', False), ('is_daily_rollup', '=', False)]"
                         context="{'iot_time_mode': 'raw'}"/>
-                <group expand="0" string="Group By">
-                    <filter name="group_sensor" string="Sensor" context="{'group_by': 'sensor_id'}"/>
-                    <filter name="group_location" string="Location" context="{'group_by': 'sensor_location_id'}"/>
-                    <filter name="group_sensor_group" string="Sensor Group" context="{'group_by': 'sensor_group_id'}"/>
-                    <filter name="group_gateway" string="Gateway" context="{'group_by': 'gateway_id'}"/>
-                </group>
+                <separator/>
+                <filter name="group_sensor" string="Sensor" context="{'group_by': 'sensor_id'}"/>
+                <filter name="group_location" string="Location" context="{'group_by': 'sensor_location_id'}"/>
+                <filter name="group_sensor_group" string="Sensor Group" context="{'group_by': 'sensor_group_id'}"/>
+                <filter name="group_gateway" string="Gateway" context="{'group_by': 'gateway_id'}"/>
             </search>
         </field>
     </record>
