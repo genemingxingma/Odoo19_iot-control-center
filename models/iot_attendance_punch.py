@@ -16,7 +16,7 @@ class IoTAttendancePunch(models.Model):
     employee_id = fields.Many2one("hr.employee", index=True, ondelete="set null")
     attendance_id = fields.Many2one("hr.attendance", readonly=True, ondelete="set null")
     device_user_id = fields.Char(index=True)
-    device_uid = fields.Char()
+    device_uid = fields.Char(string="Device UID")
     punch_time = fields.Datetime(required=True, index=True)
     direction = fields.Selection([("auto", "Auto"), ("in", "Check In"), ("out", "Check Out")], default="auto", required=True, index=True)
     source = fields.Selection(

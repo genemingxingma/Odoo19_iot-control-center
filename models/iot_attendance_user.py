@@ -12,7 +12,7 @@ class IoTAttendanceUser(models.Model):
     device_id = fields.Many2one("iot.attendance.device", required=True, ondelete="cascade")
     employee_id = fields.Many2one("hr.employee", required=True, ondelete="cascade")
     device_user_id = fields.Char(required=True, help="Enroll/PIN code used by the attendance device.")
-    device_uid = fields.Char(help="Optional internal UID returned by the device.")
+    device_uid = fields.Char(string="Device UID", help="Optional internal UID returned by the device.")
     company_id = fields.Many2one(related="device_id.company_id", store=True, readonly=True)
     last_seen_at = fields.Datetime(readonly=True, copy=False)
 

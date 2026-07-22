@@ -54,7 +54,7 @@ class IoTOpenwrtAP(models.Model):
     board_name = fields.Char(readonly=True, tracking=True)
     model = fields.Char(readonly=True, tracking=True)
     target = fields.Char(readonly=True, tracking=True)
-    openwrt_version = fields.Char(readonly=True, tracking=True)
+    openwrt_version = fields.Char(string="OpenWrt Version", readonly=True, tracking=True)
     current_hostname = fields.Char(readonly=True, tracking=True)
     client_count_total = fields.Integer(readonly=True, compute="_compute_live_telemetry", store=False)
     client_count_24g = fields.Integer(string="2.4G Clients", readonly=True, compute="_compute_live_telemetry", store=False)

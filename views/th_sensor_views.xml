@@ -7,7 +7,7 @@
             <list create="0"
                   decoration-muted="not online"
                   decoration-danger="online and (last_temperature &lt; effective_temperature_low or last_temperature &gt; effective_temperature_high or last_humidity &lt; effective_humidity_low or last_humidity &gt; effective_humidity_high)">
-                <field name="display_name" string="Chart Label"/>
+                <field name="display_name" string="Chart Legend Label"/>
                 <field name="name" optional="show"/>
                 <field name="technical_code"/>
                 <field name="group_id"/>
@@ -42,7 +42,7 @@
                     <group>
                         <group>
                             <field name="name"/>
-                            <field name="display_name" string="Chart Label" readonly="1"/>
+                            <field name="display_name" string="Chart Legend Label" readonly="1"/>
                             <field name="technical_code" readonly="1"/>
                             <field name="node_id" readonly="1" invisible="1"/>
                             <field name="probe_code" readonly="1" invisible="1"/>
@@ -73,7 +73,7 @@
                         <field name="effective_humidity_low" readonly="1"/>
                         <field name="effective_humidity_high" readonly="1"/>
                     </group>
-                    <group string="Statistics Window">
+                    <group string="Statistics Period">
                         <field name="stats_window_hours"/>
                         <field name="avg_temperature" readonly="1"/>
                         <field name="min_temperature" readonly="1"/>

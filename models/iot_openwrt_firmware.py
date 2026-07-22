@@ -18,7 +18,7 @@ class IoTOpenwrtFirmware(models.Model):
     version = fields.Char(required=True)
     filename = fields.Char(required=True)
     file = fields.Binary(required=True, attachment=True)
-    checksum_sha256 = fields.Char(compute="_compute_checksum_sha256", store=True)
+    checksum_sha256 = fields.Char(string="SHA-256 Checksum", compute="_compute_checksum_sha256", store=True)
     notes = fields.Text(translate=True)
 
     @api.depends("file")

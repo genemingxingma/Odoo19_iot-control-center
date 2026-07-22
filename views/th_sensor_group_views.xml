@@ -23,7 +23,7 @@
         <field name="arch" type="xml">
             <form>
                 <header>
-                    <button name="action_open_sensors" type="object" string="Open Sensors"/>
+                    <button name="action_open_sensors" type="object" string="View Sensors"/>
                 </header>
                 <sheet>
                     <group>

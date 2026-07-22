@@ -77,7 +77,7 @@ class IoTFirmwarePushWizard(models.TransientModel):
 
         if ok_count == 0:
             detail = "\n".join(failed[:5]) if failed else _("Unknown error")
-            raise UserError(_("No upgrade command sent successfully.\n%s") % detail)
+            raise UserError(_("No upgrade command could be sent.\n%s") % detail)
 
         msg = _("Upgrade command sent to %s device(s).") % ok_count
         if failed:

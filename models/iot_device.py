@@ -75,9 +75,10 @@ class IoTDevice(models.Model):
     firmware_hardware_profile = fields.Char(readonly=True)
     flash_real_size_bytes = fields.Integer(readonly=True)
     free_heap_bytes = fields.Integer(readonly=True)
-    mqtt_active_host = fields.Char(readonly=True)
+    mqtt_active_host = fields.Char(string="Active MQTT Host", readonly=True)
     mqtt_route = fields.Selection(
         [("unknown", "Unknown"), ("primary", "Internal / Primary"), ("fallback", "Public / Fallback")],
+        string="MQTT Route",
         default="unknown",
         readonly=True,
     )
@@ -374,7 +375,9 @@ class IoTDevice(models.Model):
         locked = self._delay_locked_devices()
         if locked:
             names = ", ".join(locked.mapped("display_name"))
-            raise UserError(_("Delay mode is active. This action is blocked for: %s") % names)
+            raise UserError(
+                _("Delay mode is active for: %s. Cancel the delay before sending another command.") % names
+            )
 
     def _publish_command(self, command, payload=None, raise_on_fail=True, retain=False, return_details=False):
         icp = self.env["ir.config_parameter"].sudo()

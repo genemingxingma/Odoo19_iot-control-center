@@ -80,7 +80,7 @@ class IoTTHReading(models.Model):
         digits=(16, 2),
         aggregator="max",
     )
-    sample_count = fields.Integer(default=1, string="Samples", aggregator="sum")
+    sample_count = fields.Integer(default=1, string="Sample Count", aggregator="sum")
 
     @api.model
     def init(self):

@@ -51,7 +51,7 @@ class IoTTHSensor(models.Model):
     last_battery_voltage = fields.Float(string="Battery Voltage (V)")
     last_reported_at = fields.Datetime()
     online = fields.Boolean(compute="_compute_online")
-    reading_count = fields.Integer(default=0)
+    reading_count = fields.Integer(string="Sample Count", default=0)
 
     stats_window_hours = fields.Integer(default=24)
     keep_full_history = fields.Boolean(

@@ -583,7 +583,7 @@ msgstr "最后命令载荷"
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__last_humidity
 msgid "Last Humidity"
-msgstr "最后湿度"
+msgstr "最新湿度"
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__last_reported_at
@@ -599,7 +599,7 @@ msgstr "最后在线时间"
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__last_temperature
 msgid "Last Temperature"
-msgstr "最后温度"
+msgstr "最新温度"
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__write_uid
@@ -955,18 +955,18 @@ msgstr "原始载荷"
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__reading_ids
 msgid "Reading"
-msgstr "读数"
+msgstr "监测数据"
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__reading_count
 msgid "Reading Count"
-msgstr "读数数量"
+msgstr "采样次数"
 
 #. module: iot_control_center
 #: model:ir.actions.act_window,name:iot_control_center.action_iot_th_reading
 #: model:ir.ui.menu,name:iot_control_center.menu_iot_th_reading
 msgid "Readings & Analysis"
-msgstr "读数与分析"
+msgstr "监测数据与分析"
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__received_at
@@ -1051,25 +1051,25 @@ msgstr "定时计划"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__sensor_id
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_reading_search
 msgid "Sensor"
-msgstr "传感器"
+msgstr "探头"
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__sensor_count
 msgid "Sensor Count"
-msgstr "传感器数量"
+msgstr "探头数量"
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__sensor_code
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__probe_code
 msgid "Sensor ID"
-msgstr "传感器ID"
+msgstr "探头 ID"
 
 #. module: iot_control_center
 #: model:ir.actions.act_window,name:iot_control_center.action_iot_th_sensor
 #: model:ir.ui.menu,name:iot_control_center.menu_iot_th_sensor
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_gateway_form
 msgid "Sensors"
-msgstr "传感器"
+msgstr "探头"
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__sequence
@@ -1105,12 +1105,12 @@ msgstr "状态"
 #. module: iot_control_center
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_sensor_form
 msgid "Statistics Window"
-msgstr "统计窗口"
+msgstr "统计时段"
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__statistics_window_hours
 msgid "Statistics Window Hours"
-msgstr "统计窗口小时数"
+msgstr "统计时段（小时）"
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__stats_window_hours
@@ -1233,12 +1233,12 @@ msgstr "温湿度原始报文"
 #. module: iot_control_center
 #: model:ir.model,name:iot_control_center.model_iot_th_reading
 msgid "Temperature/Humidity Reading"
-msgstr "温湿度读数"
+msgstr "温湿度监测数据"
 
 #. module: iot_control_center
 #: model:ir.model,name:iot_control_center.model_iot_th_sensor
 msgid "Temperature/Humidity Sensor"
-msgstr "温湿度传感器"
+msgstr "温湿度探头"
 
 #. module: iot_control_center
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_reading_pivot
@@ -1354,40 +1354,40 @@ msgstr "web.base.url 未配置。"
 #: model:ir.actions.act_window,name:iot_control_center.action_iot_device_bind_wizard
 #: model:ir.ui.menu,name:iot_control_center.menu_iot_device_bind
 msgid "Bind by ID"
-msgstr "按ID绑定"
+msgstr "按 ID 绑定"
 
 #. module: iot_control_center
 #: model:ir.actions.act_window,name:iot_control_center.action_iot_device_bind_wizard
 msgid "Bind Switch by ID"
-msgstr "按ID绑定开关"
+msgstr "按 ID 绑定开关"
 
 #. module: iot_control_center
 #: model:ir.actions.act_window,name:iot_control_center.action_iot_th_sensor_bind_wizard
 #: model:ir.ui.menu,name:iot_control_center.menu_iot_th_sensor_bind
 msgid "Bind Node by ID"
-msgstr "按ID绑定节点"
+msgstr "按 ID 绑定节点"
 
 #. module: iot_control_center
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_bind_wizard_form
 msgid "Search ID"
-msgstr "搜索ID"
+msgstr "查询 ID"
 
 #. module: iot_control_center
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_bind_wizard_form
 msgid "Confirm Bind"
-msgstr "确定绑定"
+msgstr "确认绑定"
 
 #. module: iot_control_center
 #. odoo-python
 #: code:addons/iot_control_center/wizard/iot_device_bind_wizard.py:0
 msgid "Search Switch ID"
-msgstr "搜索开关ID"
+msgstr "查询开关 ID"
 
 #. module: iot_control_center
 #. odoo-python
 #: code:addons/iot_control_center/wizard/iot_device_bind_wizard.py:0
 msgid "Found switch %s. Click Confirm Bind to continue."
-msgstr "已找到开关 %s，请点击“确定绑定”继续。"
+msgstr "已找到开关 %s，请点击“确认绑定”继续。"
 
 #. module: iot_control_center
 #. odoo-python
@@ -1399,7 +1399,7 @@ msgstr "绑定成功"
 #. odoo-python
 #: code:addons/iot_control_center/wizard/iot_device_bind_wizard.py:0
 msgid "Switch %s bound successfully. You can bind next one now."
-msgstr "开关 %s 绑定成功，你可以继续绑定下一个。"
+msgstr "开关 %s 已绑定，现在可以继续绑定下一个。"
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__effective_humidity_high
@@ -1429,7 +1429,7 @@ msgstr "分组"
 #. module: iot_control_center
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_sensor_group_form
 msgid "Open Sensors"
-msgstr "打开探头"
+msgstr "查看探头"
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__group_id
@@ -1500,7 +1500,7 @@ msgstr "接入点"
 
 #. module: iot_control_center
 msgid "Probe"
-msgstr "探测"
+msgstr "检测"
 
 #. module: iot_control_center
 msgid "Apply Template"
@@ -1555,7 +1555,9 @@ msgid "Generate / Refresh SSH Key"
 msgstr "生成 / 刷新 SSH 密钥"
 
 #. module: iot_control_center
-msgid "Generate one SSH key pair for OpenWrt AP management. Add the public key manually to each AP's authorized_keys file."
+msgid ""
+"Generate one SSH key pair for OpenWrt AP management. Add the public key "
+"manually to each AP's authorized_keys file."
 msgstr "为 OpenWrt AP 管理生成一对 SSH 密钥。请将公钥手动添加到每台 AP 的 authorized_keys 文件中。"
 
 #. module: iot_control_center
@@ -1567,8 +1569,10 @@ msgid "OpenWrt SSH Public Key"
 msgstr "OpenWrt SSH 公钥"
 
 #. module: iot_control_center
-msgid "Add this public key manually to each OpenWrt AP's authorized_keys file, then bind the AP in IoT Control Center."
-msgstr "请将此公钥手动添加到每台 OpenWrt AP 的 authorized_keys 文件中，然后在 IoT Control Center 中绑定该 AP。"
+msgid ""
+"Add this public key manually to each OpenWrt AP's authorized_keys file, then"
+" bind the AP in IoT Control Center."
+msgstr "请将此公钥手动添加到每台 OpenWrt AP 的 authorized_keys 文件中，然后在 IoT 控制中心绑定该 AP。"
 
 #. module: iot_control_center
 msgid "2.4G Enabled"
@@ -1631,7 +1635,8 @@ msgid "WPA3-SAE"
 msgstr "WPA3-SAE"
 
 #. module: iot_control_center
-msgid "Firmware applies to AP model names containing this text, case-insensitive."
+msgid ""
+"Firmware applies to AP model names containing this text, case-insensitive."
 msgstr "该固件适用于型号名称中包含此文本的 AP，匹配时不区分大小写。"
 
 #. module: iot_control_center
@@ -1671,7 +1676,9 @@ msgstr "ADMS 推送"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
-msgid "ADMS devices do not support pull-based connection tests. Point the device to the ADMS URL instead."
+msgid ""
+"ADMS devices do not support pull-based connection tests. Point the device to"
+" the ADMS URL instead."
 msgstr "ADMS 设备不支持拉取式连接测试。请将设备指向 ADMS URL。"
 
 #. module: iot_control_center
@@ -1686,13 +1693,15 @@ msgstr "累计开启时间（小时）"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
-msgid "Accumulated ON time reset by %s. Reason: %s. Previous total: %.2f hours."
+msgid ""
+"Accumulated ON time reset by %s. Reason: %s. Previous total: %.2f hours."
 msgstr "%s 重置了累计开启时间。原因：%s。重置前累计：%.2f 小时。"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
-msgid "All matched sensors are offline. Please wait for fresh data before binding."
-msgstr "所有匹配的传感器均离线。请等待新数据后再绑定。"
+msgid ""
+"All matched sensors are offline. Please wait for fresh data before binding."
+msgstr "所有匹配的探头均已离线，请等待收到最新数据后再绑定。"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
@@ -1812,7 +1821,7 @@ msgstr "已连接客户端"
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Connection successful. Sample records fetched: %s"
-msgstr "连接成功。已获取样本记录：%s"
+msgstr "连接成功，已获取记录数：%s"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
@@ -1847,7 +1856,7 @@ msgstr "延时开关"
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Delay mode is active. This action is blocked for: %s"
-msgstr "延时模式正在运行。该操作被阻止，剩余：%s"
+msgstr "以下设备正在执行延时任务，当前操作已阻止：%s"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
@@ -1962,7 +1971,7 @@ msgstr "固件文件必须是 .bin 文件。"
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Full Probe Every N Heartbeats"
-msgstr "每 N 次心跳执行一次完整探测"
+msgstr "每 N 次心跳进行完整检测"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
@@ -2041,8 +2050,10 @@ msgstr "IP"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
-msgid "If enabled, this node keeps all raw readings and skips historical daily rollup."
-msgstr "启用后，该节点保留所有原始读数，并跳过历史每日汇总。"
+msgid ""
+"If enabled, this node keeps all raw readings and skips historical daily "
+"rollup."
+msgstr "启用后，该节点将保留全部原始监测数据，不再执行历史数据的每日汇总。"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
@@ -2197,7 +2208,7 @@ msgstr "IoT 定时计划多公司规则"
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "IoT TH - Rollup Old Readings"
-msgstr "IoT 温湿度 - 汇总旧读数"
+msgstr "IoT 温湿度 - 汇总历史监测数据"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
@@ -2261,12 +2272,14 @@ msgstr "部分设备 MQTT 发布失败，请重试。"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
-msgid "Manage OpenWrt AP inventory, wireless templates, and firmware upgrades."
+msgid ""
+"Manage OpenWrt AP inventory, wireless templates, and firmware upgrades."
 msgstr "管理 OpenWrt AP 清单、无线模板和固件升级。"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
-msgid "Manage biometric attendance devices, push logs, and employee punch mapping."
+msgid ""
+"Manage biometric attendance devices, push logs, and employee punch mapping."
 msgstr "管理生物识别考勤设备、推送日志和员工打卡映射。"
 
 #. module: iot_control_center
@@ -2297,7 +2310,7 @@ msgstr "已匹配"
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Matched Sensors"
-msgstr "匹配的传感器"
+msgstr "匹配的探头"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
@@ -2351,7 +2364,8 @@ msgstr "不匹配"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
-msgid "Missing Python dependency `pyzk`. Install it in the Odoo runtime first."
+msgid ""
+"Missing Python dependency `pyzk`. Install it in the Odoo runtime first."
 msgstr "缺少 Python 依赖 `pyzk`。请先安装到 Odoo 运行环境。"
 
 #. module: iot_control_center
@@ -2367,7 +2381,7 @@ msgstr "模块图标"
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "No available company for binding."
-msgstr "没有可用于绑定的公司。"
+msgstr "没有可绑定的公司。"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
@@ -2377,7 +2391,7 @@ msgstr "没有已连接客户端。"
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "No sensor found for this Node ID."
-msgstr "未找到该节点 ID 对应的传感器。"
+msgstr "未找到此节点 ID 对应的探头。"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
@@ -2387,12 +2401,12 @@ msgstr "未找到 ID 为 %s 的开关"
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "No upgrade command sent successfully. %s"
-msgstr "没有升级命令成功下发。%s"
+msgstr "未能成功发送任何升级命令。%s"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Node %s is now bound to %s. You can bind next one now."
-msgstr "节点 %s 已绑定到 %s。现在可以继续绑定下一个。"
+msgstr "节点 %s 已绑定到 %s，现在可以继续绑定下一个。"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
@@ -2407,7 +2421,7 @@ msgstr "必须填写节点 ID"
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Node is offline. Please wait for fresh data before binding."
-msgstr "节点离线。请等待新数据后再绑定。"
+msgstr "节点已离线，请等待收到最新数据后再绑定。"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
@@ -2506,7 +2520,8 @@ msgstr "打卡"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
-msgid "Push devices are passive. Point the device to the ADMS/Webhook URL instead."
+msgid ""
+"Push devices are passive. Point the device to the ADMS/Webhook URL instead."
 msgstr "推送设备是被动设备。请将设备指向 ADMS/Webhook URL。"
 
 #. module: iot_control_center
@@ -2582,12 +2597,12 @@ msgstr "所选固件与 AP 型号不匹配。"
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Sensor Channel"
-msgstr "传感器通道"
+msgstr "探头通道"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Sensor Channel (Optional)"
-msgstr "传感器通道（可选）"
+msgstr "探头通道（可选）"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
@@ -2667,12 +2682,12 @@ msgstr "测试连接"
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "This node is already bound to another company."
-msgstr "该节点已绑定到其他公司。"
+msgstr "此节点已绑定到其他公司。"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "This switch is already bound to company: %s"
-msgstr "该开关已绑定到公司：%s"
+msgstr "此开关已绑定到公司：%s"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
@@ -2722,7 +2737,7 @@ msgstr "解除绑定"
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Unbound Device Retention (days)"
-msgstr "未绑定设备保留天数"
+msgstr "未绑定设备保留时间（天）"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
@@ -2802,7 +2817,7 @@ msgstr "Webhook 已导入 %s 条打卡记录。"
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "You can only bind to companies you can access."
-msgstr "只能绑定到你有权限访问的公司。"
+msgstr "只能绑定到您有权访问的公司。"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
@@ -2829,10 +2844,13 @@ msgstr "http://127.0.0.1:8099"
 msgid "relay-001"
 msgstr "relay-001"
 
-
 #. module: iot_control_center
-msgid "No upgrade command sent successfully.\n%s"
-msgstr "没有升级命令成功下发。\n%s"
+msgid ""
+"No upgrade command sent successfully.\n"
+"%s"
+msgstr ""
+"未能成功发送任何升级命令。\n"
+"%s"
 
 #. module: iot_control_center
 msgid "Delay Countdown"
@@ -2841,47 +2859,47 @@ msgstr "延时倒计时"
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Turn on command sent."
-msgstr "????????"
+msgstr "开启命令已发送。"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Turn off command sent."
-msgstr "????????"
+msgstr "关闭命令已发送。"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Delay command sent."
-msgstr "????????"
+msgstr "延时命令已发送。"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Temperature low limit must not exceed high limit."
-msgstr "???????????"
+msgstr "温度下限不能高于温度上限。"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Humidity low limit must not exceed high limit."
-msgstr "???????????"
+msgstr "湿度下限不能高于湿度上限。"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Statistics window must be greater than 0 hours."
-msgstr "?????????? 0 ???"
+msgstr "统计时段必须大于 0 小时。"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Attendance Source IP Allowlist"
-msgstr "???? IP ???"
+msgstr "考勤来源 IP 白名单"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Max Open Attendance Hours"
-msgstr "????????"
+msgstr "考勤记录最长未签退时长（小时）"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Chart Label"
-msgstr "图表标签"
+msgstr "图例名称"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
@@ -2901,7 +2919,7 @@ msgstr "原始采样"
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Samples"
-msgstr "样本数"
+msgstr "采样次数"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
@@ -2931,32 +2949,32 @@ msgstr "未命名探头"
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Temperature (C)"
-msgstr "温度 (°C)"
+msgstr "温度（°C）"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Relative Humidity (%RH)"
-msgstr "相对湿度 (%RH)"
+msgstr "相对湿度（%RH）"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Minimum Temperature (C)"
-msgstr "最低温度 (°C)"
+msgstr "最低温度（°C）"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Maximum Temperature (C)"
-msgstr "最高温度 (°C)"
+msgstr "最高温度（°C）"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Minimum Humidity (%RH)"
-msgstr "最低湿度 (%RH)"
+msgstr "最低湿度（%RH）"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Maximum Humidity (%RH)"
-msgstr "最高湿度 (%RH)"
+msgstr "最高湿度（%RH）"
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
@@ -2967,3 +2985,1259 @@ msgstr "探头名称"
 #: code:addons/iot_control_center:0
 msgid "Friendly name used in charts; the technical code is stored separately."
 msgstr "图表中显示的易读名称；技术编号会单独保留。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "192.168.10.15"
+msgstr "192.168.10.15"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "192.168.10.50, 192.168.10.51"
+msgstr "192.168.10.50, 192.168.10.51"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"A full OpenWrt probe runs every N heartbeat cycles to refresh version and "
+"hardware facts."
+msgstr "每 N 次心跳周期执行一次完整的 OpenWrt 检测，以刷新版本和硬件信息。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Accumulated ON (Hours):"
+msgstr "累计开启时间（小时）："
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Adms Http Url"
+msgstr "ADMS HTTP 地址"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Adms Https Url"
+msgstr "ADMS HTTPS 地址"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Adms Last Payload"
+msgstr "ADMS 最近数据"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Adms Last Seen At"
+msgstr "ADMS 最近在线时间"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"After this many consecutive heartbeat failures, the AP is marked offline."
+msgstr "连续心跳失败达到此次数后，AP 将标记为离线。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Ap"
+msgstr "AP"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Attendance Heartbeat Log Interval (seconds)"
+msgstr "考勤心跳日志间隔（秒）"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Bind TH Node/Sensor Channel by ID"
+msgstr "按 ID 绑定温湿度节点/探头通道"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Board Name"
+msgstr "控制板名称"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Candidate Count"
+msgstr "匹配数量"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Chart Legend Label"
+msgstr "图例名称"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Checksum Sha256"
+msgstr "SHA-256 校验值"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Client Count Total"
+msgstr "客户端总数"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Comma-separated ADMS source IP allowlist. Leave blank to allow any source "
+"that matches a bound device."
+msgstr "允许访问的 ADMS 来源 IP，以逗号分隔。留空表示允许与已绑定设备匹配的任意来源。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Command Payload"
+msgstr "命令数据"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Company %(company)s is in a country with multiple timezones. Set the "
+"timezone on the company contact before using IoT schedules."
+msgstr "公司 %(company)s 所在国家/地区有多个时区。使用 IoT 定时计划前，请在公司联系人中设置时区。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Company Country"
+msgstr "公司所在国家/地区"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Company Timezone"
+msgstr "公司时区"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Company internal network settings were sent to the selected controller(s)."
+msgstr "已将公司内网设置发送到选定的控制器。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Company-specific server IP or hostname reachable through WireGuard. Do not "
+"include scheme, port, or path."
+msgstr "可通过 WireGuard 访问的公司专用服务器 IP 或主机名。请勿包含协议、端口或路径。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Completed At"
+msgstr "完成时间"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Configure the country on company %(company)s before using IoT devices."
+msgstr "使用 IoT 设备前，请先为公司 %(company)s 设置国家/地区。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Confirmed"
+msgstr "已确认"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Connected Seconds"
+msgstr "连接时长（秒）"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Controllers use the company WireGuard route first and fall back to public "
+"endpoints when unavailable."
+msgstr "控制器优先使用公司的 WireGuard 路由；不可用时自动回退到公网端点。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Create Date"
+msgstr "创建时间"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Current Hostname"
+msgstr "当前主机名"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "DIO"
+msgstr "DIO"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "DOUT"
+msgstr "DOUT"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Delay Active"
+msgstr "延时中"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Delay Active:"
+msgstr "延时状态："
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Delay Duration Minutes"
+msgstr "延时时长（分钟）"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Delay End At"
+msgstr "延时结束时间"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Delay Remaining Minutes"
+msgstr "剩余延时（分钟）"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Delay Remaining:"
+msgstr "剩余延时："
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Delay Started At"
+msgstr "延时开始时间"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Delay mode is active for: %s. Cancel the delay before sending another "
+"command."
+msgstr "以下设备正在执行延时任务：%s。发送其他命令前请先取消延时。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Desired Relay State"
+msgstr "期望继电器状态"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Device Uid"
+msgstr "设备 UID"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Device User"
+msgstr "设备用户"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Device-side safety cutoff. Set to 0 to disable. UV lamps should always have "
+"a finite limit."
+msgstr "设备端安全断电时限。设为 0 表示禁用；紫外灯必须设置有限时长。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Direction"
+msgstr "方向"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Download Bytes Total"
+msgstr "下载总量（字节）"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Download Rate Mbps"
+msgstr "下载速率（Mbps）"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Employee"
+msgstr "员工"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Enable this to route both MQTT relay traffic and Temperature/Humidity TCP "
+"gateway traffic through middleware."
+msgstr "启用后，MQTT 继电器流量和温湿度 TCP 网关流量都将通过中间件转发。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Enabled"
+msgstr "已启用"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Encryption"
+msgstr "加密方式"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Endpoint"
+msgstr "端点"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Enter an internal IP address or hostname without a scheme, port, or path."
+msgstr "请输入不含协议、端口或路径的内网 IP 地址或主机名。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Error Code"
+msgstr "错误代码"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Firmware Hardware Profile"
+msgstr "固件硬件配置"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Firmware Target Version"
+msgstr "固件目标版本"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Firmware Upgrade Completed At"
+msgstr "固件升级完成时间"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Firmware Upgrade Requested At"
+msgstr "固件升级请求时间"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Firmware Upgrade State"
+msgstr "固件升级状态"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Firmware:"
+msgstr "固件："
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Flash Real Size Bytes"
+msgstr "闪存实际大小（字节）"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Free Heap Bytes"
+msgstr "可用堆内存（字节）"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Group By"
+msgstr "分组方式"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Heartbeat Fail Count"
+msgstr "心跳失败次数"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Hidden"
+msgstr "隐藏"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"High-frequency ADMS request logs older than this many days are purged "
+"automatically to keep the database lean."
+msgstr "超过此天数的高频 ADMS 请求日志将自动清理，以控制数据库容量。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"High-frequency processed telemetry is kept for a much shorter time than "
+"command/status messages."
+msgstr "高频遥测数据的保留时间远短于命令和状态消息。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Host"
+msgstr "主机"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Idle"
+msgstr "空闲"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Image Compatible"
+msgstr "镜像兼容"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Image Flash Mode"
+msgstr "镜像闪存模式"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Image Flash Size"
+msgstr "镜像闪存大小"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Internal / Primary"
+msgstr "内网 / 首选"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Internal MQTT Port"
+msgstr "内网 MQTT 端口"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Internal OTA HTTPS Port"
+msgstr "内网 OTA HTTPS 端口"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Internal Odoo Port"
+msgstr "内网 Odoo 端口"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Internal Server Host"
+msgstr "内网服务器地址"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT - Refresh Company Timezone Offsets"
+msgstr "IoT - 刷新公司时区偏移"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Attendance Device"
+msgstr "IoT 考勤设备"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Attendance Punch"
+msgstr "IoT 考勤打卡记录"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Attendance Request Log"
+msgstr "IoT 考勤请求日志"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Attendance User Mapping"
+msgstr "IoT 考勤用户映射"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Device Group"
+msgstr "IoT 设备分组"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Firmware Upgrade Log"
+msgstr "IoT 固件升级日志"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Internal MQTT Port"
+msgstr "IoT 内网 MQTT 端口"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Internal OTA HTTPS Port"
+msgstr "IoT 内网 OTA HTTPS 端口"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Internal Odoo Port"
+msgstr "IoT 内网 Odoo 端口"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Internal Server Host"
+msgstr "IoT 内网服务器地址"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT internal ports must be between 1 and 65535."
+msgstr "IoT 内网端口必须在 1 到 65535 之间。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Attendance Adms Port"
+msgstr "考勤 ADMS 端口"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Attendance Allowed Ips"
+msgstr "考勤允许来源 IP"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Attendance Max Open Hours"
+msgstr "考勤记录最长未签退时长（小时）"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Attendance Punch Raw Retention Days"
+msgstr "考勤打卡原始数据保留天数"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Attendance Request Retention Days"
+msgstr "考勤请求保留天数"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Device Retention Days"
+msgstr "IoT 设备保留天数"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Firmware Base Url"
+msgstr "IoT 固件基础 URL"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Firmware Log Payload Retention Days"
+msgstr "IoT 固件日志数据保留天数"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Firmware Log Retention Days"
+msgstr "IoT 固件日志保留天数"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Middleware Base Url"
+msgstr "IoT 中间件基础 URL"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Middleware Enabled"
+msgstr "启用 IoT 中间件"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Middleware Token"
+msgstr "IoT 中间件令牌"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Mqtt Message Retention Days"
+msgstr "IoT MQTT 消息保留天数"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Mqtt Telemetry Retention Hours"
+msgstr "IoT MQTT 遥测数据保留小时数"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Mqtt Telemetry Sample Window Seconds"
+msgstr "IoT MQTT 遥测采样窗口（秒）"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Openwrt Full Probe Every"
+msgstr "OpenWrt 完整检测周期"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Openwrt Heartbeat Interval Sec"
+msgstr "OpenWrt 心跳间隔（秒）"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Openwrt Job Payload Retention Days"
+msgstr "OpenWrt 任务数据保留天数"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Openwrt Job Retention Days"
+msgstr "OpenWrt 任务保留天数"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Openwrt Offline Failure Threshold"
+msgstr "OpenWrt 离线失败阈值"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Openwrt Online Timeout Sec"
+msgstr "OpenWrt 在线超时（秒）"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Openwrt Ssh Private Key Path"
+msgstr "OpenWrt SSH 私钥路径"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Openwrt Ssh Public Key"
+msgstr "OpenWrt SSH 公钥"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Th Raw Retention Days"
+msgstr "温湿度原始数据保留天数"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Ip Address"
+msgstr "IP 地址"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Items"
+msgstr "条目"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Job"
+msgstr "任务"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Job Count"
+msgstr "任务数量"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Job Type"
+msgstr "任务类型"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Last Apply At"
+msgstr "最近应用时间"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Last Command"
+msgstr "最近命令"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Last Command Confirmed At"
+msgstr "最近命令确认时间"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Last Error"
+msgstr "最近错误"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Last Heartbeat At"
+msgstr "最近心跳时间"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Last Probe At"
+msgstr "最近检测时间"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Last Seen At"
+msgstr "最近在线时间"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Last Sync At"
+msgstr "最近同步时间"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Last Sync Message"
+msgstr "最近同步消息"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Last Upgrade At"
+msgstr "最近升级时间"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Mac Address"
+msgstr "MAC 地址"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Manual Override"
+msgstr "手动覆盖"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Maximum Continuous ON (Minutes)"
+msgstr "最长连续开启时间（分钟）"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Maximum continuous ON time cannot be negative."
+msgstr "最长连续开启时间不能为负数。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Message"
+msgstr "消息"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Method"
+msgstr "方法"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Middleware checks AP reachability on this interval."
+msgstr "中间件按此间隔检查 AP 的可达性。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Model"
+msgstr "型号"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Model Pattern"
+msgstr "型号匹配规则"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Module"
+msgstr "模块"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Monitoring & Analysis"
+msgstr "监测与分析"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Mqtt Active Host"
+msgstr "MQTT 当前主机"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Mqtt Route"
+msgstr "MQTT 路由"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Must exactly match the IOT_BRIDGE_TOKEN value in middleware environment "
+"config. If left blank when saving, Odoo will generate a secure token "
+"automatically."
+msgstr "必须与中间件环境配置中的 IOT_BRIDGE_TOKEN 完全一致。保存时留空，Odoo 将自动生成安全令牌。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Network"
+msgstr "网络"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Network Config Dirty"
+msgstr "网络配置待同步"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Network configuration"
+msgstr "网络配置"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "No MQTT endpoint is configured for %s"
+msgstr "未为 %s 配置 MQTT 端点"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"No timezone mapping is available for company %(company)s. Set the timezone "
+"on the company contact."
+msgstr "无法获取公司 %(company)s 的时区。请在公司联系人中设置时区。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"No upgrade command could be sent.\n"
+"%s"
+msgstr ""
+"未能发送任何升级命令。\n"
+"%s"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Node Sensor Channel (Temp+Humidity)"
+msgstr "节点探头通道（温湿度）"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Notes"
+msgstr "备注"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Online:"
+msgstr "在线："
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Open attendances older than this are not auto-closed by a new punch, "
+"preventing yesterday's punch from leaking into today."
+msgstr "超过此时长且未签退的考勤记录不会被新打卡自动关闭，以防前一天的记录延续到当天。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "OpenWrt AP Client"
+msgstr "OpenWrt AP 客户端"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "OpenWrt Template SSID"
+msgstr "OpenWrt 模板 SSID"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Openwrt Version"
+msgstr "OpenWrt 版本"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Optional comma-separated source IPs for ADMS terminals. Blank means any "
+"source is accepted only if it matches a bound device SN or host."
+msgstr "可选的 ADMS 终端来源 IP，以逗号分隔。留空时，仅接受与已绑定设备序列号或主机匹配的来源。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Password"
+msgstr "密码"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Payload Text"
+msgstr "数据内容"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Port"
+msgstr "端口"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Prefer Company Internal Network"
+msgstr "优先使用公司内网"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Prefer IoT Internal Network"
+msgstr "IoT 优先使用内网"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Processed or ignored punch raw payloads are cleared after this many days "
+"while keeping the punch result itself."
+msgstr "已处理或忽略的打卡原始数据将在此天数后清除，但保留打卡结果。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Public / Fallback"
+msgstr "公网 / 备用"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Punch Count"
+msgstr "打卡数量"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Punch Direction Mode"
+msgstr "打卡方向模式"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Punch Time"
+msgstr "打卡时间"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "QIO"
+msgstr "QIO"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "QOUT"
+msgstr "QOUT"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Quarantine Reason"
+msgstr "隔离原因"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Quarantined"
+msgstr "已隔离"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Quarantined firmware cannot be pushed to devices."
+msgstr "已隔离的固件不能下发到设备。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Raw node-frequency readings older than this are compressed into daily "
+"averages unless the sensor keeps full history."
+msgstr "超过此天数的节点原始采样将压缩为每日平均值；设置保留完整历史的探头除外。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Relay Command State"
+msgstr "继电器命令状态"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Relay firmware must be an ESP8266 1MB/DOUT image. Detected flash mode: "
+"%(mode)s; flash size: %(size)s."
+msgstr "继电器固件必须是 ESP8266 1MB/DOUT 镜像。检测到的闪存模式：%(mode)s；闪存大小：%(size)s。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Relay telemetry from the same device/topic inside this window is collapsed "
+"into one queue row to reduce database growth."
+msgstr "在此窗口内，同一设备和主题的继电器遥测数据将合并为一条队列记录，以减少数据库增长。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Remote Ip"
+msgstr "远程 IP"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Reported Version"
+msgstr "上报版本"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Request Count"
+msgstr "请求数量"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Request Payload"
+msgstr "请求数据"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Requested"
+msgstr "已请求"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Requested At"
+msgstr "请求时间"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Reset Accumulated Time Wizard"
+msgstr "重置累计时间向导"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Response Payload"
+msgstr "响应数据"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Retained"
+msgstr "保留"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Sample Count"
+msgstr "采样次数"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Schedule Timezone Name"
+msgstr "定时计划时区"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Schedule Timezone Offset Min"
+msgstr "定时计划时区偏移（分钟）"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Signal Dbm"
+msgstr "信号强度（dBm）"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Source"
+msgstr "来源"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Ssh Port"
+msgstr "SSH 端口"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Ssh User"
+msgstr "SSH 用户"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Ssid"
+msgstr "SSID"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Statistics Period"
+msgstr "统计时段"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Status Message"
+msgstr "状态消息"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Status:"
+msgstr "状态："
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Successful ADMS heartbeats are sampled at this interval. Punch, error, and "
+"unknown-device requests are still logged individually. Set to 0 to keep "
+"every heartbeat."
+msgstr "成功的 ADMS 心跳按此间隔抽样记录；打卡、错误和未知设备请求仍会逐条记录。设为 0 可保留每次心跳。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Switch ID:"
+msgstr "开关 ID："
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Switch Id Display"
+msgstr "开关显示 ID"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Sync Enabled"
+msgstr "启用同步"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Sync Internal Network"
+msgstr "同步内网配置"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "System Hostname"
+msgstr "系统主机名"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Target"
+msgstr "目标"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Target Version"
+msgstr "目标版本"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Temperature/Humidity Sensor Group"
+msgstr "温湿度探头分组"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Template"
+msgstr "模板"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"This firmware is quarantined or incompatible with ESP8266 1MB/DOUT relay "
+"hardware."
+msgstr "该固件已被隔离，或与 ESP8266 1MB/DOUT 继电器硬件不兼容。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "This firmware is quarantined or incompatible with relay hardware."
+msgstr "该固件已被隔离，或与继电器硬件不兼容。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Timed Out"
+msgstr "已超时"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Total On Hours"
+msgstr "累计开启小时数"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Turn off command sent; waiting for device confirmation."
+msgstr "关闭命令已发送，正在等待设备确认。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Turn on command sent; waiting for device confirmation."
+msgstr "开启命令已发送，正在等待设备确认。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Unbind this node from current company?"
+msgstr "确定要解除此节点与当前公司的绑定吗？"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Unbind this switch from current company?"
+msgstr "确定要解除此开关与当前公司的绑定吗？"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Unique Hash"
+msgstr "唯一哈希值"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Upload Bytes Total"
+msgstr "上传总量（字节）"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Upload Rate Mbps"
+msgstr "上传速率（Mbps）"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Used to generate the ADMS HTTP/HTTPS address shown in attendance devices. "
+"Default is 8069."
+msgstr "用于生成考勤设备中显示的 ADMS HTTP/HTTPS 地址。默认端口为 8069。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "User Count"
+msgstr "用户数量"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Validated"
+msgstr "已验证"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Validated Key"
+msgstr "已验证密钥"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Validated Node"
+msgstr "已验证节点"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Validated Probe Code"
+msgstr "已验证探头通道"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "View Sensors"
+msgstr "查看探头"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Webhook Token"
+msgstr "Webhook 令牌"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Webhook Url"
+msgstr "Webhook URL"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Wifi24 Ssid Count"
+msgstr "2.4 GHz SSID 数量"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Wifi5 Ssid Count"
+msgstr "5 GHz SSID 数量"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "2.4 GHz SSID Count"
+msgstr "2.4 GHz SSID 数量"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "5 GHz SSID Count"
+msgstr "5 GHz SSID 数量"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "ADMS HTTP URL"
+msgstr "ADMS HTTP 地址"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "ADMS HTTPS URL"
+msgstr "ADMS HTTPS 地址"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "ADMS Last Payload"
+msgstr "ADMS 最近数据"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "ADMS Last Seen"
+msgstr "ADMS 最近在线时间"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Active MQTT Host"
+msgstr "当前 MQTT 主机"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Device UID"
+msgstr "设备 UID"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "MQTT Route"
+msgstr "MQTT 路由"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "OpenWrt Version"
+msgstr "OpenWrt 版本"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "SHA-256 Checksum"
+msgstr "SHA-256 校验值"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "SSID"
+msgstr "SSID"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Webhook URL"
+msgstr "Webhook 地址"

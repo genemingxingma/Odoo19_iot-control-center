@@ -17,8 +17,8 @@ class IoTOpenwrtTemplate(models.Model):
     timezone_name = fields.Char(string="Company Timezone", compute="_compute_company_location", readonly=True)
 
     ssid_entry_ids = fields.One2many("iot.openwrt.template.ssid", "template_id", string="SSID Entries")
-    wifi24_ssid_count = fields.Integer(compute="_compute_ssid_counts")
-    wifi5_ssid_count = fields.Integer(compute="_compute_ssid_counts")
+    wifi24_ssid_count = fields.Integer(string="2.4 GHz SSID Count", compute="_compute_ssid_counts")
+    wifi5_ssid_count = fields.Integer(string="5 GHz SSID Count", compute="_compute_ssid_counts")
 
     wifi24_enabled = fields.Boolean(string="2.4G Enabled", default=True)
     wifi24_ssid = fields.Char(string="2.4G SSID")

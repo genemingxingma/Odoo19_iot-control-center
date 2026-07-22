@@ -1447,7 +1447,9 @@ msgid "Generate / Refresh SSH Key"
 msgstr ""
 
 #. module: iot_control_center
-msgid "Generate one SSH key pair for OpenWrt AP management. Add the public key manually to each AP's authorized_keys file."
+msgid ""
+"Generate one SSH key pair for OpenWrt AP management. Add the public key "
+"manually to each AP's authorized_keys file."
 msgstr ""
 
 #. module: iot_control_center
@@ -1459,7 +1461,9 @@ msgid "OpenWrt SSH Public Key"
 msgstr ""
 
 #. module: iot_control_center
-msgid "Add this public key manually to each OpenWrt AP's authorized_keys file, then bind the AP in IoT Control Center."
+msgid ""
+"Add this public key manually to each OpenWrt AP's authorized_keys file, then"
+" bind the AP in IoT Control Center."
 msgstr ""
 
 #. module: iot_control_center
@@ -1523,7 +1527,8 @@ msgid "WPA3-SAE"
 msgstr ""
 
 #. module: iot_control_center
-msgid "Firmware applies to AP model names containing this text, case-insensitive."
+msgid ""
+"Firmware applies to AP model names containing this text, case-insensitive."
 msgstr ""
 
 #. module: iot_control_center
@@ -1563,7 +1568,9 @@ msgstr ""
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
-msgid "ADMS devices do not support pull-based connection tests. Point the device to the ADMS URL instead."
+msgid ""
+"ADMS devices do not support pull-based connection tests. Point the device to"
+" the ADMS URL instead."
 msgstr ""
 
 #. module: iot_control_center
@@ -1578,12 +1585,14 @@ msgstr ""
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
-msgid "Accumulated ON time reset by %s. Reason: %s. Previous total: %.2f hours."
+msgid ""
+"Accumulated ON time reset by %s. Reason: %s. Previous total: %.2f hours."
 msgstr ""
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
-msgid "All matched sensors are offline. Please wait for fresh data before binding."
+msgid ""
+"All matched sensors are offline. Please wait for fresh data before binding."
 msgstr ""
 
 #. module: iot_control_center
@@ -1933,7 +1942,9 @@ msgstr ""
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
-msgid "If enabled, this node keeps all raw readings and skips historical daily rollup."
+msgid ""
+"If enabled, this node keeps all raw readings and skips historical daily "
+"rollup."
 msgstr ""
 
 #. module: iot_control_center
@@ -2153,12 +2164,14 @@ msgstr ""
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
-msgid "Manage OpenWrt AP inventory, wireless templates, and firmware upgrades."
+msgid ""
+"Manage OpenWrt AP inventory, wireless templates, and firmware upgrades."
 msgstr ""
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
-msgid "Manage biometric attendance devices, push logs, and employee punch mapping."
+msgid ""
+"Manage biometric attendance devices, push logs, and employee punch mapping."
 msgstr ""
 
 #. module: iot_control_center
@@ -2243,7 +2256,8 @@ msgstr ""
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
-msgid "Missing Python dependency `pyzk`. Install it in the Odoo runtime first."
+msgid ""
+"Missing Python dependency `pyzk`. Install it in the Odoo runtime first."
 msgstr ""
 
 #. module: iot_control_center
@@ -2398,7 +2412,8 @@ msgstr ""
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
-msgid "Push devices are passive. Point the device to the ADMS/Webhook URL instead."
+msgid ""
+"Push devices are passive. Point the device to the ADMS/Webhook URL instead."
 msgstr ""
 
 #. module: iot_control_center
@@ -2721,9 +2736,10 @@ msgstr ""
 msgid "relay-001"
 msgstr ""
 
-
 #. module: iot_control_center
-msgid "No upgrade command sent successfully.\n%s"
+msgid ""
+"No upgrade command sent successfully.\n"
+"%s"
 msgstr ""
 
 #. module: iot_control_center
@@ -2768,4 +2784,1423 @@ msgstr ""
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Max Open Attendance Hours"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "192.168.10.15"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "192.168.10.50, 192.168.10.51"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"A full OpenWrt probe runs every N heartbeat cycles to refresh version and "
+"hardware facts."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Accumulated ON (Hours):"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Adms Http Url"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Adms Https Url"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Adms Last Payload"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Adms Last Seen At"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"After this many consecutive heartbeat failures, the AP is marked offline."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Ap"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Attendance Heartbeat Log Interval (seconds)"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Bind Node by ID"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Bind Switch by ID"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Bind TH Node/Sensor Channel by ID"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Bind by ID"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Board Name"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Candidate Count"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Chart Legend Label"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Checksum Sha256"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Client Count Total"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Comma-separated ADMS source IP allowlist. Leave blank to allow any source "
+"that matches a bound device."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Command Payload"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Company %(company)s is in a country with multiple timezones. Set the "
+"timezone on the company contact before using IoT schedules."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Company Country"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Company Timezone"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Company internal network settings were sent to the selected controller(s)."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Company-specific server IP or hostname reachable through WireGuard. Do not "
+"include scheme, port, or path."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Completed At"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Configure the country on company %(company)s before using IoT devices."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Confirm Bind"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Confirmed"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Connected Seconds"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Controllers use the company WireGuard route first and fall back to public "
+"endpoints when unavailable."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Create Date"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Current Hostname"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "DIO"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "DOUT"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Daily Overview"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Delay Active"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Delay Active:"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Delay Duration Minutes"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Delay End At"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Delay Remaining Minutes"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Delay Remaining:"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Delay Started At"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Delay mode is active for: %s. Cancel the delay before sending another "
+"command."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Desired Relay State"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Device Uid"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Device User"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Device-side safety cutoff. Set to 0 to disable. UV lamps should always have "
+"a finite limit."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Direction"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Download Bytes Total"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Download Rate Mbps"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Effective Humidity High"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Effective Humidity Low"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Effective Temperature High"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Effective Temperature Low"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Employee"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Enable this to route both MQTT relay traffic and Temperature/Humidity TCP "
+"gateway traffic through middleware."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Enabled"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Encryption"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Endpoint"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Enter an internal IP address or hostname without a scheme, port, or path."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Error Code"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Firmware Hardware Profile"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Firmware Target Version"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Firmware Upgrade Completed At"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Firmware Upgrade Requested At"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Firmware Upgrade State"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Firmware:"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Flash Real Size Bytes"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Found switch %s. Click Confirm Bind to continue."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Free Heap Bytes"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Friendly name used in charts; the technical code is stored separately."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Group"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Group By"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Heartbeat Fail Count"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Hidden"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"High-frequency ADMS request logs older than this many days are purged "
+"automatically to keep the database lean."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"High-frequency processed telemetry is kept for a much shorter time than "
+"command/status messages."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Host"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Idle"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Image Compatible"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Image Flash Mode"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Image Flash Size"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Internal / Primary"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Internal MQTT Port"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Internal OTA HTTPS Port"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Internal Odoo Port"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Internal Server Host"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT - Refresh Company Timezone Offsets"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Attendance Device"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Attendance Punch"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Attendance Request Log"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Attendance User Mapping"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Device Group"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Firmware Upgrade Log"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Internal MQTT Port"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Internal OTA HTTPS Port"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Internal Odoo Port"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Internal Server Host"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT internal ports must be between 1 and 65535."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Attendance Adms Port"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Attendance Allowed Ips"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Attendance Max Open Hours"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Attendance Punch Raw Retention Days"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Attendance Request Retention Days"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Device Retention Days"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Firmware Base Url"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Firmware Log Payload Retention Days"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Firmware Log Retention Days"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Middleware Base Url"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Middleware Enabled"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Middleware Token"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Mqtt Message Retention Days"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Mqtt Telemetry Retention Hours"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Mqtt Telemetry Sample Window Seconds"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Openwrt Full Probe Every"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Openwrt Heartbeat Interval Sec"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Openwrt Job Payload Retention Days"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Openwrt Job Retention Days"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Openwrt Offline Failure Threshold"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Openwrt Online Timeout Sec"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Openwrt Ssh Private Key Path"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Openwrt Ssh Public Key"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Iot Th Raw Retention Days"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Ip Address"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Items"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Job"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Job Count"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Job Type"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Last 30 Days"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Last Apply At"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Last Command"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Last Command Confirmed At"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Last Error"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Last Heartbeat At"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Last Probe At"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Last Seen At"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Last Sync At"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Last Sync Message"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Last Upgrade At"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Mac Address"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Manual Override"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Maximum Continuous ON (Minutes)"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Maximum Humidity (%RH)"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Maximum Temperature (C)"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Maximum continuous ON time cannot be negative."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Message"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Method"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Middleware checks AP reachability on this interval."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Minimum Humidity (%RH)"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Minimum Temperature (C)"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Model"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Model Pattern"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Module"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Monitoring & Analysis"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Mqtt Active Host"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Mqtt Route"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Must exactly match the IOT_BRIDGE_TOKEN value in middleware environment "
+"config. If left blank when saving, Odoo will generate a secure token "
+"automatically."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Network"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Network Config Dirty"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Network configuration"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "No MQTT endpoint is configured for %s"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"No timezone mapping is available for company %(company)s. Set the timezone "
+"on the company contact."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"No upgrade command could be sent.\n"
+"%s"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Node Sensor Channel (Temp+Humidity)"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Notes"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Online:"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Open attendances older than this are not auto-closed by a new punch, "
+"preventing yesterday's punch from leaking into today."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "OpenWrt AP Client"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "OpenWrt Template SSID"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Openwrt Version"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Optional comma-separated source IPs for ADMS terminals. Blank means any "
+"source is accepted only if it matches a bound device SN or host."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Password"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Payload Text"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Port"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Prefer Company Internal Network"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Prefer IoT Internal Network"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Probe Name"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Processed or ignored punch raw payloads are cleared after this many days "
+"while keeping the punch result itself."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Public / Fallback"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Punch Count"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Punch Direction Mode"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Punch Time"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "QIO"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "QOUT"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Quarantine Reason"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Quarantined"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Quarantined firmware cannot be pushed to devices."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Raw Samples"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Raw node-frequency readings older than this are compressed into daily "
+"averages unless the sensor keeps full history."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Relative Humidity (%RH)"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Relay Command State"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Relay firmware must be an ESP8266 1MB/DOUT image. Detected flash mode: "
+"%(mode)s; flash size: %(size)s."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Relay telemetry from the same device/topic inside this window is collapsed "
+"into one queue row to reduce database growth."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Remote Ip"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Reported Version"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Request Count"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Request Payload"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Requested"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Requested At"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Reset Accumulated Time Wizard"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Response Payload"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Retained"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Sample Count"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Schedule Timezone Name"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Schedule Timezone Offset Min"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Search ID"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Sensor Group"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Sensor Group company must match the sensor company."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Sensor Groups"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Sensor Location"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Sensors in This Group"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Signal Dbm"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Source"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Ssh Port"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Ssh User"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Ssid"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Statistics Period"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Status Message"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Status:"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Successful ADMS heartbeats are sampled at this interval. Punch, error, and "
+"unknown-device requests are still logged individually. Set to 0 to keep "
+"every heartbeat."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Switch %s bound successfully. You can bind next one now."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Switch ID:"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Switch Id Display"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Sync Enabled"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Sync Internal Network"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "System Hostname"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Target"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Target Version"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Technical Code"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Temperature (C)"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Temperature/Humidity Sensor Group"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Template"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"This firmware is quarantined or incompatible with ESP8266 1MB/DOUT relay "
+"hardware."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "This firmware is quarantined or incompatible with relay hardware."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Threshold Source"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Timed Out"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Total On Hours"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Trend"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Trend - %s"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Turn off command sent; waiting for device confirmation."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Turn on command sent; waiting for device confirmation."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Unbind this node from current company?"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Unbind this switch from current company?"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Unique Hash"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Unnamed Sensor"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Upload Bytes Total"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Upload Rate Mbps"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Used to generate the ADMS HTTP/HTTPS address shown in attendance devices. "
+"Default is 8069."
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "User Count"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Validated"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Validated Key"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Validated Node"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Validated Probe Code"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "View Sensors"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Webhook Token"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Webhook Url"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Wifi24 Ssid Count"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Wifi5 Ssid Count"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "2.4 GHz SSID Count"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "5 GHz SSID Count"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "ADMS HTTP URL"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "ADMS HTTPS URL"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "ADMS Last Payload"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "ADMS Last Seen"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Active MQTT Host"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Device UID"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "MQTT Route"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "OpenWrt Version"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "SHA-256 Checksum"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "SSID"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Webhook URL"
 msgstr ""

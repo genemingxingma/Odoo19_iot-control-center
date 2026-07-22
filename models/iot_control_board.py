@@ -167,7 +167,7 @@ class IoTControlBoard(models.Model):
         if self.key == "th":
             return self._safe_window_action(
                 "iot_control_center.action_iot_th_reading",
-                "Readings & Analysis",
+                "Monitoring & Analysis",
                 "iot.th.reading",
                 default_view_mode="graph,list,pivot",
             )

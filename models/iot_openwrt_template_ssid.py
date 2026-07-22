@@ -18,7 +18,7 @@ class IoTOpenwrtTemplateSSID(models.Model):
         default="2g",
     )
     enabled = fields.Boolean(default=True)
-    ssid = fields.Char(required=True)
+    ssid = fields.Char(string="SSID", required=True)
     encryption = fields.Selection(
         [
             ("none", "Open"),
