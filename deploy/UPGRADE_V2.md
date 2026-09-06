@@ -4,6 +4,12 @@ This runbook is preparation. Deployment authorization remains conditional on eve
 
 V1 firmware is not compatible with V2 control semantics. In particular, 1.8.x does not implement `delay_start`, command expiry or monotonic command sequences. Do not deploy the backend alone and leave 1.8.x devices operating under it, or assume that a successful MQTT publish proves compatibility.
 
+## Current Hardware Hold
+
+The 2026-09-06 2.0.1 rolling-migration trial stopped after the IoT-Outlet canary repeatedly reconnected and did not acknowledge configuration or state restoration. Firmware record 15 is quarantined. Only the IoT-Relay canary confirmed its original OFF state; no fleet rollout or backend cutover took place. See `CANARY_V2_2026-09-06.md` before any further action.
+
+The candidate has a one-way V1 migration mode loaded only from an existing V1 state file. A valid sequenced V2 command permanently closes that mode. Fresh devices remain strict V2. Migration mode does not add missing sequence/expiry fields to V1 traffic and only deduplicates identified V1 commands within a 16-entry receipt cache. Unidentified legacy commands retain V1 behavior. This compatibility path is not evidence that the physical hardware release gates have passed.
+
 ## Required Sequence
 
 1. Record exact current Odoo/bridge/firmware versions, gateway identities, source addresses, company ownership, network endpoints and hardware profiles. `tools/v2_release_preflight.py` is a read-only Odoo-shell inventory; it does not authorize a release. Resolve duplicate gateway identities, unowned active gateways and inconsistent active probe ownership through reviewed V1 ORM operations before upgrading. Never infer every company's ownership from a default company or changing public IP. Export configuration through authorized Odoo access; never put secrets in Git.
@@ -13,7 +19,7 @@ V1 firmware is not compatible with V2 control semantics. In particular, 1.8.x do
 5. Through Odoo ORM set `iot_control_center.v2_discard_monitoring_history` to `true` only after confirming the backup. The standard pre-migration then deletes only module TH history/alerts and removes the obsolete timestamp identity index. Other business history is outside this authorization.
 6. Run the standard module upgrade. The migration checks gateway identities and ownership before deleting history; it refuses inconsistent active probes instead of silently archiving them. Register the reviewed stable source addresses or JSON gateway credentials before resuming ingestion. Preserve meaningful probe names and locations; use new identities when a genuine company transfer requires them.
 7. Deploy the matching bridge with protected directory permissions and authenticated APIs. Verify invalid events are preserved as rejected, transient errors remain queued, and receipt IDs survive retry/restart. Provision and verify OpenWrt SSH host keys.
-8. Provision the already validated OTA certificate trust and deploy the tested firmware/controller pair within the coordinated window. Firmware 2.0.0 must not be assumed tested on every relay merely because a shared build succeeds.
+8. Provision the already validated OTA certificate trust and deploy the tested firmware/controller pair within the coordinated window. A 2.x firmware must not be assumed tested on every relay merely because a shared build succeeds. Resolve any candidate quarantine first through a new verified hardware trial, not by bypassing the wizard guard.
 9. Verify each device-reported version, configuration revision and actual electrical state before re-enabling its load or schedules. Keep inaccessible or unverified equipment isolated; report remaining units explicitly rather than claiming full fleet completion.
 
 ## Rollback

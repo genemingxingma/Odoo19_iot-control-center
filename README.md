@@ -1,7 +1,9 @@
 # IoT Control Center V2 (Odoo 19)
 
 Company-isolated environmental monitoring, relay control, attendance and OpenWrt management.
-This is a breaking architecture release: Odoo `19.0.2.0.0`, bridge protocol `2`, relay firmware `2.0.0`.
+This is a breaking architecture candidate: Odoo `19.0.2.0.0`, bridge protocol `2`, relay firmware `2.0.1`.
+
+**Firmware rollout is stopped.** The 2.0.1 IoT-Outlet canary repeatedly reconnected and did not confirm state restoration. Production firmware record 15 is quarantined; production Odoo remains on V1. See [the canary incident and recovery record](deploy/CANARY_V2_2026-09-06.md). Do not treat the passing build or isolated backend tests as fleet acceptance.
 The candidate is for isolated validation, not permission to upgrade a production database or real devices.
 
 ## Boundaries

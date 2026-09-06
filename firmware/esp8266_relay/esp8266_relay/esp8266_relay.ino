@@ -30,7 +30,8 @@ const char* CONFIG_AP_PASSWORD = "iMyTestIoT";
 const char* PROFILE_RELAY = "IoT-Relay";
 const char* PROFILE_OUTLET = "IoT-Outlet";
 
-const char* FIRMWARE_VERSION = "2.0.0";
+#include "protocol_guard.h"
+const char* FIRMWARE_VERSION = "2.0.1";
 const char* FIRMWARE_HARDWARE_PROFILE = "esp8266-1m-dout-64kfs";
 
 const char* NTP_SERVER_1 = "pool.ntp.org";
@@ -102,6 +103,10 @@ uint32_t lastCommandSeq = 0;
 bool controlInhibit = true;
 String configRevision;
 String otaTlsFingerprint;
+bool legacyProtocolEnabled = false;
+static const size_t LEGACY_RECEIPT_COUNT = 16;
+String legacyReceipts[LEGACY_RECEIPT_COUNT];
+size_t legacyReceiptNext = 0;
 
 bool configMode = false;
 bool runtimeStarted = false;
@@ -204,7 +209,7 @@ bool timeSynced() {
 }
 
 bool saveState() {
-  DynamicJsonDocument doc(4096);
+  DynamicJsonDocument doc(8192);
   doc["relay_on"] = relayOn;
   doc["schedule_version"] = scheduleVersion;
   doc["max_on_sec"] = maxOnSec;
@@ -212,6 +217,12 @@ bool saveState() {
   doc["command_seq"] = lastCommandSeq;
   doc["control_inhibit"] = controlInhibit;
   doc["config_revision"] = configRevision;
+  doc["protocol_version"] = legacyProtocolEnabled ? 1 : 2;
+  doc["legacy_receipt_next"] = legacyReceiptNext;
+  JsonArray receipts = doc.createNestedArray("legacy_receipts");
+  for (const String& receipt : legacyReceipts) {
+    receipts.add(receipt);
+  }
 
   JsonArray arr = doc.createNestedArray("entries");
   for (size_t i = 0; i < scheduleCount; ++i) {
@@ -231,7 +242,7 @@ bool saveState() {
   size_t written = serializeJson(doc, f);
   f.flush();
   f.close();
-  return written > 0 && LittleFS.rename(tempPath, STATE_FILE);
+  return !doc.overflowed() && written == measureJson(doc) && LittleFS.rename(tempPath, STATE_FILE);
 }
 
 void setRelay(bool on, bool persist) {
@@ -268,7 +279,7 @@ void loadState() {
     return;
   }
 
-  DynamicJsonDocument doc(4096);
+  DynamicJsonDocument doc(8192);
   DeserializationError err = deserializeJson(doc, f);
   f.close();
   if (err) {
@@ -280,6 +291,19 @@ void loadState() {
   maxOnSec = doc["max_on_sec"] | 0;
   lastCommandId = String(doc["last_command_id"] | "");
   lastCommandSeq = doc["command_seq"] | 0;
+  // Only an existing V1 state file can enter the one-way migration mode.
+  // Factory devices and any device that accepted V2 commands stay strict V2.
+  legacyProtocolEnabled = legacyMigrationState(doc.containsKey("protocol_version"),
+      doc["protocol_version"] | 0, doc.containsKey("command_seq"), lastCommandSeq,
+      doc.containsKey("relay_on"));
+  legacyReceiptNext = (doc["legacy_receipt_next"] | 0U) % LEGACY_RECEIPT_COUNT;
+  for (size_t i = 0; i < LEGACY_RECEIPT_COUNT; ++i) {
+    legacyReceipts[i] = String(doc["legacy_receipts"][i] | "");
+  }
+  if (legacyProtocolEnabled && lastCommandId.length() > 0 && legacyReceipts[0].length() == 0) {
+    legacyReceipts[0] = lastCommandId;
+    legacyReceiptNext = 1;
+  }
   controlInhibit = true;
   safetyTrip = false;
   setRelay(false, false);
@@ -340,7 +364,7 @@ bool saveConfig() {
   size_t written = serializeJson(doc, f);
   f.flush();
   f.close();
-  return written > 0 && LittleFS.rename(tempPath, CONFIG_FILE);
+  return !doc.overflowed() && written == measureJson(doc) && LittleFS.rename(tempPath, CONFIG_FILE);
 }
 
 String normalizeUpgradeUrl(const String& rawUrl) {
@@ -472,6 +496,7 @@ void publishStatus() {
   doc["state"] = relayOn ? "on" : "off";
   doc["module_id"] = moduleId;
   doc["firmware_version"] = FIRMWARE_VERSION;
+  doc["protocol_version"] = legacyProtocolEnabled ? 1 : 2;
   doc["hardware_profile"] = FIRMWARE_HARDWARE_PROFILE;
   doc["flash_real_size"] = ESP.getFlashChipRealSize();
   doc["free_heap"] = ESP.getFreeHeap();
@@ -815,11 +840,21 @@ void handleCommand(char* topic, byte* payload, unsigned int length) {
   const char* command = doc["command"] | "";
   const char* commandId = doc["command_id"] | "";
   const char* requestedState = doc["state"] | "";
+  bool legacyToggle = strcmp(command, "delay_toggle") == 0;
   bool stopping = (strcmp(command, "relay") == 0 && strcmp(requestedState, "off") == 0)
-      || strcmp(command, "delay_cancel") == 0;
+      || strcmp(command, "delay_cancel") == 0 || (legacyToggle && isDelayActive());
   uint32_t sequence = doc["command_seq"] | 0;
   uint32_t expiresAt = doc["expires_at"] | 0;
-  if (!strlen(commandId) || sequence <= lastCommandSeq) {
+  bool energizing = (strcmp(command, "relay") == 0 && strcmp(requestedState, "on") == 0)
+      || strcmp(command, "delay_start") == 0 || (legacyToggle && !stopping);
+  bool legacyReplay = false;
+  for (const String& receipt : legacyReceipts) {
+    legacyReplay = legacyReplay || (strlen(commandId) > 0 && receipt == commandId);
+  }
+  bool hasIdentity = strlen(commandId) > 0 || allowLegacyUnidentified(legacyProtocolEnabled, sequence, command);
+  if (rejectRelayCommand(legacyProtocolEnabled, hasIdentity, legacyReplay,
+                         sequence, lastCommandSeq, expiresAt, (uint32_t)time(nullptr),
+                         timeSynced(), stopping, energizing, legacyToggle)) {
     publishStatus();
     return;
   }
@@ -827,14 +862,16 @@ void handleCommand(char* topic, byte* payload, unsigned int length) {
     controlInhibit = true;
     cancelDelayMode();
   }
-  bool energizing = (strcmp(command, "relay") == 0 && strcmp(requestedState, "on") == 0)
-      || strcmp(command, "delay_start") == 0;
-  if (!stopping && ((timeSynced() && expiresAt <= (uint32_t)time(nullptr)) || (energizing && !timeSynced()))) {
-    publishStatus();
-    return;
+  if (strlen(commandId) > 0) {
+    lastCommandId = String(commandId);
   }
-  lastCommandId = String(commandId);
-  lastCommandSeq = sequence;
+  if (sequence > 0) {
+    lastCommandSeq = sequence;
+    legacyProtocolEnabled = false;
+  } else if (strlen(commandId) > 0) {
+    legacyReceipts[legacyReceiptNext] = lastCommandId;
+    legacyReceiptNext = (legacyReceiptNext + 1) % LEGACY_RECEIPT_COUNT;
+  }
   bool metadataChanged = true;
   if (doc.containsKey("max_on_sec")) {
     uint32_t requestedMaxOnSec = (uint32_t)(doc["max_on_sec"] | 0);
@@ -856,18 +893,23 @@ void handleCommand(char* topic, byte* payload, unsigned int length) {
       delayActive = false;
       setRelay(true);
     } else if (strcmp(state, "off") == 0) {
+      // An authenticated migration restore can resume the pre-upgrade schedules
+      // without briefly switching an originally OFF load ON.
+      if (legacyProtocolEnabled && (doc["restore_schedule"] | false)) {
+        controlInhibit = false;
+      }
       setRelay(false);
 
     }
     publishStatus();
-  } else if (strcmp(command, "delay_start") == 0) {
+  } else if (strcmp(command, "delay_start") == 0 || (legacyToggle && !stopping)) {
     uint32_t durationSec = (uint32_t)(doc["duration_sec"] | 0);
     if (durationSec > 0 && durationSec <= 86400) {
       controlInhibit = false;
       startDelayMode(durationSec);
     }
     publishStatus();
-  } else if (strcmp(command, "delay_cancel") == 0) {
+  } else if (strcmp(command, "delay_cancel") == 0 || (legacyToggle && stopping)) {
     cancelDelayMode();
     publishStatus();
   } else if (strcmp(command, "upgrade") == 0) {
@@ -895,10 +937,14 @@ void handleCommand(char* topic, byte* payload, unsigned int length) {
       cfgMqttFallbackHost = fallbackHost;
       cfgMqttFallbackPort = fallbackPort > 0 ? fallbackPort : DEFAULT_MQTT_PORT;
       cfgFirmwareUpgradeUrl = otaBaseUrl;
-      otaTlsFingerprint = String(doc["ota_tls_fingerprint"] | "");
+      if (doc.containsKey("ota_tls_fingerprint")) {
+        otaTlsFingerprint = String(doc["ota_tls_fingerprint"] | "");
+      }
       String previousRevision = configRevision;
-      configRevision = String(doc["config_revision"] | "");
-      if (configRevision.length() != 64 || !saveConfig()) {
+      if (doc.containsKey("config_revision")) {
+        configRevision = String(doc["config_revision"] | "");
+      }
+      if ((!legacyProtocolEnabled && configRevision.length() != 64) || !saveConfig()) {
         configRevision = previousRevision;
         publishStatus();
         return;
@@ -981,6 +1027,7 @@ void handleButton() {
       delayActive = false;
       delayEndAtMs = 0;
       delayDurationSec = 0;
+      controlInhibit = relayOn;
       setRelay(!relayOn);
       saveState();
       publishStatus();
@@ -1052,6 +1099,7 @@ void publishTelemetry() {
   StaticJsonDocument<1280> doc;
   doc["rssi"] = WiFi.RSSI();
   doc["uptime_sec"] = millis() / 1000;
+  doc["protocol_version"] = legacyProtocolEnabled ? 1 : 2;
   doc["state"] = relayOn ? "on" : "off";
   doc["module_id"] = moduleId;
   doc["firmware_version"] = FIRMWARE_VERSION;
