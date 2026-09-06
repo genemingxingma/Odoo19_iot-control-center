@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <record id="action_iot_operations_overview" model="ir.actions.client">
+        <field name="name">Operations Overview</field>
+        <field name="tag">iot_control_center.operations_overview</field>
+    </record>
     <record id="view_iot_control_board_kanban" model="ir.ui.view">
         <field name="name">iot.control.board.kanban</field>
         <field name="model">iot.control.board</field>
         <field name="arch" type="xml">
-            <kanban class="o_kanban_mobile iot_control_board_kanban">
+            <kanban create="0" edit="0" delete="0" class="o_kanban_mobile iot_control_board_kanban">
                 <field name="name"/>
                 <field name="key"/>
                 <field name="color"/>
@@ -53,5 +57,5 @@
         <field name="context">{'search_default_active': 1}</field>
     </record>
 
-    <menuitem id="menu_iot_control_board" name="Control Cards" parent="menu_iot_mode_cards" action="action_iot_control_board" sequence="10" groups="base.group_erp_manager"/>
+    <menuitem id="menu_iot_control_board" name="Overview" parent="menu_iot_mode_cards" action="action_iot_operations_overview" sequence="5" groups="base.group_erp_manager"/>
 </odoo>

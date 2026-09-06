@@ -4,22 +4,22 @@
         <field name="name">iot.device.tree</field>
         <field name="model">iot.device</field>
         <field name="arch" type="xml">
-            <list create="0">
+            <list create="0" class="iot_list" decoration-muted="not online">
                 <field name="name"/>
-                <field name="switch_id_display" string="Switch ID"/>
-                <field name="company_id"/>
-                <field name="department_id"/>
+                <field name="switch_id_display" string="Switch ID" optional="hide"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+                <field name="department_id" optional="hide"/>
                 <field name="location_id"/>
-                <field name="location_detail"/>
-                <field name="relay_state" invisible="1"/>
+                <field name="location_detail" optional="hide"/>
+                <field name="relay_state" string="Confirmed State" widget="badge" decoration-success="relay_state == 'on'" decoration-info="relay_state == 'off'" decoration-warning="relay_state == 'unknown'"/>
                 <field name="delay_active" invisible="1"/>
                 <field name="delay_remaining_minutes" string="Delay Remaining" widget="delay_countdown"/>
                 <field name="online"/>
-                <field name="desired_relay_state" string="Requested"/>
+                <field name="desired_relay_state" string="Requested" optional="hide"/>
                 <field name="relay_command_state" string="Command" widget="badge"/>
-                <field name="firmware_version" string="Firmware"/>
+                <field name="firmware_version" string="Firmware" optional="hide"/>
                 <field name="mqtt_route" string="Network" widget="badge"/>
-                <field name="total_on_hours" string="Accumulated ON (Hours)"/>
+                <field name="total_on_hours" string="Accumulated ON (Hours)" optional="hide"/>
                 <field name="last_seen"/>
                 <button name="action_turn_on" groups="iot_control_center.group_iot_operator" type="object" string="ON" class="iot_toggle_btn iot_toggle_left iot_toggle_on_active" invisible="relay_state != 'on'"/>
                 <button name="action_turn_on" groups="iot_control_center.group_iot_operator" type="object" string="ON" class="iot_toggle_btn iot_toggle_left iot_toggle_passive" invisible="relay_state == 'on'"/>
@@ -35,7 +35,7 @@
         <field name="name">iot.device.kanban</field>
         <field name="model">iot.device</field>
         <field name="arch" type="xml">
-            <kanban class="o_kanban_mobile" create="0">
+            <kanban class="o_kanban_mobile iot_device_cards" create="0">
                 <field name="name"/>
                 <field name="switch_id_display"/>
                 <field name="relay_state"/>
@@ -45,32 +45,32 @@
                 <field name="online"/>
                 <field name="firmware_version"/>
                 <field name="total_on_hours"/>
+                <field name="relay_command_state"/>
+                <field name="desired_relay_state"/>
+                <field name="location_id"/>
+                <field name="last_seen"/>
                 <templates>
                     <t t-name="card">
-                        <div class="oe_kanban_card oe_kanban_global_click">
-                            <div class="o_kanban_record_top mb-2">
-                                <strong><field name="name"/></strong>
+                        <div class="oe_kanban_card oe_kanban_global_click iot_device_card iot_relay_card">
+                            <div class="iot_device_identity">
+                                <h3><field name="name"/></h3>
+                                <span t-if="record.online.raw_value" class="iot_status_pill">Connected</span>
+                                <span t-else="" class="iot_status_pill iot_status_pill_off">No Recent Contact</span>
                             </div>
-                            <div class="text-muted mb-1">
+                            <div class="iot_device_meta"><field name="location_id"/></div>
+                            <div class="iot_device_meta">
                                 <span>Switch ID: </span><field name="switch_id_display"/>
                             </div>
-                            <div class="mb-1">
-                                <span>Status: </span><field name="relay_state"/>
+                            <div class="iot_relay_state_panel">
+                                <div class="iot_state_row"><span>Confirmed State: </span><field name="relay_state" widget="badge" decoration-success="relay_state == 'on'"/></div>
+                                <div class="iot_state_row" t-if="record.relay_command_state.raw_value != 'idle'"><span>Command: </span><field name="relay_command_state" widget="badge" decoration-warning="relay_command_state == 'pending'" decoration-danger="relay_command_state == 'timeout'"/></div>
+                                <div class="iot_state_row" t-if="record.relay_command_state.raw_value == 'pending'"><span>Requested State: </span><field name="desired_relay_state" widget="badge"/></div>
                             </div>
-                            <div class="mb-1">
-                                <span>Delay Active: </span><field name="delay_active"/>
-                            </div>
-                            <div class="mb-1">
+                            <div class="iot_state_row" t-if="record.delay_active.raw_value">
                                 <span>Delay Remaining: </span><field name="delay_remaining_minutes" widget="delay_countdown"/>
                             </div>
-                            <div class="mb-1">
-                                <span>Online: </span><field name="online"/>
-                            </div>
-                            <div class="mb-1">
-                                <span>Firmware: </span><field name="firmware_version"/>
-                            </div>
-                            <div class="mb-2">
-                                <span>Accumulated ON (Hours): </span><field name="total_on_hours"/>
+                            <div class="iot_device_meta">
+                                <span>Last contact: </span><field name="last_seen"/>
                             </div>
                             <div class="iot_toggle_group">
                                 <button type="object" name="action_turn_on" groups="iot_control_center.group_iot_operator" class="iot_toggle_btn iot_toggle_left iot_toggle_on_active" invisible="relay_state != 'on'">ON</button>
@@ -186,8 +186,8 @@
     </record>
 
     <menuitem id="menu_iot_root" name="IoT Control Center" sequence="10" groups="base.group_erp_manager" web_icon="iot_control_center,static/description/icon.png"/>
-    <menuitem id="menu_iot_mode_cards" name="Card Mode" parent="menu_iot_root" sequence="10" groups="base.group_erp_manager"/>
-    <menuitem id="menu_iot_mode_detailed" name="Detailed Mode" parent="menu_iot_root" sequence="20" groups="base.group_erp_manager"/>
+    <menuitem id="menu_iot_mode_cards" name="Workspaces" parent="menu_iot_root" sequence="10" groups="base.group_erp_manager"/>
+    <menuitem id="menu_iot_mode_detailed" name="Device Management" parent="menu_iot_root" sequence="20" groups="base.group_erp_manager"/>
     <menuitem id="menu_iot_switch_cards" name="Switch" parent="menu_iot_mode_cards" action="action_iot_device_cards" sequence="10" groups="base.group_erp_manager"/>
     <menuitem id="menu_iot_switch_root" name="Switch" parent="menu_iot_mode_detailed" sequence="10" groups="base.group_erp_manager"/>
     <menuitem id="menu_iot_device" name="Switch" parent="menu_iot_switch_root" action="action_iot_device" sequence="10" groups="base.group_erp_manager"/>

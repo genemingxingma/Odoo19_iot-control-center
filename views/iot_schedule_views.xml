@@ -4,7 +4,7 @@
         <field name="name">iot.schedule.tree</field>
         <field name="model">iot.schedule</field>
         <field name="arch" type="xml">
-            <list>
+            <list class="iot_list">
                 <field name="name"/>
                 <field name="group_id"/>
                 <field name="command"/>

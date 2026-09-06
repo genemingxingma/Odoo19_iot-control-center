@@ -47,6 +47,85 @@ class IoTControlBoard(models.Model):
     metric_2_value = fields.Integer(compute="_compute_metrics")
 
     @api.model
+    def get_overview(self):
+        self.check_access("read")
+        now = fields.Datetime.now()
+        company_domain = [("company_id", "in", self.env.companies.ids)]
+        params = self.env["ir.config_parameter"].sudo()
+
+        def cutoff(key):
+            try:
+                seconds = max(int(params.get_param(key, 300)), 1)
+            except (ValueError, TypeError):
+                seconds = 300
+            return fields.Datetime.to_string(now - timedelta(seconds=seconds))
+
+        def action(name, model, domain, mode="list,form"):
+            return {"type": "ir.actions.act_window", "name": name, "res_model": model,
+                "views": [(False, item) for item in mode.split(",")], "target": "current",
+                "domain": company_domain + domain}
+
+        def count(model, domain=None):
+            return self.env[model].search_count(company_domain + (domain or []))
+
+        relay_offline = ["|", ("last_seen", "=", False), ("last_seen", "<", cutoff("iot_control_center.online_timeout_sec"))]
+        sensor_offline = ["|", ("last_reported_at", "=", False), ("last_reported_at", "<", cutoff("iot_control_center.th_online_timeout_sec"))]
+        ap_offline = ["|", ("status", "!=", "online"), "|", ("last_seen", "=", False),
+                      ("last_seen", "<", cutoff("iot_control_center.openwrt_online_timeout_sec"))]
+        attendance_offline = [("sync_enabled", "=", True), "|", "&", ("protocol", "=", "adms_http"),
+            "|", ("adms_last_seen_at", "=", False), ("adms_last_seen_at", "<", fields.Datetime.to_string(now - timedelta(minutes=10))),
+            "&", ("protocol", "!=", "adms_http"), "|", ("last_sync_at", "=", False),
+            ("last_sync_at", "<", fields.Datetime.to_string(now - timedelta(minutes=10)))]
+        review = [("state", "in", ["new", "error"])]
+        alert = [("state", "=", "open")]
+        specifications = [
+            ("relay", _("Relay Control"), _("Outputs, schedules and device confirmation"), "fa-toggle-on", "iot.device", relay_offline,
+             _("Offline devices"), _("Switches")),
+            ("environment", _("Environment"), _("Named probes, trends and threshold alerts"), "fa-thermometer-half", "iot.th.sensor", sensor_offline,
+             _("Silent probes"), _("Sensors")),
+            ("attendance", _("Attendance"), _("Terminal contact, employee mapping and punch review"), "fa-id-card-o", "iot.attendance.device", attendance_offline,
+             _("Terminals without recent contact"), _("Attendance Devices")),
+            ("network", _("Network"), _("Access points and their latest heartbeat"), "fa-wifi", "iot.openwrt.ap", ap_offline,
+             _("Offline access points"), _("OpenWrt APs")),
+        ]
+        cards, priorities = [], []
+        for key, title, description, icon, model, offline_domain, issue_title, action_title in specifications:
+            total, offline = count(model), count(model, offline_domain)
+            item_action = action(action_title, model, [], "kanban,list,form" if key in ("relay", "environment") else "list,form")
+            issue_action = action(issue_title, model, offline_domain)
+            card = {"key": key, "title": title, "description": description, "icon": icon,
+                "total": total, "total_label": _("Probes") if key == "environment" else _("Registered devices"),
+                "offline": offline, "attention_label": issue_title,
+                "action": item_action, "attention_action": issue_action}
+            if offline:
+                priorities.append({"key": key, "title": issue_title, "count": offline, "action": issue_action})
+            if key == "environment":
+                card["secondary_label"] = _("Open alerts")
+                card["secondary_count"] = count("iot.th.alert", alert)
+                card["secondary_action"] = action(_("Open alerts"), "iot.th.alert", alert)
+                card["detail_label"] = _("Trends and history")
+                card["detail_action"] = action(_("Readings & Analysis"), "iot.th.reading", [], "graph,list,pivot")
+                if card["secondary_count"]:
+                    priorities.insert(0, {"key": "alerts", "title": card["secondary_label"], "count": card["secondary_count"], "action": card["secondary_action"]})
+            elif key == "attendance":
+                card["secondary_label"] = _("Punches needing review")
+                card["secondary_count"] = count("iot.attendance.punch", review)
+                card["secondary_action"] = action(card["secondary_label"], "iot.attendance.punch", review)
+                card["detail_label"] = _("Punch history")
+                card["detail_action"] = action(_("Attendance Punches"), "iot.attendance.punch", [])
+                if card["secondary_count"]:
+                    priorities.insert(0, {"key": "punches", "title": card["secondary_label"], "count": card["secondary_count"], "action": card["secondary_action"]})
+            else:
+                card["secondary_label"] = _("Recent contact")
+                card["secondary_count"] = total - offline
+                card["secondary_action"] = action(card["secondary_label"], model, ["!"] + offline_domain)
+                card["detail_label"] = _("Device inventory")
+                card["detail_action"] = item_action
+            cards.append(card)
+        return {"generated_at": fields.Datetime.to_string(now), "companies": self.env.companies.mapped("name"),
+                "cards": cards, "priorities": priorities}
+
+    @api.model
     def _cleanup_legacy_records(self):
         legacy_xmlids = [
             "iot_control_center.cron_iot_run_schedules",

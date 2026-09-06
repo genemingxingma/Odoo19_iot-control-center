@@ -2,7 +2,7 @@
 <odoo>
     <record id="menu_iot_root" model="ir.ui.menu">
         <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_user')])]"/>
-        <field name="action" ref="iot_control_center.action_iot_control_board"/>
+        <field name="action" ref="iot_control_center.action_iot_operations_overview"/>
     </record>
     <record id="menu_iot_mode_cards" model="ir.ui.menu">
         <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_user')])]"/>

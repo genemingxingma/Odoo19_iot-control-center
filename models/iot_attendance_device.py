@@ -1,12 +1,14 @@
 import logging
+import re
 import secrets
-from datetime import datetime
 from urllib.parse import urlsplit
 
 import pytz
 
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError
+
+from ..core.attendance import first_value, normalize_direction, parse_adms_line, parse_timestamp
 
 _logger = logging.getLogger(__name__)
 
@@ -42,12 +44,47 @@ class IoTAttendanceDevice(models.Model):
     adms_last_payload = fields.Text(string="ADMS Last Payload", readonly=True, copy=False)
     last_sync_at = fields.Datetime(readonly=True, copy=False)
     last_sync_message = fields.Char(readonly=True, copy=False)
+    display_last_sync_message = fields.Char(compute="_compute_sync_message", string="Last Sync Message")
     user_mapping_ids = fields.One2many("iot.attendance.user", "device_id", string="Employee Mapping")
     punch_ids = fields.One2many("iot.attendance.punch", "device_id", string="Punches")
     request_ids = fields.One2many("iot.attendance.request", "device_id", string="Request Logs")
     punch_count = fields.Integer(compute="_compute_counts")
     user_count = fields.Integer(compute="_compute_counts")
     request_count = fields.Integer(compute="_compute_counts")
+    pending_count = fields.Integer(compute="_compute_counts", string="Needs Review")
+    connection_state = fields.Selection([
+        ("disabled", "Paused"), ("unknown", "No Contact Yet"),
+        ("online", "Connected"), ("offline", "No Recent Contact")],
+        compute="_compute_connection_state", string="Connection")
+
+    @api.depends("last_sync_message")
+    @api.depends_context("lang")
+    def _compute_sync_message(self):
+        for rec in self:
+            message = rec.last_sync_message or ""
+            match = re.fullmatch(r"ADMS received (\d+) punch\(es\)\.", message)
+            if match:
+                rec.display_last_sync_message = _("ADMS received %s punch(es).", int(match[1]))
+                continue
+            match = re.fullmatch(r"Webhook imported (\d+) punch\(es\)\.", message)
+            if match:
+                rec.display_last_sync_message = _("Webhook imported %s punch(es).", int(match[1]))
+                continue
+            match = re.fullmatch(r"Imported (\d+) punch\(es\)\.", message)
+            if match:
+                rec.display_last_sync_message = _("Imported %s punch(es).", int(match[1]))
+                continue
+            match = re.fullmatch(r"Connection successful\. Sample records fetched: (\d+)", message)
+            rec.display_last_sync_message = (_("Connection successful. Sample records fetched: %s", int(match[1]))
+                                            if match else message)
+
+    @api.depends("active", "sync_enabled", "adms_last_seen_at", "last_sync_at", "protocol")
+    def _compute_connection_state(self):
+        now = fields.Datetime.now()
+        for rec in self:
+            last_seen = rec.adms_last_seen_at if rec.protocol == "adms_http" else rec.last_sync_at
+            rec.connection_state = ("disabled" if not rec.active or not rec.sync_enabled else
+                "unknown" if not last_seen else "online" if (now - last_seen).total_seconds() <= 600 else "offline")
 
     _serial_unique = models.Constraint(
         "UNIQUE(serial_number)",
@@ -78,7 +115,8 @@ class IoTAttendanceDevice(models.Model):
             return internal_url
         return self.env["ir.config_parameter"].sudo().get_param("web.base.url", "")
 
-    @api.depends("webhook_token", "serial_number", "protocol")
+    @api.depends("webhook_token", "serial_number", "protocol", "company_id.iot_prefer_internal_network",
+                 "company_id.iot_internal_host", "company_id.iot_internal_odoo_port")
     def _compute_urls(self):
         for rec in self:
             base_url = rec._get_base_url().rstrip("/")
@@ -88,19 +126,22 @@ class IoTAttendanceDevice(models.Model):
                 rec.adms_https_url = False
                 continue
             parsed = urlsplit(base_url if "://" in base_url else f"http://{base_url}")
-            host_part = parsed.hostname or (base_url.split("://", 1)[1] if "://" in base_url else base_url)
+            host_part = parsed.hostname or ""
+            if ":" in host_part:
+                host_part = f"[{host_part}]"
             adms_port_raw = rec.env["ir.config_parameter"].sudo().get_param("iot_control_center.attendance_adms_port", 8069)
             try:
                 adms_port = int(adms_port_raw)
             except (TypeError, ValueError):
                 adms_port = 8069
-            if adms_port <= 0:
+            if not 1 <= adms_port <= 65535:
                 adms_port = 8069
             rec.webhook_url = f"{base_url}/iot_attendance/push/{rec.id}" if rec.id else False
-            rec.adms_http_url = f"http://{host_part}:{adms_port}"
-            rec.adms_https_url = f"https://{host_part}:{adms_port}"
+            rec.adms_http_url = base_url if parsed.scheme == "http" else f"http://{host_part}:{adms_port}"
+            # Do not manufacture HTTPS on an HTTP-only Odoo port.
+            rec.adms_https_url = base_url if parsed.scheme == "https" else False
 
-    @api.depends("punch_ids", "user_mapping_ids", "request_ids")
+    @api.depends("punch_ids", "punch_ids.state", "user_mapping_ids", "request_ids")
     def _compute_counts(self):
         punch_counts = self.env["iot.attendance.punch"].read_group([("device_id", "in", self.ids)], ["device_id"], ["device_id"])
         user_counts = self.env["iot.attendance.user"].read_group([("device_id", "in", self.ids)], ["device_id"], ["device_id"])
@@ -108,10 +149,21 @@ class IoTAttendanceDevice(models.Model):
         punch_map = {item["device_id"][0]: item["device_id_count"] for item in punch_counts}
         user_map = {item["device_id"][0]: item["device_id_count"] for item in user_counts}
         req_map = {item["device_id"][0]: item["device_id_count"] for item in request_counts}
+        pending = self.env["iot.attendance.punch"].read_group(
+            [("device_id", "in", self.ids), ("state", "in", ["new", "error"])], ["device_id"], ["device_id"])
+        pending_map = {item["device_id"][0]: item["device_id_count"] for item in pending}
         for rec in self:
             rec.punch_count = punch_map.get(rec.id, 0)
             rec.user_count = user_map.get(rec.id, 0)
             rec.request_count = req_map.get(rec.id, 0)
+            rec.pending_count = pending_map.get(rec.id, 0)
+
+    def action_review_punches(self):
+        self.ensure_one()
+        self.check_access("read")
+        action = self.env["ir.actions.actions"]._for_xml_id("iot_control_center.action_iot_attendance_punch")
+        action["domain"] = [("device_id", "=", self.id), ("state", "in", ["new", "error"])]
+        return action
 
     def action_generate_token(self):
         self._check_iot_access(manage=True)
@@ -127,7 +179,7 @@ class IoTAttendanceDevice(models.Model):
             raise UserError(_("Webhook devices do not require a live socket connection test."))
         imported = self._fetch_zk_punches(limit=1)
         message = _("Connection successful. Sample records fetched: %s") % len(imported)
-        self.write({"last_sync_message": message})
+        self.write({"last_sync_message": "Connection successful. Sample records fetched: %s" % len(imported)})
         return {"type": "ir.actions.client", "tag": "display_notification", "params": {"title": _("Connection test"), "message": message, "type": "success"}}
 
     def action_sync_now(self):
@@ -142,28 +194,21 @@ class IoTAttendanceDevice(models.Model):
 
     def _normalize_direction(self, raw_direction, raw_status):
         self.ensure_one()
-        mapping = {"0": "in", "1": "out", "2": "out", "3": "in", "4": "in", "5": "out", "in": "in", "check_in": "in", "out": "out", "check_out": "out"}
-        normalized = mapping.get(str(raw_direction).lower()) if raw_direction is not None else None
-        if not normalized and raw_status is not None:
-            normalized = mapping.get(str(raw_status).lower())
-        if not normalized or self.punch_direction_mode == "auto":
-            return "auto"
-        return normalized
+        return normalize_direction(raw_direction, raw_status, self.punch_direction_mode)
 
     def _parse_device_datetime(self, value):
         self.ensure_one()
-        if isinstance(value, datetime):
-            local_dt = value
-        elif isinstance(value, str):
-            local_dt = fields.Datetime.to_datetime(value.strip().replace("T", " "))
-        else:
-            raise UserError(_("Unsupported punch timestamp: %s") % value)
-        if not local_dt:
-            raise UserError(_("Unable to parse punch timestamp."))
+        try:
+            local_dt = parse_timestamp(value)
+        except (ValueError, TypeError) as exc:
+            raise UserError(_("Invalid punch timestamp. Check the terminal date and time.")) from exc
         if local_dt.tzinfo:
             return local_dt.astimezone(pytz.UTC).replace(tzinfo=None)
         tz = pytz.timezone(self.company_id.get_iot_timezone())
-        return tz.localize(local_dt).astimezone(pytz.UTC).replace(tzinfo=None)
+        try:
+            return tz.localize(local_dt, is_dst=None).astimezone(pytz.UTC).replace(tzinfo=None)
+        except (pytz.AmbiguousTimeError, pytz.NonExistentTimeError) as exc:
+            raise UserError(_("The punch time is ambiguous in the company timezone.")) from exc
 
     def _resolve_employee(self, device_user_id, device_uid=None):
         self.ensure_one()
@@ -171,27 +216,32 @@ class IoTAttendanceDevice(models.Model):
         device_uid = (device_uid or "").strip()
         if device_user_id:
             mapping = self.env["iot.attendance.user"].search([("device_id", "=", self.id), ("device_user_id", "=", device_user_id)], limit=1)
-            if mapping:
+            if mapping and mapping.employee_id.company_id == self.company_id:
                 return mapping.employee_id
         if device_uid:
             mapping = self.env["iot.attendance.user"].search([("device_id", "=", self.id), ("device_uid", "=", device_uid)], limit=1)
-            if mapping:
+            if mapping and mapping.employee_id.company_id == self.company_id:
                 return mapping.employee_id
         if device_user_id:
-            employee = self.env["hr.employee"].search([("biometric_code", "=", device_user_id)], limit=1)
-            if employee:
+            employee = self.env["hr.employee"].search([("company_id", "=", self.company_id.id), ("biometric_code", "=", device_user_id)], limit=2)
+            if len(employee) == 1:
                 return employee
-            employee = self.env["hr.employee"].search([("barcode", "=", device_user_id)], limit=1)
             if employee:
+                return self.env["hr.employee"]
+            employee = self.env["hr.employee"].search([("company_id", "=", self.company_id.id), ("barcode", "=", device_user_id)], limit=2)
+            if len(employee) == 1:
                 return employee
         return self.env["hr.employee"]
 
     def _prepare_punch_vals(self, payload, source):
         self.ensure_one()
-        device_user_id = str(payload.get("device_user_id") or payload.get("user_id") or payload.get("pin") or payload.get("badge_id") or "").strip()
+        if not isinstance(payload, dict):
+            raise UserError(_("Each punch must be a record with a user ID and timestamp."))
+        user_value = first_value(payload, "device_user_id", "user_id", "pin", "badge_id")
+        device_user_id = str(user_value if user_value is not None else "").strip()
         device_uid = str(payload.get("device_uid") or payload.get("uid") or "").strip()
         if not device_user_id:
-            raise UserError(_("Missing device user ID in payload %s") % payload)
+            raise UserError(_("Missing device user ID in attendance record."))
         employee = self._resolve_employee(device_user_id, device_uid=device_uid)
         mapping = self.env["iot.attendance.user"].search([("device_id", "=", self.id), ("device_user_id", "=", device_user_id)], limit=1)
         if mapping:
@@ -209,17 +259,26 @@ class IoTAttendanceDevice(models.Model):
 
     def _ingest_webhook_payload(self, punches):
         self.ensure_one()
-        Punch = self.env["iot.attendance.punch"].with_context(iot_attendance_ingest=True).sudo()
-        created = 0
-        for payload in punches:
-            vals = self._prepare_punch_vals(payload, "webhook")
-            vals["unique_hash"] = Punch._build_unique_hash(vals)
-            if Punch.search_count([("unique_hash", "=", vals["unique_hash"])]):
-                continue
-            Punch.create(vals)
-            created += 1
-        self.write({"last_sync_at": fields.Datetime.now(), "last_sync_message": _("Webhook imported %s punch(es).") % created})
+        if not self.sync_enabled:
+            raise UserError(_("Attendance synchronization is paused for this device."))
+        if not isinstance(punches, list):
+            raise UserError(_("Punches must be a list of records."))
+        values = [self._prepare_punch_vals(payload, "webhook") for payload in punches]
+        created = self._create_punch_batch(values)
+        self.write({"last_sync_at": fields.Datetime.now(), "last_sync_message": "Webhook imported %s punch(es)." % created})
         return created
+
+    def _create_punch_batch(self, values):
+        Punch = self.env["iot.attendance.punch"].with_context(iot_attendance_ingest=True).sudo()
+        new_values, seen = [], set()
+        for vals in sorted(values, key=lambda item: item["punch_time"]):
+            vals["unique_hash"] = Punch._build_unique_hash(vals)
+            if vals["unique_hash"] not in seen and not Punch.search_count([("unique_hash", "=", vals["unique_hash"])]):
+                new_values.append(vals)
+                seen.add(vals["unique_hash"])
+        if new_values:
+            Punch.create(new_values)
+        return len(new_values)
 
     @api.model
     def _find_adms_device(self, serial_number, remote_ip=None):
@@ -229,68 +288,37 @@ class IoTAttendanceDevice(models.Model):
             device = self.search(domain + [("serial_number", "=", serial_number)], limit=1)
             if device:
                 return device
+            # A conflicting serial must never fall back to a shared VPN/NAT IP.
+            return self.env["iot.attendance.device"]
         if remote_ip:
-            device = self.search(domain + [("host", "=", remote_ip)], limit=1)
-            if device:
+            device = self.search(domain + [("host", "=", remote_ip), ("serial_number", "=", False)], limit=2)
+            if len(device) == 1:
                 return device
         return self.env["iot.attendance.device"]
 
     def _ingest_adms_payload(self, payload_text, table=None, serial_number=None, remote_ip=None, query_params=None):
         self.ensure_one()
-        Punch = self.env["iot.attendance.punch"].with_context(iot_attendance_ingest=True).sudo()
-        created = 0
+        if not self.sync_enabled:
+            raise UserError(_("Attendance synchronization is paused for this device."))
+        values = []
         lines = [line.strip() for line in (payload_text or "").replace("\r", "\n").split("\n") if line.strip()]
         normalized_table = (table or "").upper()
         for line in lines:
             parsed = self._parse_adms_line(line, normalized_table)
             if not parsed:
                 continue
-            vals = self._prepare_punch_vals(parsed, "adms")
-            vals["unique_hash"] = Punch._build_unique_hash(vals)
-            if Punch.search_count([("unique_hash", "=", vals["unique_hash"])]):
-                continue
-            Punch.create(vals)
-            created += 1
-        self.write({"adms_last_seen_at": fields.Datetime.now(), "adms_last_payload": (payload_text or "")[:10000], "last_sync_message": _("ADMS received %s punch(es).") % created})
+            values.append(self._prepare_punch_vals(parsed, "adms"))
+        created = self._create_punch_batch(values)
+        self.write({"adms_last_seen_at": fields.Datetime.now(), "last_sync_at": fields.Datetime.now(),
+                    "last_sync_message": "ADMS received %s punch(es)." % created})
         return created
 
     def _parse_adms_line(self, line, table_name):
         self.ensure_one()
-        parts = [part for part in line.split("\t") if part]
-        kv = {}
-        for part in parts:
-            if "=" in part:
-                key, value = part.split("=", 1)
-                kv[key.strip()] = value.strip()
-        if kv:
-            device_user_id = kv.get("PIN") or kv.get("UserID") or kv.get("EnrollNumber")
-            timestamp = kv.get("DateTime") or kv.get("time") or kv.get("Time_second")
-            status = kv.get("Status") or kv.get("status")
-            verify = kv.get("Verify") or kv.get("verify")
-            if device_user_id and timestamp:
-                return {"device_user_id": device_user_id, "timestamp": timestamp, "status": status, "direction": verify, "raw_line": line}
-        # Fallback parser: some devices push attendance rows over non-ATTLOG tables (e.g., fdata/ATTPHOTO).
-        # If the row looks like "<user>\\t<datetime>\\t...", treat it as a punch event.
-        if len(parts) >= 2:
-            timestamp = parts[1].strip().replace("T", " ")
-            looks_like_dt = "-" in timestamp and ":" in timestamp and len(timestamp) >= 16
-            if looks_like_dt:
-                return {
-                    "device_user_id": parts[0].strip(),
-                    "timestamp": timestamp,
-                    "status": parts[2].strip() if len(parts) > 2 else None,
-                    "direction": parts[3].strip() if len(parts) > 3 else None,
-                    "raw_line": line,
-                }
-        if table_name == "ATTLOG" and len(parts) >= 2:
-            return {
-                "device_user_id": parts[0].strip(),
-                "timestamp": parts[1].strip(),
-                "status": parts[2].strip() if len(parts) > 2 else None,
-                "direction": parts[3].strip() if len(parts) > 3 else None,
-                "raw_line": line,
-            }
-        return None
+        try:
+            return parse_adms_line(line, table_name)
+        except ValueError as exc:
+            raise UserError(_("Invalid attendance row. Check the terminal upload format and clock.")) from exc
 
     def _fetch_zk_punches(self, limit=None):
         self.ensure_one()
@@ -316,11 +344,11 @@ class IoTAttendanceDevice(models.Model):
                         "device_uid": getattr(record, "uid", None),
                         "punch_time": getattr(record, "timestamp", None),
                         "status": getattr(record, "status", None),
-                        "direction": getattr(record, "punch", None),
+                        "direction": getattr(record, "punch", None) if getattr(record, "punch", None) is not None else "auto",
                     }
                 )
-            if self.auto_clear_after_sync and payloads and not limit:
-                conn.clear_attendance()
+            # Never erase the terminal before imported records are committed.
+            # Device-side deletion is deliberately not part of synchronization.
             return payloads
         except Exception as exc:
             _logger.exception("Failed to sync IoT attendance device %s: %s", self.display_name, exc)
@@ -340,16 +368,11 @@ class IoTAttendanceDevice(models.Model):
         self.ensure_one()
         if self.protocol in ("adms_http", "http_push"):
             raise UserError(_("Push devices are passive. Point the device to the ADMS/Webhook URL instead."))
-        Punch = self.env["iot.attendance.punch"].with_context(iot_attendance_ingest=True).sudo()
-        created = 0
-        for payload in self._fetch_zk_punches():
-            vals = self._prepare_punch_vals(payload, "device_pull")
-            vals["unique_hash"] = Punch._build_unique_hash(vals)
-            if Punch.search_count([("unique_hash", "=", vals["unique_hash"])]):
-                continue
-            Punch.create(vals)
-            created += 1
-        self.write({"last_sync_at": fields.Datetime.now(), "last_sync_message": _("Imported %s punch(es).") % created})
+        if not self.sync_enabled:
+            raise UserError(_("Attendance synchronization is paused for this device."))
+        values = [self._prepare_punch_vals(payload, "device_pull") for payload in self._fetch_zk_punches()]
+        created = self._create_punch_batch(values)
+        self.write({"last_sync_at": fields.Datetime.now(), "last_sync_message": "Imported %s punch(es)." % created})
         return created
 
     @api.model

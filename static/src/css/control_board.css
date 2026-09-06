@@ -142,12 +142,17 @@
     margin-left: 8px;
 }
 
-.iot_toggle_on_active,
-.iot_toggle_off_active {
-    background: #7c3aed !important;
-    border-color: #6d28d9 !important;
+.iot_toggle_on_active {
+    background: #176c5d !important;
+    border-color: #145b4e !important;
     color: #ffffff !important;
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.iot_toggle_off_active {
+    background: #41545f !important;
+    border-color: #35464f !important;
+    color: #ffffff !important;
 }
 
 .iot_toggle_passive {

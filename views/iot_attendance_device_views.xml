@@ -4,14 +4,17 @@
         <field name="name">iot.attendance.device.tree</field>
         <field name="model">iot.attendance.device</field>
         <field name="arch" type="xml">
-            <list>
+            <list class="iot_list" decoration-muted="connection_state == 'disabled'" decoration-warning="connection_state in ['unknown', 'offline']">
                 <field name="name"/>
-                <field name="serial_number"/>
+                <field name="connection_state" widget="badge" decoration-success="connection_state == 'online'" decoration-warning="connection_state in ['unknown', 'offline']"/>
+                <field name="pending_count" string="Needs Review" decoration-danger="pending_count &gt; 0"/>
+                <field name="serial_number" optional="hide"/>
                 <field name="protocol"/>
-                <field name="company_id"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
                 <field name="adms_last_seen_at"/>
-                <field name="last_sync_message"/>
+                <field name="display_last_sync_message"/>
                 <field name="sync_enabled"/>
+                <button name="action_review_punches" type="object" string="Review Punches" icon="fa-exclamation-circle" invisible="pending_count == 0"/>
             </list>
         </field>
     </record>
@@ -27,6 +30,9 @@
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
+                        <button type="object" class="oe_stat_button" icon="fa-exclamation-circle" name="action_review_punches">
+                            <field name="pending_count" widget="statinfo" string="Needs Review"/>
+                        </button>
                         <button type="action" class="oe_stat_button" icon="fa-list" name="%(action_iot_attendance_punch)d" context="{'search_default_device_id': id, 'default_device_id': id}">
                             <field name="punch_count" widget="statinfo" string="Punches"/>
                         </button>
@@ -37,8 +43,18 @@
                             <field name="request_count" widget="statinfo" string="Requests"/>
                         </button>
                     </div>
+                    <div class="iot_form_intro">
+                        <strong>Connection and attendance processing are separate checks.</strong>
+                        <p>A recent heartbeat confirms terminal contact. Review employee mappings and punch errors to confirm attendance was created correctly.</p>
+                    </div>
+                    <group string="Health Summary">
+                        <field name="connection_state" widget="badge" decoration-success="connection_state == 'online'" decoration-warning="connection_state in ['unknown', 'offline']"/>
+                        <field name="adms_last_seen_at" readonly="1"/>
+                        <field name="last_sync_at" readonly="1"/>
+                        <field name="display_last_sync_message" readonly="1"/>
+                    </group>
                     <group>
-                        <group>
+                        <group string="Device and Employee Matching">
                             <field name="name"/>
                             <field name="company_id" groups="base.group_multi_company"/>
                             <field name="protocol"/>
@@ -47,28 +63,23 @@
                             <field name="punch_direction_mode"/>
                             <field name="timezone" readonly="1"/>
                         </group>
-                        <group>
+                        <group string="Connection Settings">
                             <field name="host" invisible="protocol != 'zk_tcp'"/>
                             <field name="port" invisible="protocol != 'zk_tcp'"/>
                             <field name="password" password="True" invisible="protocol != 'zk_tcp'"/>
-                            <field name="auto_clear_after_sync" invisible="protocol != 'zk_tcp'"/>
+                            <div class="text-muted" colspan="2" invisible="protocol != 'zk_tcp'">Synchronization does not delete records from the terminal.</div>
                             <field name="active"/>
-                            <field name="adms_last_seen_at" readonly="1"/>
-                            <field name="last_sync_at" readonly="1"/>
                         </group>
                     </group>
                     <group string="ADMS / Push" invisible="protocol != 'adms_http'">
-                        <field name="adms_https_url" widget="url" readonly="1" string="HTTPS URL"/>
+                        <field name="adms_https_url" widget="url" readonly="1" string="HTTPS URL" invisible="not adms_https_url"/>
                         <field name="adms_http_url" widget="url" readonly="1" string="HTTP URL"/>
-                        <field name="adms_last_payload" widget="text" readonly="1"/>
+                        <div class="text-muted" colspan="2">Use the company VPN for the internal HTTP address. HTTPS is shown only when a TLS endpoint is configured.</div>
                     </group>
                     <group string="Webhook" invisible="protocol != 'http_push'">
                         <field name="webhook_url" widget="url" readonly="1"/>
                         <field name="webhook_token" password="True"/>
                         <button name="action_generate_token" type="object" string="Generate Token"/>
-                    </group>
-                    <group string="Status">
-                        <field name="last_sync_message" readonly="1"/>
                     </group>
                 </sheet>
                 <chatter/>
@@ -76,10 +87,23 @@
         </field>
     </record>
 
+    <record id="view_iot_attendance_device_search" model="ir.ui.view">
+        <field name="name">iot.attendance.device.search</field>
+        <field name="model">iot.attendance.device</field>
+        <field name="arch" type="xml"><search>
+            <field name="name"/><field name="serial_number"/><field name="company_id"/>
+            <filter name="paused" string="Paused" domain="[('sync_enabled', '=', False)]"/>
+            <filter name="never_seen" string="No Contact Yet" domain="[('adms_last_seen_at', '=', False), ('last_sync_at', '=', False)]"/>
+            <group><filter name="protocol" string="Protocol" context="{'group_by': 'protocol'}"/>
+                <filter name="company" string="Company" context="{'group_by': 'company_id'}"/></group>
+        </search></field>
+    </record>
+
     <record id="action_iot_attendance_device" model="ir.actions.act_window">
         <field name="name">Attendance Devices</field>
         <field name="res_model">iot.attendance.device</field>
         <field name="view_mode">list,form</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">Connect your first attendance terminal</p><p>Choose its company, configure the connection, then map terminal user IDs to employees.</p></field>
     </record>
 
     <menuitem id="menu_iot_attendance_device" name="Devices" parent="menu_iot_attendance_root" action="action_iot_attendance_device" sequence="10" groups="base.group_erp_manager"/>

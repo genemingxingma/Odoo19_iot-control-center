@@ -1,7 +1,7 @@
 # IoT Control Center V2 (Odoo 19)
 
 Company-isolated environmental monitoring, relay control, attendance and OpenWrt management.
-This is a breaking architecture candidate: Odoo `19.0.2.0.0`, bridge protocol `2`, relay firmware `2.0.2`.
+This is a breaking architecture candidate: Odoo `19.0.2.0.1`, bridge protocol `2`, relay firmware `2.0.2`.
 
 **2.0.1 remains quarantined.** Firmware 2.0.2 fixes the retained-schedule stack failure and passed both board-profile canaries. All 11 online relays passed serial upgrade, restoration and bounded fleet observation; two long-offline devices remain pending. See [the 2.0.2 hardware validation](deploy/RELAY_2_0_2_VALIDATION_2026-09-06.md). Production Odoo remains on V1; firmware acceptance is not a backend cutover.
 The candidate is for isolated validation, not permission to upgrade a production database or real devices.
@@ -19,6 +19,8 @@ The candidate is for isolated validation, not permission to upgrade a production
 - Country, timezone, internal routes and OTA trust come from company configuration. There are no deployment-specific Wi-Fi credentials, MQTT hosts or OTA URLs compiled into new firmware.
 
 ## Operations
+
+Start with **Overview** for company-scoped priorities and four workspaces. The overview never sends relay commands. Device contact, confirmed output state and attendance matching are shown separately. Probe cards show meaningful names, latest values and direct trend links. See [UI and attendance validation](deploy/UI_ATTENDANCE_VALIDATION_2026-09-06.md).
 
 1. Assign viewers `IoT User`, device operators `IoT Operator`, and configuration administrators `IoT Manager`.
 2. Configure the company's country, internal WireGuard endpoint, port numbers, retention and trusted OTA certificate fingerprint.
@@ -62,5 +64,7 @@ python tools/check_relay_stack.py
 ```
 
 Run Odoo tests with `--test-tags=/iot_control_center` in an isolated database, alternate loopback HTTP ports and `--max-cron-threads=0`. Test mode can bind HTTP despite `--no-http`; never share production ports.
+
+After changing fields or views, run `tools/export_i18n.py` through Odoo shell in the upgraded isolated database, then `python tools/check_i18n.py --write`. Native extraction is required for model references and `odoo-python` / `odoo-javascript` markers. Catalog presence alone is not proof of runtime translation.
 
 See [the multilingual manual](README_MANUAL_zh_en_th.md), [the V2 cutover runbook](deploy/UPGRADE_V2.md) and [isolated validation results](deploy/V2_VALIDATION_2026-09-06.md). No credentials, database dumps or built firmware images belong in Git.

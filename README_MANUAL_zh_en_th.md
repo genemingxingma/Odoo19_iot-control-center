@@ -4,6 +4,20 @@
 
 本手册描述 V2 候选架构，不代表生产服务器已切换。2.0.1 固件保持隔离；2.0.2 已修复定时配置处理问题，并通过两种板型的开关、保护和倒计时测试。11 台在线继电器已逐台升级、恢复原状态并通过短时联合验收；另有两台长期离线设备待处理。记录见 `deploy/RELAY_2_0_2_VALIDATION_2026-09-06.md`。
 
+### 运行总览与考勤核查（19.0.2.0.1）
+
+“功能分区 / 总览”先显示待处理事项，再列出继电器、环境监测、考勤和网络入口。统计只覆盖所选公司及可访问记录；点击数字查看对应筛选结果。总览不会发送开关指令，需手动刷新；刷新失败时会明确提示数据可能过期。
+
+探头卡片以名称为主，保留编号用于排查，并显示最新温湿度、采样时间和趋势入口。继电器的“设备确认状态”与请求状态分开，不能把已发送当作已执行。手机上各功能区改为单列。
+
+考勤设备先检查“连接状态”和“最近设备通信”，再点击“待核查”检查打卡。设备在线不等于考勤成功。优先核对公司国家/时区、设备用户编号对应的员工、签到/签退模式及未签退或重叠记录。不同公司不能共用员工对应关系；有明确序列号时不会按相同 VPN 来源 IP 匹配到其他设备。
+
+ADMS 使用设备的考勤状态，而不是指纹/刷卡等验证方式决定签到、签退。上传按时间顺序处理；重复上传不新增重复打卡；单个人员的匹配异常保留为待核查，不丢弃同批其他人员的数据。格式错误或写入失败不会回复成功。同步不会清空考勤机日志；旧的自动清空选项不再执行。历史 HR 考勤不会自动重算、补签退或删除。
+
+本版支持 ATTLOG 标准文本上传和 JSON Webhook；表单编码导致请求正文不可用时明确拒绝。终端的特殊初始化握手、自动补传及重试间隔仍需对具体型号验证，不应把隔离接口测试当作设备端验收。
+
+界面示例均为合成数据：[中文总览](docs/screenshots/overview-zh-desktop.png)、[探头卡片](docs/screenshots/probes-zh-desktop.png)、[手机总览](docs/screenshots/overview-zh-mobile.png)。本版仍是 V2 候选，未据此更新生产后端。
+
 ### 公司与权限
 
 国家与时区、内网主机、MQTT/OTA 端口及原始记录保留天数都从公司配置读取。保留天数为零时不自动删除；正数表示授权清理超过该天数的样本。“保留完整历史”的探头不参与清理。
@@ -46,6 +60,16 @@ OpenWrt 首次连接前由管理员核实并安装 SSH 主机密钥。心跳最�
 
 ## English
 
+### Overview and Attendance Review (19.0.2.0.1)
+
+Start at Workspaces / Overview. Click priority counts to open the matching records in the selected companies. Refresh is manual; a failed refresh clearly marks potentially stale data. The overview never sends device commands. Probe cards show names, recent temperature/humidity and trend links. Relay confirmation is distinct from requested output state. Workspaces stack vertically on phones.
+
+For attendance, check connection and last contact first, then review pending punches. Contact alone does not prove HR attendance was matched. Check company timezone/country, terminal user IDs, employee mappings, direction mode and overlapping/open attendance. Mappings cannot cross companies; a conflicting serial number never falls back to a shared VPN source address.
+
+ADMS direction comes from attendance status, not the verification method. Batches are sorted; replays are deduplicated; one employee's matching error remains reviewable without discarding other employees. Failed imports are not acknowledged as successful. Synchronization never clears terminal logs, including the former automatic-clear option. Historical HR attendance is not silently recalculated, closed or deleted. Model-specific initialization and device retry behavior still require hardware validation.
+
+All screenshots use synthetic data: [English overview](docs/screenshots/overview-en-desktop.png). This is a V2 candidate, not a production backend deployment.
+
 This manual describes the V2 candidate, not a completed production backend cutover. Firmware 2.0.1 remains quarantined. The 2.0.2 fix passed switching, watchdog and timer tests on both board profiles. All 11 online relays passed serial upgrade, state restoration and bounded fleet observation; two long-offline devices remain pending. See `deploy/RELAY_2_0_2_VALIDATION_2026-09-06.md`.
 
 Configure country, timezone, private routes, OTA certificate trust and retention on the company. Zero retention keeps all raw history; positive retention authorizes expiry deletion, except probes marked to keep full history.
@@ -71,6 +95,16 @@ OpenWrt requires pre-verified SSH host keys. Heartbeats use bounded concurrency/
 V2 is a breaking release. Back up first and explicitly authorize removal of old module temperature/humidity observations and alerts. HR attendance and unrelated business data are not part of this reset. Do not upgrade production or real devices on the strength of compilation alone.
 
 ## ภาษาไทย
+
+### ภาพรวมและการตรวจสอบลงเวลา (19.0.2.0.1)
+
+เปิดส่วนการทำงาน / ภาพรวม แล้วคลิกจำนวนรายการที่ต้องดูแลเพื่อดูข้อมูลของบริษัทที่เลือก กดรีเฟรชเพื่อโหลดสถานะล่าสุด หากรีเฟรชไม่สำเร็จจะมีคำเตือนว่าข้อมูลอาจเก่า หน้าภาพรวมไม่ส่งคำสั่งควบคุมอุปกรณ์ การ์ดเซ็นเซอร์แสดงชื่อ อุณหภูมิ ความชื้น และปุ่มดูแนวโน้ม สถานะที่รีเลย์ยืนยันแยกจากสถานะที่ร้องขอ บนโทรศัพท์จะแสดงทีละส่วนในแนวตั้ง
+
+สำหรับเครื่องลงเวลา ให้ตรวจสอบการเชื่อมต่อและเวลาติดต่อล่าสุด จากนั้นเปิดรายการรอตรวจสอบ การเชื่อมต่อสำเร็จไม่ได้แปลว่าบันทึก HR ถูกต้องแล้ว ตรวจสอบประเทศและเขตเวลาบริษัท รหัสผู้ใช้ในเครื่อง การจับคู่พนักงาน โหมดเข้า/ออก และช่วงเวลาซ้อนทับหรือรายการที่ยังไม่ออก ห้ามจับคู่ข้ามบริษัท และไม่ใช้ IP ของ VPN แทนหมายเลขเครื่องที่ไม่ตรงกัน
+
+ADMS ใช้สถานะลงเวลา ไม่ใช้วิธียืนยันตัวตนเพื่อตัดสินเข้า/ออก ระบบเรียงข้อมูลตามเวลาและไม่สร้างรายการซ้ำ ข้อผิดพลาดของพนักงานคนหนึ่งจะไม่ทำให้ข้อมูลของคนอื่นหาย การนำเข้าที่ล้มเหลวจะไม่ตอบว่าสำเร็จ การซิงค์ไม่ล้างข้อมูลในเครื่อง แม้เคยเปิดตัวเลือกล้างอัตโนมัติ ประวัติ HR จะไม่ถูกคำนวณใหม่ ปิดรายการ หรือลบโดยอัตโนมัติ ยังต้องทดสอบขั้นตอนเริ่มเชื่อมต่อและการส่งซ้ำกับเครื่องรุ่นจริง
+
+ภาพตัวอย่างเป็นข้อมูลจำลองทั้งหมด: [ภาพรวมภาษาไทย](docs/screenshots/overview-th-desktop.png) และ [หน้าจอโทรศัพท์](docs/screenshots/overview-th-mobile.png) รุ่นนี้ยังเป็น V2 สำหรับการทดสอบ ไม่ใช่การอัปเดตระบบใช้งานจริง
 
 คู่มือนี้อธิบายสถาปัตยกรรม V2 ที่อยู่ระหว่างทดสอบ ไม่ได้หมายความว่าเซิร์ฟเวอร์ใช้งานจริงเปลี่ยนเป็น V2 แล้ว เฟิร์มแวร์ 2.0.1 ยังถูกระงับการใช้งาน ส่วน 2.0.2 แก้ปัญหาการประมวลผลตารางเวลาแล้ว และผ่านการทดสอบเปิดปิด การตัดเมื่อเปิดนานเกินกำหนด และตัวจับเวลากับฮาร์ดแวร์ทั้งสองรุ่น รีเลย์ออนไลน์ทั้ง 11 เครื่องอัปเกรดทีละเครื่อง คืนสถานะเดิม และผ่านการตรวจสอบร่วมกันในช่วงเวลาทดสอบแล้ว อีกสองเครื่องที่ออฟไลน์มานานยังรอดำเนินการ ดูบันทึกที่ `deploy/RELAY_2_0_2_VALIDATION_2026-09-06.md`
 

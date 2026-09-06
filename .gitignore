@@ -18,3 +18,4 @@ middleware/**/target/
 *.dump
 *.backup
 deploy/artifacts/
+.playwright-mcp/

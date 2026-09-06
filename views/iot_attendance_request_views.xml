@@ -4,7 +4,7 @@
         <field name="name">iot.attendance.request.tree</field>
         <field name="model">iot.attendance.request</field>
         <field name="arch" type="xml">
-            <list create="0" edit="0" delete="0">
+            <list create="0" edit="0" delete="0" class="iot_list" decoration-danger="status == 'error'" decoration-muted="status == 'ignored'">
                 <field name="create_date"/>
                 <field name="endpoint"/>
                 <field name="method"/>

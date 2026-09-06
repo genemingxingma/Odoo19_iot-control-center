@@ -4,7 +4,7 @@
         <field name="name">iot.th.alert.list</field>
         <field name="model">iot.th.alert</field>
         <field name="arch" type="xml">
-            <list>
+            <list class="iot_list" decoration-danger="state == 'open'" decoration-muted="state != 'open'">
                 <field name="occurred_at"/>
                 <field name="state"/>
                 <field name="alert_type"/>

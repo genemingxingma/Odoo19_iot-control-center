@@ -4,14 +4,14 @@
         <field name="name">iot.attendance.punch.tree</field>
         <field name="model">iot.attendance.punch</field>
         <field name="arch" type="xml">
-            <list create="0">
+            <list create="0" edit="0" class="iot_list" decoration-danger="state == 'error'" decoration-muted="state == 'ignored'">
                 <field name="punch_time"/>
                 <field name="device_id"/>
                 <field name="employee_id"/>
-                <field name="device_user_id"/>
-                <field name="direction"/>
-                <field name="source"/>
-                <field name="state"/>
+                <field name="device_user_id" optional="show"/>
+                <field name="direction" widget="badge"/>
+                <field name="source" optional="hide"/>
+                <field name="state" widget="badge" decoration-success="state == 'processed'" decoration-danger="state == 'error'" decoration-info="state == 'new'"/>
                 <field name="display_message"/>
             </list>
         </field>
@@ -21,8 +21,9 @@
         <field name="name">iot.attendance.punch.form</field>
         <field name="model">iot.attendance.punch</field>
         <field name="arch" type="xml">
-            <form create="0">
+            <form create="0" edit="0">
                 <sheet>
+                    <div class="iot_form_intro"><strong>Attendance review</strong><p>Check the device direction, employee mapping and linked attendance. Historical records are not recalculated automatically.</p></div>
                     <group>
                         <group>
                             <field name="device_id"/>
@@ -35,7 +36,7 @@
                             <field name="punch_time"/>
                             <field name="direction"/>
                             <field name="source"/>
-                            <field name="state"/>
+                            <field name="state" widget="badge" decoration-success="state == 'processed'" decoration-danger="state == 'error'"/>
                             <field name="display_message"/>
                         </group>
                     </group>
@@ -47,10 +48,26 @@
         </field>
     </record>
 
+    <record id="view_iot_attendance_punch_search" model="ir.ui.view">
+        <field name="name">iot.attendance.punch.search</field>
+        <field name="model">iot.attendance.punch</field>
+        <field name="arch" type="xml"><search>
+            <field name="employee_id"/><field name="device_id"/><field name="device_user_id"/>
+            <filter name="needs_review" string="Needs Review" domain="[('state', 'in', ['new', 'error'])]"/>
+            <filter name="missing_mapping" string="Missing Employee Mapping" domain="[('error_code', '=', 'no_employee_mapping')]"/>
+            <filter name="processed" string="Processed" domain="[('state', '=', 'processed')]"/>
+            <filter name="date" string="Punch Time" date="punch_time"/>
+            <group><filter name="state" string="Processing Status" context="{'group_by': 'state'}"/>
+                <filter name="error" string="Issue" context="{'group_by': 'error_code'}"/>
+                <filter name="device" string="Device" context="{'group_by': 'device_id'}"/></group>
+        </search></field>
+    </record>
+
     <record id="action_iot_attendance_punch" model="ir.actions.act_window">
         <field name="name">Attendance Punches</field>
         <field name="res_model">iot.attendance.punch</field>
         <field name="view_mode">list,form</field>
+        <field name="help" type="html"><p class="o_view_nocontent_smiling_face">No punch records in this view</p><p>Check terminal contact and employee mappings, or adjust the active filters.</p></field>
     </record>
 
     <menuitem id="menu_iot_attendance_punch" name="Punch Logs" parent="menu_iot_attendance_root" action="action_iot_attendance_punch" sequence="30" groups="base.group_erp_manager"/>

@@ -3,6 +3,7 @@ import json
 from datetime import timedelta
 
 from odoo import _, SUPERUSER_ID, api, fields, models
+from odoo.exceptions import UserError, ValidationError
 
 
 class IoTAttendancePunch(models.Model):
@@ -38,6 +39,9 @@ class IoTAttendancePunch(models.Model):
             "no_open_attendance": _("Cannot check out without an open attendance."),
             "stale_open_attendance": _("The open attendance is outside the allowed shift duration."),
             "open_attendance_exists": _("Employee already has an open attendance."),
+            "processing_error": _("Could not match this punch. Review overlapping or incomplete attendance records."),
+            "employee_company_mismatch": _("The employee and device belong to different companies."),
+            "duplicate_attendance": _("This timestamp is already recorded in attendance."),
         }
         for rec in self:
             rec.display_message = labels.get(rec.error_code) or (_("Processed") if rec.state == "processed" else rec.message)
@@ -49,6 +53,12 @@ class IoTAttendancePunch(models.Model):
         "UNIQUE(unique_hash)",
         "The same punch cannot be imported twice.",
     )
+
+    @api.constrains("employee_id", "device_id")
+    def _check_employee_company(self):
+        for rec in self:
+            if rec.employee_id and rec.employee_id.company_id != rec.device_id.company_id:
+                raise ValidationError(_("The employee and attendance device must belong to the same company."))
 
     @api.depends("employee_id.name", "device_user_id", "punch_time")
     def _compute_name(self):
@@ -126,44 +136,52 @@ class IoTAttendancePunch(models.Model):
         )
 
     def _process_punches(self):
-        attendance_model = self._attendance_service()
         for punch in self.sorted(key=lambda rec: (rec.punch_time or fields.Datetime.now(), rec.id)):
             if punch.state != "new":
                 continue
-            if not punch.employee_id:
-                # Re-resolve employee at processing time so records imported before mapping can be recovered.
-                employee = punch.device_id._resolve_employee(punch.device_user_id, device_uid=punch.device_uid)
-                if employee:
-                    punch.employee_id = employee.id
-                else:
-                    punch._mark("error", "No employee mapping found for this punch.", error_code="no_employee_mapping")
-                    continue
-            open_attendance = punch._get_open_attendance()
-            if punch.direction == "out":
-                if not open_attendance:
-                    punch._mark("error", "Cannot check out without an open attendance.", error_code="no_open_attendance")
-                    continue
-                if not punch._is_open_attendance_matchable(open_attendance):
-                    punch._mark("error", "Open attendance is stale or not in the same local day.", error_code="stale_open_attendance")
-                    continue
-                open_attendance.write({"check_out": punch.punch_time})
-                punch._mark("processed", "Matched to an open attendance.", attendance=open_attendance)
-                continue
-            if punch.direction == "in":
-                if open_attendance:
-                    punch._mark("error", "Employee already has an open attendance.", error_code="open_attendance_exists")
-                    continue
-                attendance = attendance_model.create({"employee_id": punch.employee_id.id, "check_in": punch.punch_time})
-                punch._mark("processed", "Created check-in attendance.", attendance=attendance)
-                continue
-            if open_attendance and punch._is_open_attendance_matchable(open_attendance):
-                open_attendance.write({"check_out": punch.punch_time})
-                punch._mark("processed", "Auto-matched as check-out.", attendance=open_attendance)
-            elif open_attendance:
-                punch._mark("error", "Open attendance is stale or not in the same local day.", error_code="stale_open_attendance")
-            else:
-                attendance = attendance_model.create({"employee_id": punch.employee_id.id, "check_in": punch.punch_time})
-                punch._mark("processed", "Auto-created as check-in.", attendance=attendance)
+            try:
+                with self.env.cr.savepoint():
+                    punch._process_one()
+            except UserError:
+                # Preserve the punch for review without poisoning the remaining
+                # employees in this batch. Database failures still propagate.
+                punch._mark("error", "Attendance matching needs review.", error_code="processing_error")
+
+    def _process_one(self):
+        self.ensure_one()
+        if not self.employee_id:
+            employee = self.device_id._resolve_employee(self.device_user_id, device_uid=self.device_uid)
+            if not employee:
+                self._mark("error", "No employee mapping found for this punch.", error_code="no_employee_mapping")
+                return
+            self.employee_id = employee.id
+        if self.employee_id.company_id != self.company_id:
+            self._mark("error", "Employee company mismatch.", error_code="employee_company_mismatch")
+            return
+        # Different terminals may report the same employee concurrently.
+        self.env.cr.execute("SELECT pg_advisory_xact_lock(%s, %s)", [490021, self.employee_id.id])
+        attendance_model = self._attendance_service()
+        existing = attendance_model.search([("employee_id", "=", self.employee_id.id),
+            "|", ("check_in", "=", self.punch_time), ("check_out", "=", self.punch_time)], limit=1)
+        if existing:
+            self._mark("ignored", "Timestamp already recorded.", attendance=existing, error_code="duplicate_attendance")
+            return
+        open_attendance = self._get_open_attendance()
+        if self.direction == "out" and not open_attendance:
+            self._mark("error", "Cannot check out without an open attendance.", error_code="no_open_attendance")
+            return
+        if self.direction == "in" and open_attendance:
+            self._mark("error", "Employee already has an open attendance.", error_code="open_attendance_exists")
+            return
+        if open_attendance:
+            if not self._is_open_attendance_matchable(open_attendance):
+                self._mark("error", "The open attendance is outside the allowed shift duration.", error_code="stale_open_attendance")
+                return
+            open_attendance.write({"check_out": self.punch_time})
+            self._mark("processed", "Matched to an open attendance.", attendance=open_attendance)
+        else:
+            attendance = attendance_model.create({"employee_id": self.employee_id.id, "check_in": self.punch_time})
+            self._mark("processed", "Created check-in attendance.", attendance=attendance)
 
     @api.model
     def cron_reprocess_pending(self):

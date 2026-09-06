@@ -31,3 +31,9 @@ class IoTAttendanceUser(models.Model):
         for rec in self:
             if rec.device_user_id and not rec.device_user_id.strip():
                 raise ValidationError(_("Device User ID cannot be empty."))
+
+    @api.constrains("device_id", "employee_id")
+    def _check_employee_company(self):
+        for rec in self:
+            if rec.employee_id.company_id != rec.device_id.company_id:
+                raise ValidationError(_("The employee and attendance device must belong to the same company."))

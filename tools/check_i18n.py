@@ -34,6 +34,103 @@ SOURCE_TERM_RENAMES = {
 # Terms absent from older catalogs plus wording overrides found during review.
 # Each value is (Simplified Chinese, Thai).
 TRANSLATIONS = {
+    "Requested State:": ("请求状态：", "สถานะที่ร้องขอ:"),
+    "<span>Requested State: </span>": ("<span>请求状态：</span>", "<span>สถานะที่ร้องขอ: </span>"),
+    "Mappings": ("员工对应关系", "การจับคู่พนักงาน"),
+    "Requests": ("通信记录", "ประวัติการติดต่อ"),
+    "Use Device Direction": ("按设备上报的签到/签退状态", "ใช้สถานะเข้า/ออกจากเครื่อง"),
+    "Auto Alternate In/Out": ("自动交替签到/签退", "สลับเข้า/ออกอัตโนมัติ"),
+    "<small>Relative humidity</small>": ("<small>相对湿度</small>", "<small>ความชื้นสัมพัทธ์</small>"),
+    "<small>Temperature</small>": ("<small>温度</small>", "<small>อุณหภูมิ</small>"),
+    "<span>Command: </span>": ("<span>指令：</span>", "<span>คำสั่ง: </span>"),
+    "<span>Confirmed State: </span>": ("<span>设备确认状态：</span>", "<span>สถานะที่อุปกรณ์ยืนยัน: </span>"),
+    "<span>Last contact: </span>": ("<span>最近通信：</span>", "<span>ติดต่อล่าสุด: </span>"),
+    "<span>Last reading: </span>": ("<span>最近采样：</span>", "<span>อ่านค่าล่าสุด: </span>"),
+    "<strong>Attendance review</strong>": ("<strong>考勤核查</strong>", "<strong>ตรวจสอบการลงเวลา</strong>"),
+    "<strong>Connection and attendance processing are separate checks.</strong>": ("<strong>设备连接与考勤处理需要分别核查。</strong>", "<strong>ต้องตรวจสอบการเชื่อมต่อและการประมวลผลลงเวลาแยกกัน</strong>"),
+    "A probe event can only be stored once.": ("同一探头事件只能保存一次。", "บันทึกเหตุการณ์เดียวกันของเซ็นเซอร์ได้เพียงครั้งเดียว"),
+    "Command identity must be unique.": ("指令标识不能重复。", "รหัสคำสั่งต้องไม่ซ้ำกัน"),
+    "Event identity must be unique.": ("事件标识不能重复。", "รหัสเหตุการณ์ต้องไม่ซ้ำกัน"),
+    "Gateway identity must be unique.": ("网关标识不能重复。", "รหัสเกตเวย์ต้องไม่ซ้ำกัน"),
+    "Gateway source address must be unique.": ("网关来源地址不能重复。", "ที่อยู่ต้นทางของเกตเวย์ต้องไม่ซ้ำกัน"),
+    "attendance": ("考勤", "การลงเวลา"),
+    "environment": ("环境监测", "การตรวจวัดสภาพแวดล้อม"),
+    "network": ("网络", "เครือข่าย"),
+    "°C": ("°C", "°C"),
+    "Operations Overview": ("运行总览", "ภาพรวมการทำงาน"),
+    "Overview": ("总览", "ภาพรวม"),
+    "Workspaces": ("功能分区", "ส่วนการทำงาน"),
+    "IoT workspaces": ("IoT 功能分区", "ส่วนการทำงาน IoT"),
+    "Device Management": ("设备管理", "จัดการอุปกรณ์"),
+    "Refresh overview": ("刷新总览", "รีเฟรชภาพรวม"),
+    "See what needs attention, then open the right workspace.": ("先查看待处理事项，再进入对应功能。", "ตรวจสอบรายการที่ต้องดูแล แล้วเปิดส่วนการทำงานที่เกี่ยวข้อง"),
+    "Selected companies": ("当前公司范围", "บริษัทที่เลือก"),
+    "Updated": ("更新于", "อัปเดตเมื่อ"),
+    "The overview could not be refreshed. Displayed values may be out of date. Please retry.": ("总览刷新失败，当前数据可能不是最新状态，请重试。", "รีเฟรชภาพรวมไม่สำเร็จ ข้อมูลที่แสดงอาจไม่เป็นปัจจุบัน กรุณาลองอีกครั้ง"),
+    "Loading device status...": ("正在读取设备状态…", "กำลังโหลดสถานะอุปกรณ์..."),
+    "Needs Attention": ("待处理事项", "รายการที่ต้องดูแล"),
+    "Click an item to review its records.": ("点击事项即可查看相关记录。", "คลิกรายการเพื่อดูข้อมูลที่เกี่ยวข้อง"),
+    "No pending issues in this overview": ("当前总览没有待处理事项", "ไม่พบรายการที่ต้องดูแลในภาพรวมนี้"),
+    "Device contact is not proof of physical operation. Use device confirmation for control checks.": ("设备在线不代表已实际执行，请结合设备反馈确认控制结果。", "การเชื่อมต่อไม่ได้ยืนยันว่าอุปกรณ์ทำงานจริง โปรดตรวจสอบผลตอบกลับจากอุปกรณ์"),
+    "Open workspace": ("进入功能", "เปิดส่วนการทำงาน"),
+    "Counts follow your selected companies and access permissions. Refresh to fetch current status; no control commands are sent from this overview.": ("统计范围依据当前所选公司及访问权限。点击刷新获取最新状态；总览不会下发设备控制指令。", "สถิติตามบริษัทที่เลือกและสิทธิ์การเข้าถึง กดรีเฟรชเพื่อดูสถานะล่าสุด หน้าภาพรวมนี้ไม่ส่งคำสั่งควบคุมอุปกรณ์"),
+    "Access points and their latest heartbeat": ("无线接入点及最近通信情况", "จุดกระจายสัญญาณและการติดต่อครั้งล่าสุด"),
+    "Attendance review": ("考勤核查", "ตรวจสอบการลงเวลา"),
+    "Attendance synchronization is paused for this device.": ("此设备已暂停考勤同步。", "อุปกรณ์นี้หยุดซิงค์ข้อมูลลงเวลาชั่วคราว"),
+    "A recent heartbeat confirms terminal contact. Review employee mappings and punch errors to confirm attendance was created correctly.": ("最近通信只表示考勤机已连接。请检查员工对应关系和打卡异常，确认考勤记录已正确生成。", "การติดต่อล่าสุดยืนยันเพียงว่าเครื่องลงเวลาเชื่อมต่อแล้ว โปรดตรวจสอบการจับคู่พนักงานและข้อผิดพลาดเพื่อยืนยันว่าบันทึกเวลาทำงานถูกต้อง"),
+    "Check terminal contact and employee mappings, or adjust the active filters.": ("请检查设备通信及员工对应关系，或调整筛选条件。", "ตรวจสอบการเชื่อมต่อเครื่องและการจับคู่พนักงาน หรือปรับตัวกรอง"),
+    "Check the device direction, employee mapping and linked attendance. Historical records are not recalculated automatically.": ("请核对签到/签退方向、对应员工及关联考勤。系统不会自动重算历史记录。", "ตรวจสอบทิศทางเข้า/ออก พนักงานที่จับคู่ และรายการลงเวลาที่เชื่อมโยง ระบบจะไม่คำนวณประวัติใหม่โดยอัตโนมัติ"),
+    "Choose its company, configure the connection, then map terminal user IDs to employees.": ("先选择所属公司、配置连接，再将考勤机用户编号对应到员工。", "เลือกบริษัท ตั้งค่าการเชื่อมต่อ แล้วจับคู่รหัสผู้ใช้ในเครื่องกับพนักงาน"),
+    "Command:": ("指令：", "คำสั่ง:"),
+    "Confirmed State": ("设备确认状态", "สถานะที่อุปกรณ์ยืนยัน"),
+    "Confirmed State:": ("设备确认状态：", "สถานะที่อุปกรณ์ยืนยัน:"),
+    "Connect your first attendance terminal": ("连接第一台考勤机", "เชื่อมต่อเครื่องลงเวลาเครื่องแรก"),
+    "Connection": ("连接状态", "สถานะการเชื่อมต่อ"),
+    "Connection Settings": ("连接设置", "ตั้งค่าการเชื่อมต่อ"),
+    "Connection and attendance processing are separate checks.": ("设备连接与考勤处理需要分别核查。", "ต้องตรวจสอบการเชื่อมต่อและการประมวลผลลงเวลาแยกกัน"),
+    "Could not match this punch. Review overlapping or incomplete attendance records.": ("此打卡记录匹配失败，请检查时间重叠或未签退的考勤记录。", "จับคู่รายการลงเวลานี้ไม่สำเร็จ โปรดตรวจสอบช่วงเวลาซ้อนทับหรือรายการที่ยังไม่ลงเวลาออก"),
+    "Device and Employee Matching": ("设备与员工对应关系", "การจับคู่อุปกรณ์กับพนักงาน"),
+    "Device inventory": ("设备清单", "รายการอุปกรณ์"),
+    "Each punch must be a record with a user ID and timestamp.": ("每条打卡数据都必须包含用户编号和打卡时间。", "แต่ละรายการต้องมีรหัสผู้ใช้และเวลาลงรายการ"),
+    "Health Summary": ("运行状态", "สถานะการทำงาน"),
+    "Invalid attendance row. Check the terminal upload format and clock.": ("打卡数据无效，请检查考勤机上传格式和时钟。", "ข้อมูลลงเวลาไม่ถูกต้อง โปรดตรวจสอบรูปแบบที่เครื่องส่งและนาฬิกาของเครื่อง"),
+    "Invalid punch timestamp. Check the terminal date and time.": ("打卡时间无效，请检查考勤机日期和时间。", "เวลาลงรายการไม่ถูกต้อง โปรดตรวจสอบวันที่และเวลาของเครื่อง"),
+    "Issue": ("异常原因", "สาเหตุของปัญหา"),
+    "Last contact:": ("最近通信：", "ติดต่อล่าสุด:"),
+    "Last reading:": ("最近采样：", "อ่านค่าล่าสุด:"),
+    "Missing Employee Mapping": ("未关联员工", "ยังไม่จับคู่พนักงาน"),
+    "Missing device user ID in attendance record.": ("打卡记录缺少设备用户编号。", "รายการลงเวลาไม่มีรหัสผู้ใช้ในเครื่อง"),
+    "Named probes, trends and threshold alerts": ("按名称识别探头，查看趋势和超限告警", "ดูเซ็นเซอร์ตามชื่อ แนวโน้ม และการแจ้งเตือนเกินเกณฑ์"),
+    "Needs Review": ("待核查", "รอตรวจสอบ"),
+    "No Contact Yet": ("尚未连接", "ยังไม่เคยติดต่อ"),
+    "No Recent Contact": ("近期未连接", "ไม่มีการติดต่อล่าสุด"),
+    "No punch records in this view": ("当前视图没有打卡记录", "ไม่พบรายการลงเวลาในมุมมองนี้"),
+    "Offline access points": ("离线接入点", "จุดกระจายสัญญาณออฟไลน์"),
+    "Offline devices": ("离线设备", "อุปกรณ์ออฟไลน์"),
+    "Open alerts": ("未处理告警", "การแจ้งเตือนที่ยังไม่จัดการ"),
+    "Outputs, schedules and device confirmation": ("继电器输出、定时计划与设备执行反馈", "เอาต์พุตรีเลย์ ตารางเวลา และผลยืนยันจากอุปกรณ์"),
+    "Paused": ("已暂停", "หยุดชั่วคราว"),
+    "Probes": ("探头", "เซ็นเซอร์"),
+    "Processing Status": ("处理状态", "สถานะการประมวลผล"),
+    "Punch history": ("打卡历史", "ประวัติลงเวลา"),
+    "Punches must be a list of records.": ("打卡数据必须是记录列表。", "ข้อมูลลงเวลาต้องอยู่ในรูปแบบรายการข้อมูล"),
+    "Punches needing review": ("待核查打卡", "รายการลงเวลาที่รอตรวจสอบ"),
+    "Recent contact": ("近期已连接", "มีการติดต่อล่าสุด"),
+    "Registered devices": ("已登记设备", "อุปกรณ์ที่ลงทะเบียน"),
+    "Relative humidity": ("相对湿度", "ความชื้นสัมพัทธ์"),
+    "Review Punches": ("核查打卡", "ตรวจสอบการลงเวลา"),
+    "Silent probes": ("未上报探头", "เซ็นเซอร์ที่ไม่ส่งข้อมูล"),
+    "Synchronization does not delete records from the terminal.": ("同步不会删除考勤机中的记录。", "การซิงค์จะไม่ลบข้อมูลในเครื่องลงเวลา"),
+    "Terminal contact, employee mapping and punch review": ("设备通信、员工对应关系与打卡异常核查", "การเชื่อมต่อเครื่อง การจับคู่พนักงาน และการตรวจสอบลงเวลา"),
+    "Terminals without recent contact": ("近期未连接考勤机", "เครื่องลงเวลาที่ไม่มีการติดต่อล่าสุด"),
+    "The employee and attendance device must belong to the same company.": ("员工与考勤机必须属于同一家公司。", "พนักงานและเครื่องลงเวลาต้องอยู่ในบริษัทเดียวกัน"),
+    "The employee and device belong to different companies.": ("员工与设备所属公司不一致。", "พนักงานกับอุปกรณ์อยู่คนละบริษัท"),
+    "The punch time is ambiguous in the company timezone.": ("此打卡时间在公司时区中存在歧义，请核对设备时钟。", "เวลาลงรายการไม่ชัดเจนในเขตเวลาของบริษัท โปรดตรวจสอบนาฬิกาของเครื่อง"),
+    "This timestamp is already recorded in attendance.": ("此时间点已有考勤记录。", "มีบันทึกลงเวลานี้แล้ว"),
+    "Trends and history": ("趋势与历史", "แนวโน้มและประวัติ"),
+    "Use the company VPN for the internal HTTP address. HTTPS is shown only when a TLS endpoint is configured.": ("内网 HTTP 地址应通过公司 VPN 访问。只有配置了 TLS 入口才会显示 HTTPS 地址。", "ใช้ VPN ของบริษัทเพื่อเข้าถึง HTTP ภายใน จะแสดง HTTPS เฉพาะเมื่อกำหนดปลายทาง TLS แล้ว"),
+    "View trend": ("查看趋势", "ดูแนวโน้ม"),
+    "Waiting for the first reading": ("等待首次采样", "รอค่าแรกจากเซ็นเซอร์"),
     "Device Connection Service": ("设备接入服务", "บริการเชื่อมต่ออุปกรณ์"),
     "MQTT and TCP connections are managed by the bridge. Configure listener ports in the bridge service, not in Odoo.": ("MQTT 和 TCP 连接由中间件统一管理，请在中间件服务中配置监听端口，无需在 Odoo 中设置。", "บริดจ์เป็นผู้จัดการการเชื่อมต่อ MQTT และ TCP ให้กำหนดพอร์ตรับการเชื่อมต่อในบริการบริดจ์ ไม่ใช่ใน Odoo"),
     "Upgrade command queued for %s device(s).": ("已为 %s 台设备加入升级队列。", "นำคำสั่งอัปเกรดอุปกรณ์ %s เครื่องเข้าคิวแล้ว"),
@@ -94,7 +191,7 @@ TRANSLATIONS = {
     "ADMS HTTP URL": ("ADMS HTTP 地址", "URL HTTP ของ ADMS"),
     "ADMS HTTPS URL": ("ADMS HTTPS 地址", "URL HTTPS ของ ADMS"),
     "ADMS Last Payload": ("ADMS 最近数据", "ข้อมูลล่าสุดจาก ADMS"),
-    "ADMS Last Seen": ("ADMS 最近在线时间", "เวลาที่พบ ADMS ล่าสุด"),
+    "ADMS Last Seen": ("最近设备通信", "การติดต่อจากเครื่องครั้งล่าสุด"),
     "Add this public key manually to each OpenWrt AP's authorized_keys file, then bind the AP in IoT Control Center.": (
         "请将此公钥手动添加到每台 OpenWrt AP 的 authorized_keys 文件中，然后在 IoT 控制中心绑定该 AP。",
         "เพิ่ม public key นี้ลงในไฟล์ authorized_keys ของ OpenWrt AP แต่ละตัวด้วยตนเอง แล้วเชื่อมโยง AP ในศูนย์ควบคุม IoT",
@@ -254,7 +351,7 @@ TRANSLATIONS = {
         "设备端安全断电时限。设为 0 表示禁用；紫外灯必须设置有限时长。",
         "เวลาตัดการทำงานเพื่อความปลอดภัยที่อุปกรณ์ ตั้งเป็น 0 เพื่อปิดใช้งาน โดยหลอด UV ต้องกำหนดเวลาจำกัดเสมอ",
     ),
-    "Direction": ("方向", "ทิศทาง"),
+    "Direction": ("签到/签退", "เข้า/ออก"),
     "Download Bytes Total": ("下载总量（字节）", "ปริมาณดาวน์โหลดรวม (ไบต์)"),
     "Download Rate Mbps": ("下载速率（Mbps）", "อัตราดาวน์โหลด (Mbps)"),
     "Employee": ("员工", "พนักงาน"),
@@ -689,9 +786,13 @@ def _xml_terms() -> set[str]:
     for path in paths:
         root = ET.parse(path).getroot()
         for element in root.iter():
-            for attribute in ("string", "help", "confirm", "placeholder"):
+            for attribute in ("string", "help", "confirm", "placeholder", "title", "aria-label"):
                 value = element.attrib.get(attribute)
                 if value and not value.startswith(("{", "[", "%", "/")):
+                    terms.add(value)
+            if element.tail:
+                value = " ".join(element.tail.split())
+                if value and re.search(r"[A-Za-z]{2}", value):
                     terms.add(value)
             if element.tag == "menuitem" and element.attrib.get("name"):
                 terms.add(element.attrib["name"])
@@ -705,7 +806,7 @@ def _xml_terms() -> set[str]:
                 ):
                     terms.add(value)
         for record in root.findall(".//record"):
-            if record.attrib.get("model") in ("ir.actions.act_window", "ir.cron"):
+            if record.attrib.get("model") in ("ir.actions.act_window", "ir.actions.client", "ir.cron"):
                 for field in record.findall("./field"):
                     if field.attrib.get("name") == "name" and field.text:
                         terms.add(field.text.strip())
@@ -770,10 +871,12 @@ def synchronize() -> None:
         english_entry.msgstr = msgid
         english_entry.occurrences = list(pot_entry.occurrences)
         english_entry.flags = list(pot_entry.flags)
+        english_entry.comment = pot_entry.comment
         for name, language_index in (("zh_CN.po", 0), ("th.po", 1), ("th_TH.po", 1)):
             entry = _entry(catalogs[name], msgid)
             entry.occurrences = list(pot_entry.occurrences)
             entry.flags = list(pot_entry.flags)
+            entry.comment = pot_entry.comment
             if msgid in TRANSLATIONS:
                 entry.msgstr = TRANSLATIONS[msgid][language_index]
             elif not entry.msgstr or any(marker in entry.msgstr for marker in SUSPICIOUS_MARKERS):
@@ -825,6 +928,9 @@ def validate() -> None:
         for msgid in sorted(pot_ids & set(entries)):
             if set(entries[msgid].occurrences) != set(pot_entries[msgid].occurrences):
                 errors.append(f"{name}: source references differ for {msgid!r}")
+            for marker in ("odoo-python", "odoo-javascript"):
+                if marker in pot_entries[msgid].comment and marker not in entries[msgid].comment:
+                    errors.append(f"{name}: missing runtime marker {marker} for {msgid!r}")
         for msgid in sorted(entries):
             msgstr = entries[msgid].msgstr
             if not msgstr:

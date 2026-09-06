@@ -9,9 +9,10 @@ _logger = logging.getLogger(__name__)
 
 
 class IoTAttendanceController(http.Controller):
-    def _plain_ok(self, body="OK"):
+    def _plain_ok(self, body="OK", status=200):
         return request.make_response(
             body,
+            status=status,
             headers=[
                 ("Content-Type", "text/plain; charset=utf-8"),
                 # Some attendance terminals keep stale HTTP sessions and only recover after reboot.
@@ -22,8 +23,19 @@ class IoTAttendanceController(http.Controller):
             ],
         )
 
-    def _headers(self):
-        return {key: value for key, value in request.httprequest.headers.items()}
+    def _read_payload(self):
+        limit = 1024 * 1024
+        if (request.httprequest.content_length or 0) > limit:
+            raise ValueError("Attendance upload too large")
+        request.httprequest.max_content_length = limit
+        data = request.httprequest.get_data(cache=True)
+        if len(data) > limit:
+            raise ValueError("Attendance upload too large")
+        if not data and request.httprequest.content_length:
+            # Odoo may already have consumed a form-encoded body. Never ACK it
+            # as an empty successful upload when no attendance was imported.
+            raise ValueError("Attendance upload body unavailable; use text/plain")
+        return data.decode("utf-8", errors="strict")
 
     def _touch_device(self, device, serial_number="", payload_text=""):
         if not device:
@@ -35,14 +47,12 @@ class IoTAttendanceController(http.Controller):
                 # Throttle heartbeat writes to reduce contention under high request bursts.
                 if not device.adms_last_seen_at or (now - device.adms_last_seen_at).total_seconds() >= 15:
                     values["adms_last_seen_at"] = now
-                if payload_text and (not device.adms_last_payload or device.adms_last_payload[:10000] != payload_text[:10000]):
-                    values["adms_last_payload"] = payload_text[:10000]
                 if serial_number and not device.serial_number:
                     values["serial_number"] = serial_number
                 if values:
                     device.write(values)
         except Exception as exc:
-            _logger.warning("IoT attendance device update skipped: %s", exc)
+            _logger.warning("IoT attendance device update skipped type=%s", type(exc).__name__)
 
     def _compact_query_params(self):
         keep_keys = ("SN", "sn", "table", "Table", "Stamp", "stamp", "OpStamp", "ErrorDelay")
@@ -91,7 +101,7 @@ class IoTAttendanceController(http.Controller):
                     "method": request.httprequest.method,
                     "serial_number": serial_number or False,
                     "remote_ip": remote_ip or False,
-                    "payload_text": (payload_text or "")[:1000] or False,
+                    "payload_text": False,
                     "status": status,
                     "note": note or False,
                     "device_id": device.id if device else False,
@@ -101,34 +111,39 @@ class IoTAttendanceController(http.Controller):
                 return request_model.create_sampled(values, sample_seconds=sample_seconds)
         except Exception as exc:
             # Never block attendance ingest because auxiliary request logging failed.
-            _logger.warning("IoT attendance request log write skipped: %s", exc)
+            _logger.warning("IoT attendance request log write skipped type=%s", type(exc).__name__)
             return False
 
-    @http.route("/iot_attendance/push/<int:device_id>", type="http", auth="none", methods=["POST"], csrf=False)
+    @http.route("/iot_attendance/push/<int:device_id>", type="http", auth="none", methods=["POST"], csrf=False, readonly=False)
     def device_push(self, device_id, **kwargs):
-        try:
-            payload = json.loads((request.httprequest.data or b"{}").decode("utf-8"))
-        except Exception:
-            return request.make_json_response({"ok": False, "error": "invalid json"}, status=400)
         token = (request.httprequest.headers.get("X-Attendance-Token") or "").strip()
         device = request.env["iot.attendance.device"].sudo().browse(device_id)
         if not device.exists():
             return request.make_json_response({"ok": False, "error": "device not found"}, status=404)
         if not device._validate_webhook_token(token):
             return request.make_json_response({"ok": False, "error": "unauthorized"}, status=401)
+        try:
+            payload = json.loads(self._read_payload() or "{}")
+        except (ValueError, UnicodeError):
+            return request.make_json_response({"ok": False, "error": "invalid or oversized payload"}, status=400)
         punches = payload.get("punches") if isinstance(payload, dict) else None
         if punches is None:
             punches = [payload]
-        created = device._ingest_webhook_payload(punches)
+        try:
+            with request.env.cr.savepoint():
+                created = device._ingest_webhook_payload(punches)
+        except Exception:
+            _logger.warning("Attendance webhook ingest failed for device id=%s", device.id)
+            return request.make_json_response({"ok": False, "error": "attendance import failed"}, status=422)
         return request.make_json_response({"ok": True, "created": created})
 
-    @http.route(["/getrequest", "/iclock", "/iclock/getrequest"], type="http", auth="none", methods=["GET", "POST"], csrf=False)
+    @http.route(["/getrequest", "/iclock", "/iclock/getrequest"], type="http", auth="none", methods=["GET", "POST"], csrf=False, readonly=False)
     def adms_getrequest(self, **kwargs):
         serial_number = (request.params.get("SN") or request.params.get("sn") or "").strip()
         remote_ip = request.httprequest.remote_addr
         if not self._source_ip_allowed(remote_ip):
-            return self._plain_ok("OK")
-        payload_text = (request.httprequest.data or b"").decode("utf-8", errors="ignore")
+            return self._plain_ok("ERROR", status=403)
+        payload_text = ""
         device = request.env["iot.attendance.device"].sudo()._find_adms_device(serial_number, remote_ip=remote_ip)
         request_model = request.env["iot.attendance.request"].sudo()
         log = self._create_request_log(
@@ -146,70 +161,78 @@ class IoTAttendanceController(http.Controller):
             log.device_id = device.id
         return self._plain_ok("OK")
 
-    @http.route(["/cdata", "/iclock/cdata"], type="http", auth="none", methods=["GET", "POST"], csrf=False)
+    @http.route(["/cdata", "/iclock/cdata"], type="http", auth="none", methods=["GET", "POST"], csrf=False, readonly=False)
     def adms_cdata(self, **kwargs):
         serial_number = (request.params.get("SN") or request.params.get("sn") or "").strip()
         table = (request.params.get("table") or request.params.get("Table") or "").strip()
         remote_ip = request.httprequest.remote_addr
         if not self._source_ip_allowed(remote_ip):
-            return self._plain_ok("OK")
-        payload_text = (request.httprequest.data or b"").decode("utf-8", errors="ignore")
+            return self._plain_ok("ERROR", status=403)
+        if table.upper() not in ("", "ATTLOG"):
+            return self._plain_ok()
+        try:
+            payload_text = self._read_payload()
+        except (ValueError, UnicodeError):
+            return self._plain_ok("ERROR", status=400)
         device = request.env["iot.attendance.device"].sudo()._find_adms_device(serial_number, remote_ip=remote_ip)
         log = self._create_request_log(request.httprequest.path, serial_number, remote_ip, payload_text, device if device else None, "matched" if device else "ignored", f"table={table or '-'}")
         if not device:
-            return self._plain_ok("OK")
+            return self._plain_ok("ERROR", status=403)
         self._touch_device(device, serial_number, payload_text)
         if payload_text.strip():
             try:
-                created = device._ingest_adms_payload(payload_text=payload_text, table=table, serial_number=serial_number, remote_ip=remote_ip, query_params=request.params)
+                with request.env.cr.savepoint():
+                    created = device._ingest_adms_payload(payload_text=payload_text, table=table, serial_number=serial_number, remote_ip=remote_ip, query_params=request.params)
                 if log:
                     log.write({"status": "parsed", "note": f"table={table or '-'} created={created}"})
             except Exception as exc:
                 if log:
-                    log.write({"status": "error", "note": str(exc)[:255]})
-                _logger.exception("IoT ADMS ingest failed for device %s: %s", device.display_name, exc)
-                return self._plain_ok("ERROR")
+                    log.write({"status": "error", "note": "Attendance import failed; batch rolled back."})
+                _logger.warning("IoT ADMS ingest failed for device id=%s type=%s", device.id, type(exc).__name__)
+                return self._plain_ok("ERROR", status=500)
         else:
             if log:
                 log.write({"note": f"table={table or '-'} empty payload"})
         return self._plain_ok("OK")
 
-    @http.route(["/registry", "/iclock/registry"], type="http", auth="none", methods=["GET", "POST"], csrf=False)
+    @http.route(["/registry", "/iclock/registry"], type="http", auth="none", methods=["GET", "POST"], csrf=False, readonly=False)
     def adms_registry(self, **kwargs):
         serial_number = (request.params.get("SN") or request.params.get("sn") or "").strip()
         remote_ip = request.httprequest.remote_addr
         if not self._source_ip_allowed(remote_ip):
-            return self._plain_ok("OK")
-        payload_text = (request.httprequest.data or b"").decode("utf-8", errors="ignore")
+            return self._plain_ok("ERROR", status=403)
+        payload_text = ""
         device = request.env["iot.attendance.device"].sudo()._find_adms_device(serial_number, remote_ip=remote_ip)
         self._create_request_log(request.httprequest.path, serial_number, remote_ip, payload_text, device if device else None, "matched" if device else "ignored", "Registry")
         self._touch_device(device, serial_number, payload_text)
         return self._plain_ok("OK")
 
-    @http.route(["/devicecmd", "/iclock/devicecmd"], type="http", auth="none", methods=["GET", "POST"], csrf=False)
+    @http.route(["/devicecmd", "/iclock/devicecmd"], type="http", auth="none", methods=["GET", "POST"], csrf=False, readonly=False)
     def adms_devicecmd(self, **kwargs):
         serial_number = (request.params.get("SN") or request.params.get("sn") or "").strip()
         remote_ip = request.httprequest.remote_addr
         if not self._source_ip_allowed(remote_ip):
-            return self._plain_ok("OK")
-        payload_text = (request.httprequest.data or b"").decode("utf-8", errors="ignore")
+            return self._plain_ok("ERROR", status=403)
+        payload_text = ""
         device = request.env["iot.attendance.device"].sudo()._find_adms_device(serial_number, remote_ip=remote_ip)
         self._create_request_log(request.httprequest.path, serial_number, remote_ip, payload_text, device if device else None, "matched" if device else "ignored", "Device command poll")
         self._touch_device(device, serial_number, payload_text)
         return self._plain_ok("OK")
 
-    @http.route("/iclock/<path:subpath>", type="http", auth="none", methods=["GET", "POST"], csrf=False)
+    @http.route("/iclock/<path:subpath>", type="http", auth="none", methods=["GET", "POST"], csrf=False, readonly=False)
     def adms_catch_all(self, subpath=None, **kwargs):
         serial_number = (request.params.get("SN") or request.params.get("sn") or "").strip()
         table = (request.params.get("table") or request.params.get("Table") or "").strip()
         remote_ip = request.httprequest.remote_addr
         if not self._source_ip_allowed(remote_ip):
-            return self._plain_ok("OK")
-        payload_text = (request.httprequest.data or b"").decode("utf-8", errors="ignore")
+            return self._plain_ok("ERROR", status=403)
+        if table.upper() not in ("", "ATTLOG"):
+            return self._plain_ok()
+        try:
+            payload_text = self._read_payload()
+        except (ValueError, UnicodeError):
+            return self._plain_ok("ERROR", status=400)
         device = request.env["iot.attendance.device"].sudo()._find_adms_device(serial_number, remote_ip=remote_ip)
-        if table.upper() == "ATTPHOTO":
-            self._touch_device(device, serial_number, payload_text)
-            return self._plain_ok("OK")
         log = self._create_request_log(
             request.httprequest.path,
             serial_number,
@@ -222,17 +245,17 @@ class IoTAttendanceController(http.Controller):
         self._touch_device(device, serial_number, payload_text)
         if device and payload_text.strip():
             try:
-                created = device._ingest_adms_payload(
-                    payload_text=payload_text,
-                    table=table,
-                    serial_number=serial_number,
-                    remote_ip=remote_ip,
-                    query_params=request.params,
-                )
+                with request.env.cr.savepoint():
+                    created = device._ingest_adms_payload(
+                        payload_text=payload_text, table=table, serial_number=serial_number,
+                        remote_ip=remote_ip, query_params=request.params)
                 if log:
                     log.write({"status": "parsed", "note": f"catch-all table={table or '-'} created={created}"})
             except Exception as exc:
                 if log:
-                    log.write({"status": "error", "note": str(exc)[:255]})
-                _logger.exception("IoT ADMS catch-all ingest failed for %s: %s", request.httprequest.path, exc)
+                    log.write({"status": "error", "note": "Attendance import failed; batch rolled back."})
+                _logger.warning("IoT ADMS catch-all ingest failed type=%s", type(exc).__name__)
+                return self._plain_ok("ERROR", status=500)
+        elif not device and payload_text.strip():
+            return self._plain_ok("ERROR", status=403)
         return self._plain_ok("OK")

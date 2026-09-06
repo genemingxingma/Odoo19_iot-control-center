@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+    <t t-name="iot_control_center.OperationsOverview">
+        <div class="iot_workspace o_action" t-att-aria-busy="state.loading ? 'true' : 'false'">
+            <main class="iot_workspace_inner">
+                <header class="iot_overview_header">
+                    <div>
+                        <div class="iot_eyebrow">IoT Control Center</div>
+                        <h1>Operations Overview</h1>
+                        <p>See what needs attention, then open the right workspace.</p>
+                        <div t-if="state.data" class="iot_company_scope">
+                            <span>Selected companies</span>
+                            <strong t-esc="state.data.companies.join(' / ')"/>
+                        </div>
+                    </div>
+                    <div class="iot_refresh_block">
+                        <button class="btn btn-primary" t-on-click="refresh" t-att-disabled="state.loading">
+                            <i class="fa fa-refresh me-2" aria-hidden="true"/>Refresh overview
+                        </button>
+                        <small t-if="state.data"><span>Updated</span> <t t-esc="updatedAt"/></small>
+                    </div>
+                </header>
+                <div t-if="state.failed" class="alert alert-warning" role="alert">
+                    The overview could not be refreshed. Displayed values may be out of date. Please retry.
+                </div>
+                <div t-if="!state.data and state.loading" class="iot_loading" role="status">Loading device status...</div>
+                <t t-if="state.data">
+                    <section class="iot_attention_panel" aria-labelledby="iot_attention_title">
+                        <div class="iot_section_heading">
+                            <h2 id="iot_attention_title">Needs Attention</h2>
+                            <span>Click an item to review its records.</span>
+                        </div>
+                        <div t-if="state.data.priorities.length" class="iot_attention_grid">
+                            <button t-foreach="state.data.priorities" t-as="item" t-key="item.key"
+                                class="iot_attention_item" t-on-click="() => this.open(item.action)">
+                                <strong t-esc="number(item.count)"/>
+                                <span t-esc="item.title"/>
+                                <i class="fa fa-angle-right" aria-hidden="true"/>
+                            </button>
+                        </div>
+                        <div t-else="" class="iot_quiet_state">
+                            <i class="fa fa-check-circle" aria-hidden="true"/>
+                            <div><strong>No pending issues in this overview</strong><p>Device contact is not proof of physical operation. Use device confirmation for control checks.</p></div>
+                        </div>
+                    </section>
+                    <section class="iot_modules_grid" aria-label="IoT workspaces">
+                        <article t-foreach="state.data.cards" t-as="card" t-key="card.key" t-attf-class="iot_module_card iot_module_#{card.key}">
+                            <div class="iot_module_header">
+                                <span class="iot_module_icon"><i t-attf-class="fa #{card.icon}" aria-hidden="true"/></span>
+                                <div><h2 t-esc="card.title"/><p t-esc="card.description"/></div>
+                            </div>
+                            <div class="iot_module_metrics">
+                                <button t-on-click="() => this.open(card.action)"><strong t-esc="number(card.total)"/><span t-esc="card.total_label"/></button>
+                                <button t-on-click="() => this.open(card.secondary_action)"><strong t-esc="number(card.secondary_count)"/><span t-esc="card.secondary_label"/></button>
+                            </div>
+                            <button class="iot_contact_note" t-att-class="card.offline ? 'iot_contact_warning' : ''" t-on-click="() => this.open(card.attention_action)">
+                                <i t-att-class="card.offline ? 'fa fa-exclamation-circle' : 'fa fa-check-circle'" aria-hidden="true"/>
+                                <span t-esc="card.attention_label"/><strong t-esc="number(card.offline)"/>
+                            </button>
+                            <footer>
+                                <button class="btn iot_open_workspace" t-on-click="() => this.open(card.action)">Open workspace <i class="fa fa-arrow-right ms-2" aria-hidden="true"/></button>
+                                <button class="btn btn-link" t-on-click="() => this.open(card.detail_action)" t-esc="card.detail_label"/>
+                            </footer>
+                        </article>
+                    </section>
+                    <p class="iot_overview_note">Counts follow your selected companies and access permissions. Refresh to fetch current status; no control commands are sent from this overview.</p>
+                </t>
+            </main>
+        </div>
+    </t>
+</templates>

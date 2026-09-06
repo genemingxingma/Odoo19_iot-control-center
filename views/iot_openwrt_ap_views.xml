@@ -4,7 +4,7 @@
         <field name="name">iot.openwrt.ap.list</field>
         <field name="model">iot.openwrt.ap</field>
         <field name="arch" type="xml">
-            <list decoration-success="online" decoration-danger="status == 'error'" decoration-muted="status == 'offline'">
+            <list class="iot_list" decoration-success="online" decoration-danger="status == 'error'" decoration-muted="not online">
                 <field name="name"/>
                 <field name="model"/>
                 <field name="company_id" optional="show"/>
