@@ -4,6 +4,7 @@ import secrets
 
 from odoo import http
 from odoo.http import request
+from werkzeug.exceptions import RequestEntityTooLarge
 from ..core.telemetry import MAX_BODY_BYTES, envelope
 from ..services.tcp_service import GatewayNotRegistered, process_ingest_payload
 
@@ -19,7 +20,8 @@ class IoTInternalIngestController(http.Controller):
         length = request.httprequest.content_length
         if length and length > MAX_BODY_BYTES:
             raise ValueError("payload too large")
-        raw = request.httprequest.stream.read(MAX_BODY_BYTES + 1)
+        request.httprequest.max_content_length = MAX_BODY_BYTES
+        raw = request.httprequest.get_data(cache=True)
         if len(raw) > MAX_BODY_BYTES:
             raise ValueError("payload too large")
         data = json.loads(raw or b"{}")
@@ -41,13 +43,13 @@ class IoTInternalIngestController(http.Controller):
             return request.make_json_response(result)
         except GatewayNotRegistered:
             return request.make_json_response({"ok": False, "error": "gateway registration required"}, status=503)
-        except (ValueError, TypeError, KeyError, OverflowError):
+        except (ValueError, TypeError, KeyError, OverflowError, RequestEntityTooLarge):
             return request.make_json_response({"ok": False, "error": "invalid event"}, status=400)
         except Exception:
             _logger.exception("IoT event transaction failed on %s", route)
             return request.make_json_response({"ok": False, "error": "temporary ingest failure"}, status=503)
 
-    @http.route("/iot_control_center/internal/mqtt_ingest", type="http", auth="none", methods=["POST"], csrf=False)
+    @http.route("/iot_control_center/internal/mqtt_ingest", type="http", auth="none", methods=["POST"], csrf=False, readonly=False)
     def mqtt_ingest(self, **kwargs):
         def apply(data):
             if not isinstance(data.get("topic"), str) or not isinstance(data.get("payload"), str):
@@ -56,11 +58,11 @@ class IoTInternalIngestController(http.Controller):
             return {"ok": True, "event_id": data["event_id"]}
         return self._dispatch("mqtt", apply)
 
-    @http.route("/iot_control_center/internal/th_ingest_json", type="http", auth="none", methods=["POST"], csrf=False)
+    @http.route("/iot_control_center/internal/th_ingest_json", type="http", auth="none", methods=["POST"], csrf=False, readonly=False)
     def th_ingest_json(self, **kwargs):
         return self._dispatch("th.json", lambda data: process_ingest_payload(request.env, data), receipt=False)
 
-    @http.route("/iot_control_center/internal/th_ingest_binary", type="http", auth="none", methods=["POST"], csrf=False)
+    @http.route("/iot_control_center/internal/th_ingest_binary", type="http", auth="none", methods=["POST"], csrf=False, readonly=False)
     def th_ingest_binary(self, **kwargs):
         return self._dispatch("th.binary", lambda data: process_ingest_payload(request.env, data, binary=True), receipt=False)
 
@@ -68,7 +70,7 @@ class IoTInternalIngestController(http.Controller):
     def openwrt_inventory(self, **kwargs):
         return self._dispatch("openwrt.inventory", lambda data: {"ok": True, **request.env["iot.openwrt.ap"].sudo()._get_heartbeat_inventory()}, receipt=False)
 
-    @http.route("/iot_control_center/internal/openwrt_heartbeat", type="http", auth="none", methods=["POST"], csrf=False)
+    @http.route("/iot_control_center/internal/openwrt_heartbeat", type="http", auth="none", methods=["POST"], csrf=False, readonly=False)
     def openwrt_heartbeat(self, **kwargs):
         def apply(data):
             if not request.env["iot.openwrt.ap"].sudo()._apply_heartbeat_result(data):

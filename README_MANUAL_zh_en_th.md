@@ -4,6 +4,10 @@
 
 本手册描述 V2 候选架构，不代表生产服务器已切换。2.0.1 固件保持隔离；2.0.2 已修复定时配置处理问题，并通过两种板型的开关、保护和倒计时测试。11 台在线继电器已逐台升级、恢复原状态并通过短时联合验收；另有两台长期离线设备待处理。记录见 `deploy/RELAY_2_0_2_VALIDATION_2026-09-06.md`。
 
+### 归档设备保护（19.0.2.0.2）
+
+归档的继电器不会因历史保留消息或延迟上报被重新发现为新设备。归档前尚未发送的命令会取消，不再下发。离线旧固件设备应保持归档，完成升级与验证后再由管理员恢复使用。
+
 ### 运行总览与考勤核查（19.0.2.0.1）
 
 “功能分区 / 总览”先显示待处理事项，再列出继电器、环境监测、考勤和网络入口。统计只覆盖所选公司及可访问记录；点击数字查看对应筛选结果。总览不会发送开关指令，需手动刷新；刷新失败时会明确提示数据可能过期。
@@ -60,6 +64,10 @@ OpenWrt 首次连接前由管理员核实并安装 SSH 主机密钥。心跳最�
 
 ## English
 
+### Archived Device Protection (19.0.2.0.2)
+
+Retained or late reports do not rediscover archived relays. Commands still queued when a device is archived are cancelled. Keep offline legacy devices archived until an administrator upgrades and verifies them before returning them to service.
+
 ### Overview and Attendance Review (19.0.2.0.1)
 
 Start at Workspaces / Overview. Click priority counts to open the matching records in the selected companies. Refresh is manual; a failed refresh clearly marks potentially stale data. The overview never sends device commands. Probe cards show names, recent temperature/humidity and trend links. Relay confirmation is distinct from requested output state. Workspaces stack vertically on phones.
@@ -95,6 +103,10 @@ OpenWrt requires pre-verified SSH host keys. Heartbeats use bounded concurrency/
 V2 is a breaking release. Back up first and explicitly authorize removal of old module temperature/humidity observations and alerts. HR attendance and unrelated business data are not part of this reset. Do not upgrade production or real devices on the strength of compilation alone.
 
 ## ภาษาไทย
+
+### การป้องกันอุปกรณ์ที่เก็บถาวร (19.0.2.0.2)
+
+ข้อความที่ค้างอยู่หรือส่งมาล่าช้าจะไม่ทำให้รีเลย์ที่เก็บถาวรถูกค้นพบเป็นอุปกรณ์ใหม่ คำสั่งที่ยังรอส่งจะถูกยกเลิก อุปกรณ์ออฟไลน์ที่ใช้เฟิร์มแวร์เก่าควรคงสถานะเก็บถาวรไว้จนกว่าผู้ดูแลจะอัปเกรดและตรวจสอบก่อนนำกลับมาใช้งาน
 
 ### ภาพรวมและการตรวจสอบลงเวลา (19.0.2.0.1)
 

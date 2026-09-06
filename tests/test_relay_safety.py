@@ -2,6 +2,7 @@ import json
 import uuid
 import base64
 from datetime import timedelta
+from unittest.mock import patch
 
 from odoo import fields
 from odoo.exceptions import UserError
@@ -56,6 +57,42 @@ class TestRelaySafety(TransactionCase):
 
         self.assertEqual(self.device.relay_state, "off")
         self.assertEqual(self.device.last_seen, now)
+
+    def test_archived_relay_reports_do_not_rediscover_or_update_it(self):
+        now = fields.Datetime.now()
+        self.device.write({"active": False, "relay_state": "off", "last_seen": now})
+        for retained, module_id in ((True, self.module_id), (False, self.module_id), (True, None)):
+            message = self.env["iot.mqtt.message"]._create_from_mqtt(
+                f"iot/relay/{self.module_id}/telemetry",
+                json.dumps({"module_id": module_id, "state": "on", "firmware_version": "1.8.8"}),
+                retained=retained,
+            )
+            message._process_one()
+            self.assertEqual(message.device_id, self.device)
+            self.assertEqual(message.state, "done")
+        self.assertFalse(self.device.active)
+        self.assertEqual(self.device.relay_state, "off")
+        self.assertEqual(self.device.last_seen, now)
+        self.assertEqual(self.env["iot.device"].with_context(active_test=False).search_count(
+            [("serial", "=", self.module_id)]), 1)
+
+    def test_archiving_relay_cancels_previously_queued_commands(self):
+        command = self.env["iot.command"]._enqueue(self.device, "relay", {"state": "on"})
+        self.device.active = False
+        with patch.object(type(self.device), "_publish_command_via_middleware") as publish:
+            self.env["iot.command"]._cron_dispatch()
+            publish.assert_not_called()
+        self.assertEqual(command.state, "cancelled")
+
+    def test_reported_archived_identity_wins_over_active_topic_alias(self):
+        self.device.active = False
+        other = self.env["iot.device"].create({"name": "Other relay", "serial": "ALIAS" + self.module_id,
+            "company_id": self.env.company.id, "relay_state": "off"})
+        message = self.env["iot.mqtt.message"]._create_from_mqtt(
+            f"iot/relay/{other.serial}/telemetry", json.dumps({"module_id": self.module_id, "state": "on"}))
+        message._process_one(preloaded_device=other)
+        self.assertEqual(message.device_id, self.device)
+        self.assertEqual(other.relay_state, "off")
 
     def test_maximum_on_time_is_converted_to_seconds(self):
         self.device.max_continuous_on_minutes = 75

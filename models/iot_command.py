@@ -52,7 +52,7 @@ class IoTCommand(models.Model):
         self.search([("state", "in", ["queued", "sent"]), ("expires_at", "<=", now)]).write({"state": "expired"})
         self.env.cr.execute("SELECT id FROM iot_command WHERE state = 'queued' ORDER BY id LIMIT 20 FOR UPDATE SKIP LOCKED")
         for rec in self.browse([row[0] for row in self.env.cr.fetchall()]):
-            if rec.company_id != rec.device_id.company_id:
+            if not rec.device_id.active or not rec.company_id or rec.company_id != rec.device_id.company_id:
                 rec.state = "cancelled"
                 continue
             rec.attempts += 1

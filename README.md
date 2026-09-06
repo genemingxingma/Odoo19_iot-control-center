@@ -1,7 +1,9 @@
 # IoT Control Center V2 (Odoo 19)
 
 Company-isolated environmental monitoring, relay control, attendance and OpenWrt management.
-This is a breaking architecture candidate: Odoo `19.0.2.0.1`, bridge protocol `2`, relay firmware `2.0.2`.
+This is a breaking architecture candidate: Odoo `19.0.2.0.2`, bridge protocol `2`, relay firmware `2.0.2`.
+
+Archived relay identities remain quarantined when retained or late reports arrive. Pending commands are cancelled instead of being dispatched to archived or unbound devices.
 
 **2.0.1 remains quarantined.** Firmware 2.0.2 fixes the retained-schedule stack failure and passed both board-profile canaries. All 11 online relays passed serial upgrade, restoration and bounded fleet observation; two long-offline devices remain pending. See [the 2.0.2 hardware validation](deploy/RELAY_2_0_2_VALIDATION_2026-09-06.md). Production Odoo remains on V1; firmware acceptance is not a backend cutover.
 The candidate is for isolated validation, not permission to upgrade a production database or real devices.

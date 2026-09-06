@@ -99,6 +99,12 @@ class IoTMQTTMessage(models.Model):
             )
         if device:
             return device
+        archived = device_model.with_context(active_test=False).search(
+            [("active", "=", False), "|", ("serial", "=ilike", key), ("module_id", "=ilike", key)],
+            order="company_id desc, id desc", limit=1,
+        )
+        if archived:
+            return archived
         return device_model.with_context(iot_auto_discovery=True).create({"name": key, "serial": key, "company_id": False})
 
     @api.model
@@ -134,14 +140,13 @@ class IoTMQTTMessage(models.Model):
         key = self._normalize_device_key(module_id)
         if not key:
             return self.env["iot.device"].browse()
-        return self.env["iot.device"].sudo().search(
+        return self.env["iot.device"].sudo().with_context(active_test=False).search(
             [
-                ("active", "=", True),
                 "|",
                 ("module_id", "=ilike", key),
                 ("serial", "=ilike", key),
             ],
-            order="company_id desc, last_seen desc, id desc",
+            order="active desc, company_id desc, last_seen desc, id desc",
             limit=1,
         )
 
@@ -165,6 +170,10 @@ class IoTMQTTMessage(models.Model):
         }
         if device:
             done_vals["device_id"] = device.id
+            # A retained or late report must not undo an operator's quarantine.
+            if not device.active:
+                self.with_context(**no_track_ctx).write(done_vals)
+                return
             device = device.with_context(**no_track_ctx)
             state = payload.get("state") if isinstance(payload, dict) else None
             ota_state = payload.get("ota_state") if isinstance(payload, dict) else None
