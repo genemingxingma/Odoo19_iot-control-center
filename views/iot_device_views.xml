@@ -21,12 +21,12 @@
                 <field name="mqtt_route" string="Network" widget="badge"/>
                 <field name="total_on_hours" string="Accumulated ON (Hours)"/>
                 <field name="last_seen"/>
-                <button name="action_turn_on" type="object" string="ON" class="iot_toggle_btn iot_toggle_left iot_toggle_on_active" invisible="relay_state != 'on'"/>
-                <button name="action_turn_on" type="object" string="ON" class="iot_toggle_btn iot_toggle_left iot_toggle_passive" invisible="relay_state == 'on'"/>
-                <button name="action_turn_off" type="object" string="OFF" class="iot_toggle_btn iot_toggle_right iot_toggle_off_active" invisible="relay_state != 'off'"/>
-                <button name="action_turn_off" type="object" string="OFF" class="iot_toggle_btn iot_toggle_right iot_toggle_passive" invisible="relay_state == 'off'"/>
-                <button name="action_delay_toggle" type="object" string="Delay" class="iot_toggle_btn iot_toggle_single iot_toggle_on_active" invisible="delay_active != True"/>
-                <button name="action_delay_toggle" type="object" string="Delay" class="iot_toggle_btn iot_toggle_single iot_toggle_passive" invisible="delay_active == True"/>
+                <button name="action_turn_on" groups="iot_control_center.group_iot_operator" type="object" string="ON" class="iot_toggle_btn iot_toggle_left iot_toggle_on_active" invisible="relay_state != 'on'"/>
+                <button name="action_turn_on" groups="iot_control_center.group_iot_operator" type="object" string="ON" class="iot_toggle_btn iot_toggle_left iot_toggle_passive" invisible="relay_state == 'on'"/>
+                <button name="action_turn_off" groups="iot_control_center.group_iot_operator" type="object" string="OFF" class="iot_toggle_btn iot_toggle_right iot_toggle_off_active" invisible="relay_state != 'off'"/>
+                <button name="action_turn_off" groups="iot_control_center.group_iot_operator" type="object" string="OFF" class="iot_toggle_btn iot_toggle_right iot_toggle_passive" invisible="relay_state == 'off'"/>
+                <button name="action_delay_toggle" groups="iot_control_center.group_iot_operator" type="object" string="Delay" class="iot_toggle_btn iot_toggle_single iot_toggle_on_active" invisible="delay_active != True"/>
+                <button name="action_delay_toggle" groups="iot_control_center.group_iot_operator" type="object" string="Delay" class="iot_toggle_btn iot_toggle_single iot_toggle_passive" invisible="delay_active == True"/>
             </list>
         </field>
     </record>
@@ -73,12 +73,12 @@
                                 <span>Accumulated ON (Hours): </span><field name="total_on_hours"/>
                             </div>
                             <div class="iot_toggle_group">
-                                <button type="object" name="action_turn_on" class="iot_toggle_btn iot_toggle_left iot_toggle_on_active" invisible="relay_state != 'on'">ON</button>
-                                <button type="object" name="action_turn_on" class="iot_toggle_btn iot_toggle_left iot_toggle_passive" invisible="relay_state == 'on'">ON</button>
-                                <button type="object" name="action_turn_off" class="iot_toggle_btn iot_toggle_right iot_toggle_off_active" invisible="relay_state != 'off'">OFF</button>
-                                <button type="object" name="action_turn_off" class="iot_toggle_btn iot_toggle_right iot_toggle_passive" invisible="relay_state == 'off'">OFF</button>
-                                <button type="object" name="action_delay_toggle" class="iot_toggle_btn iot_toggle_single iot_toggle_on_active" invisible="delay_active != True">Delay</button>
-                                <button type="object" name="action_delay_toggle" class="iot_toggle_btn iot_toggle_single iot_toggle_passive" invisible="delay_active == True">Delay</button>
+                                <button type="object" name="action_turn_on" groups="iot_control_center.group_iot_operator" class="iot_toggle_btn iot_toggle_left iot_toggle_on_active" invisible="relay_state != 'on'">ON</button>
+                                <button type="object" name="action_turn_on" groups="iot_control_center.group_iot_operator" class="iot_toggle_btn iot_toggle_left iot_toggle_passive" invisible="relay_state == 'on'">ON</button>
+                                <button type="object" name="action_turn_off" groups="iot_control_center.group_iot_operator" class="iot_toggle_btn iot_toggle_right iot_toggle_off_active" invisible="relay_state != 'off'">OFF</button>
+                                <button type="object" name="action_turn_off" groups="iot_control_center.group_iot_operator" class="iot_toggle_btn iot_toggle_right iot_toggle_passive" invisible="relay_state == 'off'">OFF</button>
+                                <button type="object" name="action_delay_toggle" groups="iot_control_center.group_iot_operator" class="iot_toggle_btn iot_toggle_single iot_toggle_on_active" invisible="delay_active != True">Delay</button>
+                                <button type="object" name="action_delay_toggle" groups="iot_control_center.group_iot_operator" class="iot_toggle_btn iot_toggle_single iot_toggle_passive" invisible="delay_active == True">Delay</button>
                             </div>
                         </div>
                     </t>
@@ -94,12 +94,12 @@
             <form>
                 <header>
                     <button name="action_unbind" type="object" string="Unbind" class="btn-secondary" confirm="Unbind this switch from current company?"/>
-                    <button name="action_turn_on" type="object" string="Turn On" class="btn-primary" invisible="relay_state != 'on'"/>
-                    <button name="action_turn_on" type="object" string="Turn On" class="btn-secondary" invisible="relay_state == 'on'"/>
-                    <button name="action_turn_off" type="object" string="Turn Off" class="btn-primary" invisible="relay_state != 'off'"/>
-                    <button name="action_turn_off" type="object" string="Turn Off" class="btn-secondary" invisible="relay_state == 'off'"/>
-                    <button name="action_delay_toggle" type="object" string="Delay Switch" class="btn-primary" invisible="delay_active != True"/>
-                    <button name="action_delay_toggle" type="object" string="Delay Switch" class="btn-secondary" invisible="delay_active == True"/>
+                    <button name="action_turn_on" groups="iot_control_center.group_iot_operator" type="object" string="Turn On" class="btn-primary" invisible="relay_state != 'on'"/>
+                    <button name="action_turn_on" groups="iot_control_center.group_iot_operator" type="object" string="Turn On" class="btn-secondary" invisible="relay_state == 'on'"/>
+                    <button name="action_turn_off" groups="iot_control_center.group_iot_operator" type="object" string="Turn Off" class="btn-primary" invisible="relay_state != 'off'"/>
+                    <button name="action_turn_off" groups="iot_control_center.group_iot_operator" type="object" string="Turn Off" class="btn-secondary" invisible="relay_state == 'off'"/>
+                    <button name="action_delay_toggle" groups="iot_control_center.group_iot_operator" type="object" string="Delay Switch" class="btn-primary" invisible="delay_active != True"/>
+                    <button name="action_delay_toggle" groups="iot_control_center.group_iot_operator" type="object" string="Delay Switch" class="btn-secondary" invisible="delay_active == True"/>
                     <button name="action_reset_uptime" type="object" string="Reset Accumulated Time"/>
                     <button name="action_sync_network_config" type="object" string="Sync Internal Network"/>
                     <field name="relay_state" widget="statusbar" statusbar_visible="unknown,off,on" readonly="1"/>
@@ -124,6 +124,7 @@
                             <field name="relay_command_state" readonly="1" widget="badge"/>
                             <field name="last_command_confirmed_at" readonly="1"/>
                             <field name="max_continuous_on_minutes"/>
+                            <field name="safety_critical"/>
                             <field name="delay_duration_minutes"/>
                             <field name="delay_active" readonly="1"/>
                             <field name="delay_started_at" readonly="1"/>

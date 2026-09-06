@@ -5,7 +5,6 @@ def pre_init_check(cr):
     missing = []
     required = {
         "pytz": "pytz",
-        "paho.mqtt.client": "paho-mqtt",
     }
     for module_name, package_name in required.items():
         try:

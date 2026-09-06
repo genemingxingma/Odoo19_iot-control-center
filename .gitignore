@@ -7,3 +7,13 @@ firmware/**/.pio/
 middleware/**/target/
 *.elf
 *.map
+.env
+.env.*
+!.env.example
+.secrets/
+*.pem
+*.key
+*.pfx
+*.p12
+*.dump
+*.backup

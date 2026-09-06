@@ -1,6 +1,6 @@
 use std::collections::HashMap;
-use std::fs::{self, OpenOptions};
-use std::io::{BufRead, BufReader, Write};
+mod outbox;
+use outbox::DurableQueue;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -20,7 +20,7 @@ use sha2::{Digest, Sha256};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::process::Command;
-use tokio::sync::{Mutex, RwLock};
+use tokio::sync::RwLock;
 use tokio::task::JoinSet;
 use tracing::{error, info, warn};
 
@@ -36,18 +36,6 @@ struct Forwarder {
     http: Client,
     odoo_base_url: String,
     token: String,
-}
-
-#[derive(Clone)]
-struct DurableQueue {
-    path: Arc<PathBuf>,
-    lock: Arc<Mutex<()>>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct QueuedPost {
-    path: String,
-    body: Value,
 }
 
 #[derive(Debug, Deserialize)]
@@ -170,7 +158,7 @@ impl Config {
             ),
         );
         let default_queue_path = std::env::temp_dir()
-            .join("iot_bridge_forward_queue.jsonl")
+            .join("iot_bridge_outbox_v2")
             .to_string_lossy()
             .to_string();
         let queue_path = env_or("IOT_BRIDGE_QUEUE_PATH", &default_queue_path);
@@ -308,7 +296,7 @@ async fn main() -> anyhow::Result<()> {
         odoo_base_url: cfg.odoo_base_url.clone().trim_end_matches('/').to_string(),
         token: cfg.middleware_token.clone(),
     });
-    let forward_queue = Arc::new(DurableQueue::new(PathBuf::from(cfg.queue_path.clone())));
+    let forward_queue = Arc::new(DurableQueue::new(PathBuf::from(cfg.queue_path.clone())).await?);
     let queue_loop_forwarder = forwarder.clone();
     let queue_loop_queue = forward_queue.clone();
     tokio::spawn(async move {
@@ -341,10 +329,16 @@ async fn main() -> anyhow::Result<()> {
 
     let openwrt_forwarder = forwarder.clone();
     let openwrt_key_path = cfg.openwrt_ssh_key_path.clone();
+    let openwrt_queue = forward_queue.clone();
     let openwrt_cache_for_loop = openwrt_cache.clone();
     tokio::spawn(async move {
-        run_openwrt_heartbeat_loop(openwrt_forwarder, openwrt_key_path, openwrt_cache_for_loop)
-            .await;
+        run_openwrt_heartbeat_loop(
+            openwrt_forwarder,
+            openwrt_key_path,
+            openwrt_cache_for_loop,
+            openwrt_queue,
+        )
+        .await;
     });
 
     let app = Router::new()
@@ -369,11 +363,13 @@ async fn main() -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn healthz() -> Json<ApiResponse> {
-    Json(ApiResponse {
-        ok: true,
-        message: "ok".to_string(),
-    })
+async fn healthz() -> Json<Value> {
+    let failures = INGRESS_FAILURES.load(std::sync::atomic::Ordering::Relaxed);
+    let mqtt = MQTT_CONNECTED.load(std::sync::atomic::Ordering::Relaxed);
+    Json(
+        serde_json::json!({"ok": failures == 0 && mqtt, "mqtt_connected": mqtt,
+        "ingress_persistence_failures": failures, "protocol_version": 2}),
+    )
 }
 
 async fn switch_command(
@@ -1005,124 +1001,62 @@ fn extract_openwrt_release_version(response: &OpenwrtActionResponse) -> Option<S
         .filter(|value| !value.is_empty())
 }
 
-impl DurableQueue {
-    fn new(path: PathBuf) -> Self {
-        Self {
-            path: Arc::new(path),
-            lock: Arc::new(Mutex::new(())),
+async fn forward_or_queue(_forwarder: &Forwarder, queue: &DurableQueue, path: &str, body: &Value) {
+    let item = match DurableQueue::prepare(path, body) {
+        Ok(item) => item,
+        Err(_) => {
+            INGRESS_FAILURES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            return;
         }
-    }
-
-    async fn push(&self, item: QueuedPost) -> anyhow::Result<()> {
-        let _guard = self.lock.lock().await;
-        if let Some(parent) = self.path.parent() {
-            if !parent.as_os_str().is_empty() {
-                fs::create_dir_all(parent)
-                    .with_context(|| format!("create queue directory {}", parent.display()))?;
+    };
+    loop {
+        match queue.persist(&item).await {
+            Ok(()) => return,
+            Err(err) => {
+                error!("ingress backpressure: event persistence unavailable: {err}");
+                INGRESS_FAILURES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                tokio::time::sleep(Duration::from_secs(2)).await;
             }
-        }
-        let line = serde_json::to_string(&item).context("encode queued post")?;
-        let mut file = OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(self.path.as_ref())
-            .with_context(|| format!("open queue file {}", self.path.display()))?;
-        file.write_all(line.as_bytes())
-            .context("append queue line")?;
-        file.write_all(b"\n").context("append queue newline")?;
-        Ok(())
-    }
-
-    async fn take_batch(&self, limit: usize) -> anyhow::Result<Vec<QueuedPost>> {
-        let _guard = self.lock.lock().await;
-        if !self.path.exists() {
-            return Ok(Vec::new());
-        }
-        let file = OpenOptions::new()
-            .read(true)
-            .open(self.path.as_ref())
-            .with_context(|| format!("read queue file {}", self.path.display()))?;
-        let reader = BufReader::new(file);
-        let mut taken = Vec::new();
-        let mut remaining = Vec::new();
-        for line in reader.lines() {
-            let line = line.context("read queue line")?;
-            if line.trim().is_empty() {
-                continue;
-            }
-            if taken.len() < limit {
-                match serde_json::from_str::<QueuedPost>(&line) {
-                    Ok(item) => taken.push(item),
-                    Err(err) => warn!("dropping invalid queue line: {err}"),
-                }
-            } else {
-                remaining.push(line);
-            }
-        }
-        let tmp_path = self.path.with_extension("jsonl.tmp");
-        {
-            let mut tmp = OpenOptions::new()
-                .create(true)
-                .write(true)
-                .truncate(true)
-                .open(&tmp_path)
-                .with_context(|| format!("open queue tmp file {}", tmp_path.display()))?;
-            for line in remaining {
-                tmp.write_all(line.as_bytes())
-                    .context("rewrite queue line")?;
-                tmp.write_all(b"\n").context("rewrite queue newline")?;
-            }
-        }
-        fs::rename(&tmp_path, self.path.as_ref()).with_context(|| {
-            format!(
-                "replace queue file {} with {}",
-                self.path.display(),
-                tmp_path.display()
-            )
-        })?;
-        Ok(taken)
-    }
-}
-
-async fn forward_or_queue(forwarder: &Forwarder, queue: &DurableQueue, path: &str, body: &Value) {
-    if let Err(err) = forwarder.post_json(path, body).await {
-        warn!("forward {} failed, queued for retry: {err}", path);
-        if let Err(queue_err) = queue
-            .push(QueuedPost {
-                path: path.to_string(),
-                body: body.clone(),
-            })
-            .await
-        {
-            error!("failed to persist queued post for {}: {queue_err}", path);
         }
     }
 }
 
 async fn run_forward_queue_loop(forwarder: Arc<Forwarder>, queue: Arc<DurableQueue>) {
     loop {
-        match queue.take_batch(200).await {
-            Ok(items) if items.is_empty() => {}
+        match queue.batch(200).await {
             Ok(items) => {
-                let mut failed = 0_usize;
                 for item in items {
-                    if let Err(err) = forwarder.post_json(&item.path, &item.body).await {
-                        failed += 1;
-                        warn!("queued forward {} failed again: {err}", item.path);
-                        if let Err(queue_err) = queue.push(item).await {
-                            error!("failed to requeue post: {queue_err}");
+                    match forwarder.post_json(&item.path, &item.body).await {
+                        Ok(()) => {
+                            if let Err(err) = queue.ack(&item.id).await {
+                                error!("ACK persistence failed: {err}");
+                            }
                         }
+                        Err(err) if err.downcast_ref::<RejectedEvent>().is_some() => {
+                            if let Err(err) = queue.reject(&item.id).await {
+                                error!("dead-letter move failed: {err}");
+                            }
+                        }
+                        Err(_) => {}
                     }
                 }
-                if failed == 0 {
-                    info!("forward queue drained successfully");
-                }
             }
-            Err(err) => warn!("forward queue drain failed: {err:#}"),
+            Err(err) => error!("outbox read failed: {err}"),
         }
         tokio::time::sleep(Duration::from_secs(5)).await;
     }
 }
+
+#[derive(Debug)]
+struct RejectedEvent;
+impl std::fmt::Display for RejectedEvent {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("permanent event rejection")
+    }
+}
+impl std::error::Error for RejectedEvent {}
+static INGRESS_FAILURES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+static MQTT_CONNECTED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 async fn run_mqtt_loop(
     mqtt_client: AsyncClient,
@@ -1138,6 +1072,7 @@ async fn run_mqtt_loop(
         match event_loop.poll().await {
             Ok(Event::Incoming(Incoming::ConnAck(_))) => {
                 info!("mqtt connected");
+                MQTT_CONNECTED.store(true, std::sync::atomic::Ordering::Relaxed);
                 if let Err(err) = mqtt_client
                     .subscribe(status_pattern.clone(), QoS::AtLeastOnce)
                     .await
@@ -1169,6 +1104,7 @@ async fn run_mqtt_loop(
             Ok(_) => {}
             Err(err) => {
                 warn!("mqtt event loop error: {err}; retrying");
+                MQTT_CONNECTED.store(false, std::sync::atomic::Ordering::Relaxed);
                 tokio::time::sleep(Duration::from_millis(800)).await;
             }
         }
@@ -1182,11 +1118,14 @@ async fn run_th_tcp_server(
 ) -> anyhow::Result<()> {
     let listener = TcpListener::bind(listen).await?;
     info!("th tcp listening on {}", listen);
+    let connections = Arc::new(tokio::sync::Semaphore::new(256));
     loop {
+        let permit = connections.clone().acquire_owned().await?;
         let (socket, remote) = listener.accept().await?;
         let forwarder_clone = forwarder.clone();
         let queue_clone = queue.clone();
         tokio::spawn(async move {
+            let _permit = permit;
             if let Err(err) = handle_th_socket(socket, remote, forwarder_clone, queue_clone).await {
                 warn!("th connection {} error: {err:#}", remote);
             }
@@ -1204,11 +1143,12 @@ async fn handle_th_socket(
     let mut frame_buf = Vec::<u8>::new();
 
     loop {
-        let n = socket.read(&mut buf).await?;
+        let n = tokio::time::timeout(Duration::from_secs(300), socket.read(&mut buf)).await??;
         if n == 0 {
             break;
         }
         frame_buf.extend_from_slice(&buf[..n]);
+        anyhow::ensure!(frame_buf.len() <= 2 * 1024 * 1024, "TH buffer too large");
         process_mixed_buffer(&mut frame_buf, remote, &forwarder, &queue).await?;
     }
     Ok(())
@@ -1297,6 +1237,7 @@ async fn run_openwrt_heartbeat_loop(
     forwarder: Arc<Forwarder>,
     default_key_path: Option<String>,
     cache: Arc<RwLock<HashMap<String, CachedOpenwrtTelemetry>>>,
+    queue: Arc<DurableQueue>,
 ) {
     let mut probe_counters: HashMap<i64, u32> = HashMap::new();
     let mut sleep_sec = 300_u64;
@@ -1324,95 +1265,115 @@ async fn run_openwrt_heartbeat_loop(
         let full_probe_every = inventory.full_probe_every.unwrap_or(6).max(1);
         let _offline_failure_threshold = inventory.offline_failure_threshold.unwrap_or(2).max(1);
 
+        let mut tasks = JoinSet::new();
         for item in inventory.items {
             let counter = probe_counters.entry(item.id).or_insert(0);
             *counter = counter.saturating_add(1);
             let full_probe = *counter == 1 || (*counter % full_probe_every == 0);
-            let key_path = match resolve_key_path(item.key_path.clone(), default_key_path.clone()) {
-                Ok(path) => path,
-                Err(err) => {
-                    let _ = forwarder
-                        .post_json(
-                            "/iot_control_center/internal/openwrt_heartbeat",
-                            &serde_json::json!(OpenwrtHeartbeatPayload {
+            let forwarder = forwarder.clone();
+            let queue = queue.clone();
+            let cache = cache.clone();
+            let default_key_path = default_key_path.clone();
+            tasks.spawn(async move {
+                let key_path =
+                    match resolve_key_path(item.key_path.clone(), default_key_path.clone()) {
+                        Ok(path) => path,
+                        Err(err) => {
+                            forward_or_queue(
+                                &forwarder,
+                                &queue,
+                                "/iot_control_center/internal/openwrt_heartbeat",
+                                &serde_json::json!(OpenwrtHeartbeatPayload {
+                                    id: item.id,
+                                    auth_token: item.auth_token.clone(),
+                                    ok: false,
+                                    mode: if full_probe {
+                                        "probe".to_string()
+                                    } else {
+                                        "heartbeat".to_string()
+                                    },
+                                    error: Some(err.to_string()),
+                                    facts: None,
+                                }),
+                            )
+                            .await;
+                            return;
+                        }
+                    };
+
+                let payload = if full_probe {
+                    match perform_openwrt_probe(&item.host, item.port, &item.username, &key_path)
+                        .await
+                    {
+                        Ok(result) => {
+                            cache_openwrt_probe(
+                                &cache,
+                                &item.host,
+                                item.port,
+                                &item.username,
+                                &result,
+                            )
+                            .await;
+                            OpenwrtHeartbeatPayload {
                                 id: item.id,
                                 auth_token: item.auth_token.clone(),
-                                ok: false,
-                                mode: if full_probe {
-                                    "probe".to_string()
-                                } else {
-                                    "heartbeat".to_string()
-                                },
-                                error: Some(err.to_string()),
-                                facts: None,
-                            }),
-                        )
-                        .await;
-                    continue;
-                }
-            };
-
-            let payload = if full_probe {
-                match perform_openwrt_probe(&item.host, item.port, &item.username, &key_path).await
-                {
-                    Ok(result) => {
-                        cache_openwrt_probe(&cache, &item.host, item.port, &item.username, &result)
-                            .await;
-                        OpenwrtHeartbeatPayload {
+                                ok: true,
+                                mode: "probe".to_string(),
+                                error: None,
+                                facts: result.facts,
+                            }
+                        }
+                        Err(err) => OpenwrtHeartbeatPayload {
+                            id: item.id,
+                            auth_token: item.auth_token.clone(),
+                            ok: false,
+                            mode: "probe".to_string(),
+                            error: Some(err.to_string()),
+                            facts: None,
+                        },
+                    }
+                } else {
+                    match run_ssh_command(&item.host, item.port, &item.username, &key_path, "true")
+                        .await
+                    {
+                        Ok(_) => OpenwrtHeartbeatPayload {
                             id: item.id,
                             auth_token: item.auth_token.clone(),
                             ok: true,
-                            mode: "probe".to_string(),
+                            mode: "heartbeat".to_string(),
                             error: None,
-                            facts: result.facts,
-                        }
+                            facts: None,
+                        },
+                        Err(err) => OpenwrtHeartbeatPayload {
+                            id: item.id,
+                            auth_token: item.auth_token.clone(),
+                            ok: false,
+                            mode: "heartbeat".to_string(),
+                            error: Some(err.to_string()),
+                            facts: None,
+                        },
                     }
-                    Err(err) => OpenwrtHeartbeatPayload {
-                        id: item.id,
-                        auth_token: item.auth_token.clone(),
-                        ok: false,
-                        mode: "probe".to_string(),
-                        error: Some(err.to_string()),
-                        facts: None,
-                    },
-                }
-            } else {
-                match run_ssh_command(&item.host, item.port, &item.username, &key_path, "true")
-                    .await
-                {
-                    Ok(_) => OpenwrtHeartbeatPayload {
-                        id: item.id,
-                        auth_token: item.auth_token.clone(),
-                        ok: true,
-                        mode: "heartbeat".to_string(),
-                        error: None,
-                        facts: None,
-                    },
-                    Err(err) => OpenwrtHeartbeatPayload {
-                        id: item.id,
-                        auth_token: item.auth_token.clone(),
-                        ok: false,
-                        mode: "heartbeat".to_string(),
-                        error: Some(err.to_string()),
-                        facts: None,
-                    },
-                }
-            };
+                };
 
-            if let Err(err) = forwarder
-                .post_json(
+                forward_or_queue(
+                    &forwarder,
+                    &queue,
                     "/iot_control_center/internal/openwrt_heartbeat",
-                    &serde_json::to_value(payload).unwrap_or_else(|_| serde_json::json!({})),
+                    &serde_json::to_value(payload).unwrap(),
                 )
-                .await
-            {
-                warn!(
-                    "openwrt heartbeat writeback failed for ap {}: {err}",
-                    item.id
-                );
+                .await;
+            });
+            if tasks.len() >= 8 {
+                if let Some(Err(err)) = tasks.join_next().await {
+                    warn!("AP probe task failed: {err}");
+                }
             }
         }
-
+        while let Some(result) = tasks.join_next().await {
+            if let Err(err) = result {
+                warn!("AP probe task failed: {err}");
+            }
+        }
         tokio::time::sleep(Duration::from_secs(sleep_sec)).await;
     }
 }
@@ -1439,7 +1400,19 @@ impl Forwarder {
                 .send()
                 .await
             {
-                Ok(resp) if resp.status().is_success() => return Ok(()),
+                Ok(resp) if resp.status().is_success() => {
+                    let reply: Value = resp.json().await.context("invalid ingest receipt")?;
+                    let identity_matches = body
+                        .get("event_id")
+                        .map_or(true, |id| reply.get("event_id") == Some(id));
+                    if reply.get("ok") == Some(&Value::Bool(true)) && identity_matches {
+                        return Ok(());
+                    }
+                    anyhow::bail!("ingest response did not confirm the event");
+                }
+                Ok(resp) if matches!(resp.status().as_u16(), 400 | 413 | 422) => {
+                    return Err(RejectedEvent.into())
+                }
                 Ok(resp) => {
                     last_err = Some(anyhow::anyhow!("status {}", resp.status()));
                 }
@@ -1588,20 +1561,27 @@ async fn run_ssh_command(
     key_path: &str,
     command: &str,
 ) -> anyhow::Result<String> {
-    let output = Command::new("ssh")
-        .arg("-i")
-        .arg(key_path)
-        .arg("-o")
-        .arg("BatchMode=yes")
-        .arg("-o")
-        .arg("StrictHostKeyChecking=accept-new")
-        .arg("-p")
-        .arg(port.to_string())
-        .arg(format!("{}@{}", username, host))
-        .arg(command)
-        .output()
-        .await
-        .context("failed to spawn ssh command")?;
+    let output = tokio::time::timeout(
+        Duration::from_secs(45),
+        Command::new("ssh")
+            .kill_on_drop(true)
+            .arg("-i")
+            .arg(key_path)
+            .arg("-o")
+            .arg("BatchMode=yes")
+            .arg("-o")
+            .arg("StrictHostKeyChecking=yes")
+            .arg("-o")
+            .arg("ConnectTimeout=8")
+            .arg("-p")
+            .arg(port.to_string())
+            .arg(format!("{}@{}", username, host))
+            .arg(command)
+            .output(),
+    )
+    .await
+    .context("SSH deadline exceeded")?
+    .context("failed to spawn ssh command")?;
     if !output.status.success() {
         return Err(anyhow::anyhow!(
             "ssh command failed: {}",
@@ -2358,5 +2338,61 @@ fn sanitize_client_id(value: &str) -> String {
         "default".to_string()
     } else {
         out
+    }
+}
+
+#[cfg(test)]
+mod receipt_tests {
+    use super::*;
+
+    async fn response(status: StatusCode, reply: Value) -> anyhow::Result<()> {
+        let listener = TcpListener::bind("127.0.0.1:0").await?;
+        let address = listener.local_addr()?;
+        let app = Router::new().route("/event", post(move || async move { (status, Json(reply)) }));
+        let server = tokio::spawn(async move { axum::serve(listener, app).await });
+        let forwarder = Forwarder {
+            http: Client::builder().no_proxy().build()?,
+            odoo_base_url: format!("http://{address}"),
+            token: String::new(),
+        };
+        let result = forwarder
+            .post_json("/event", &serde_json::json!({"event_id": "receipt"}))
+            .await;
+        server.abort();
+        result
+    }
+
+    #[tokio::test]
+    async fn matching_receipt_is_required_for_success() {
+        assert!(response(
+            StatusCode::OK,
+            serde_json::json!({"ok": true, "event_id": "receipt"})
+        )
+        .await
+        .is_ok());
+        assert!(response(
+            StatusCode::OK,
+            serde_json::json!({"ok": true, "event_id": "wrong"})
+        )
+        .await
+        .is_err());
+        assert!(response(
+            StatusCode::OK,
+            serde_json::json!({"ok": false, "event_id": "receipt"})
+        )
+        .await
+        .is_err());
+    }
+
+    #[tokio::test]
+    async fn permanent_and_transient_errors_remain_distinct() {
+        let permanent = response(StatusCode::BAD_REQUEST, serde_json::json!({}))
+            .await
+            .unwrap_err();
+        assert!(permanent.downcast_ref::<RejectedEvent>().is_some());
+        let transient = response(StatusCode::SERVICE_UNAVAILABLE, serde_json::json!({}))
+            .await
+            .unwrap_err();
+        assert!(transient.downcast_ref::<RejectedEvent>().is_none());
     }
 }

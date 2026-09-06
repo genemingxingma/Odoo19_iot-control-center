@@ -1,4 +1,7 @@
 from . import res_company
+from . import ingest_event
+from . import iot_access
+from . import iot_command
 from . import iot_department
 from . import iot_location
 from . import iot_device_group

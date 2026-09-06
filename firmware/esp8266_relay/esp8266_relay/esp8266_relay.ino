@@ -15,22 +15,22 @@ static const unsigned long MQTT_PRIMARY_RETRY_MS = 300000;
 static const uint8_t MQTT_ENDPOINT_FAILURE_THRESHOLD = 3;
 static const uint16_t MQTT_PACKET_BUFFER_BYTES = 1536;
 
-const char* DEFAULT_WIFI_SSID = "iMyTest_IoT";
-const char* DEFAULT_WIFI_PASSWORD = "iMyTest_IoT";
-const char* DEFAULT_MQTT_HOST = "iot.imytest.com";
+const char* DEFAULT_WIFI_SSID = "";
+const char* DEFAULT_WIFI_PASSWORD = "";
+const char* DEFAULT_MQTT_HOST = "";
 const uint16_t DEFAULT_MQTT_PORT = 1883;
-const char* DEFAULT_MQTT_USERNAME = "imytest";
-const char* DEFAULT_MQTT_PASSWORD = "imytest";
+const char* DEFAULT_MQTT_USERNAME = "";
+const char* DEFAULT_MQTT_PASSWORD = "";
 const char* DEFAULT_TOPIC_ROOT = "iot/relay";
 const char* DEFAULT_DEVICE_SERIAL = "";
 const char* DEFAULT_BOARD_PROFILE = "";
-const char* DEFAULT_FIRMWARE_UPGRADE_URL = "iot.imytest.com";
+const char* DEFAULT_FIRMWARE_UPGRADE_URL = "";
 const char* CONFIG_AP_PASSWORD = "iMyTestIoT";
 
 const char* PROFILE_RELAY = "IoT-Relay";
 const char* PROFILE_OUTLET = "IoT-Outlet";
 
-const char* FIRMWARE_VERSION = "1.8.10";
+const char* FIRMWARE_VERSION = "2.0.0";
 const char* FIRMWARE_HARDWARE_PROFILE = "esp8266-1m-dout-64kfs";
 
 const char* NTP_SERVER_1 = "pool.ntp.org";
@@ -98,6 +98,10 @@ uint32_t maxOnSec = 0;
 unsigned long relayOnStartedMs = 0;
 bool safetyTrip = false;
 String lastCommandId;
+uint32_t lastCommandSeq = 0;
+bool controlInhibit = true;
+String configRevision;
+String otaTlsFingerprint;
 
 bool configMode = false;
 bool runtimeStarted = false;
@@ -156,9 +160,6 @@ bool isDelayActive() {
     return false;
   }
   if ((long)(millis() - delayEndAtMs) >= 0) {
-    delayActive = false;
-    delayEndAtMs = 0;
-    delayDurationSec = 0;
     return false;
   }
   return true;
@@ -208,6 +209,9 @@ bool saveState() {
   doc["schedule_version"] = scheduleVersion;
   doc["max_on_sec"] = maxOnSec;
   doc["last_command_id"] = lastCommandId;
+  doc["command_seq"] = lastCommandSeq;
+  doc["control_inhibit"] = controlInhibit;
+  doc["config_revision"] = configRevision;
 
   JsonArray arr = doc.createNestedArray("entries");
   for (size_t i = 0; i < scheduleCount; ++i) {
@@ -219,16 +223,19 @@ bool saveState() {
     o["action"] = schedules[i].turnOn ? "on" : "off";
   }
 
-  File f = LittleFS.open(STATE_FILE, "w");
+  String tempPath = String(STATE_FILE) + ".tmp";
+  File f = LittleFS.open(tempPath, "w");
   if (!f) {
     return false;
   }
-  serializeJson(doc, f);
+  size_t written = serializeJson(doc, f);
+  f.flush();
   f.close();
-  return true;
+  return written > 0 && LittleFS.rename(tempPath, STATE_FILE);
 }
 
 void setRelay(bool on, bool persist) {
+  if (on && controlInhibit) { return; }
   bool changed = relayOn != on;
   if (!pinsReady) {
     relayOn = on;
@@ -272,6 +279,8 @@ void loadState() {
   // state is never restored blindly after a reset or power interruption.
   maxOnSec = doc["max_on_sec"] | 0;
   lastCommandId = String(doc["last_command_id"] | "");
+  lastCommandSeq = doc["command_seq"] | 0;
+  controlInhibit = true;
   safetyTrip = false;
   setRelay(false, false);
 
@@ -320,14 +329,18 @@ bool saveConfig() {
   doc["device_serial"] = cfgDeviceSerial;
   doc["board_profile"] = cfgBoardProfile;
   doc["firmware_upgrade_url"] = cfgFirmwareUpgradeUrl;
+  doc["ota_tls_fingerprint"] = otaTlsFingerprint;
+  doc["config_revision"] = configRevision;
 
-  File f = LittleFS.open(CONFIG_FILE, "w");
+  String tempPath = String(CONFIG_FILE) + ".tmp";
+  File f = LittleFS.open(tempPath, "w");
   if (!f) {
     return false;
   }
-  serializeJson(doc, f);
+  size_t written = serializeJson(doc, f);
+  f.flush();
   f.close();
-  return true;
+  return written > 0 && LittleFS.rename(tempPath, CONFIG_FILE);
 }
 
 String normalizeUpgradeUrl(const String& rawUrl) {
@@ -382,6 +395,8 @@ void loadConfig() {
     return;
   }
 
+  configRevision = String(doc["config_revision"] | "");
+  otaTlsFingerprint = String(doc["ota_tls_fingerprint"] | "");
   if (doc.containsKey("wifi_ssid")) {
     cfgWifiSsid = String(doc["wifi_ssid"] | "");
   }
@@ -453,7 +468,7 @@ void detectBoardProfileFromPowerOnButton() {
 
 void publishStatus() {
   bool active = isDelayActive();
-  StaticJsonDocument<768> doc;
+  StaticJsonDocument<1280> doc;
   doc["state"] = relayOn ? "on" : "off";
   doc["module_id"] = moduleId;
   doc["firmware_version"] = FIRMWARE_VERSION;
@@ -476,9 +491,12 @@ void publishStatus() {
   doc["safety_trip"] = safetyTrip;
   if (lastCommandId.length() > 0) {
     doc["last_command_id"] = lastCommandId;
+  doc["command_seq"] = lastCommandSeq;
+  doc["control_inhibit"] = controlInhibit;
+  doc["config_revision"] = configRevision;
   }
 
-  char out[768];
+  char out[1280];
   size_t len = serializeJson(doc, out);
   mqttClient.publish(topicStatus.c_str(), reinterpret_cast<const uint8_t*>(out), len, true);
 }
@@ -560,7 +578,13 @@ void doUpgrade(const char* url, const char* fallbackUrl) {
   ESPhttpUpdate.rebootOnUpdate(false);
   ESPhttpUpdate.onProgress(otaProgress);
   BearSSL::WiFiClientSecure secureClient;
-  secureClient.setInsecure();
+  if (otaTlsFingerprint.length() == 0 || !secureClient.setFingerprint(otaTlsFingerprint.c_str())) {
+    otaState = "failed";
+    otaNote = "Provision a trusted OTA TLS certificate fingerprint before upgrading";
+    ensureMqtt();
+    publishStatus();
+    return;
+  }
   secureClient.setTimeout(15000);
   t_httpUpdate_return ret = ESPhttpUpdate.update(secureClient, normalizedUrl);
   String fallbackRaw = String(fallbackUrl);
@@ -663,7 +687,6 @@ void startConfigPortal() {
     page += "<title>iMyTest IoT Module Config</title><style>body{font-family:Arial,sans-serif;max-width:560px;margin:16px auto;padding:0 12px}label{display:block;margin-top:10px;font-weight:600}input,select{width:100%;padding:8px;box-sizing:border-box}button{margin-top:12px;padding:9px 14px}</style></head><body>";
     page += "<h2>iMyTest IoT Module Config</h2>";
     page += "<p>AP SSID: <b>" + htmlEscape(apSsid) + "</b></p>";
-    page += "<p>AP Password: <b>" + htmlEscape(String(CONFIG_AP_PASSWORD)) + "</b></p>";
     page += "<p>Firmware Version: <b>" + String(FIRMWARE_VERSION) + "</b></p>";
     page += "<form method='POST' action='/save'>";
     page += "<label>Board Profile</label><select name='board_profile'>";
@@ -672,13 +695,13 @@ void startConfigPortal() {
     page += "<option value='IoT-Outlet'" + String(cfgBoardProfile == "IoT-Outlet" ? " selected" : "") + ">IoT-Outlet</option>";
     page += "</select>";
     page += "<label>WiFi SSID</label><input name='wifi_ssid' value='" + htmlEscape(cfgWifiSsid) + "'>";
-    page += "<label>WiFi Password</label><input name='wifi_password' value='" + htmlEscape(cfgWifiPassword) + "'>";
+    page += "<label>WiFi Password</label><input type='password' name='wifi_password' autocomplete='new-password'>";
     page += "<label>MQTT Host</label><input name='mqtt_host' value='" + htmlEscape(cfgMqttHost) + "'>";
     page += "<label>MQTT Port</label><input name='mqtt_port' value='" + String(cfgMqttPort) + "'>";
     page += "<label>MQTT Fallback Host</label><input name='mqtt_fallback_host' value='" + htmlEscape(cfgMqttFallbackHost) + "'>";
     page += "<label>MQTT Fallback Port</label><input name='mqtt_fallback_port' value='" + String(cfgMqttFallbackPort) + "'>";
     page += "<label>MQTT Username</label><input name='mqtt_username' value='" + htmlEscape(cfgMqttUsername) + "'>";
-    page += "<label>MQTT Password</label><input name='mqtt_password' value='" + htmlEscape(cfgMqttPassword) + "'>";
+    page += "<label>MQTT Password</label><input type='password' name='mqtt_password' autocomplete='new-password'>";
     page += "<label>Device ID (Fixed)</label><input value='" + htmlEscape(moduleId) + "' readonly>";
     page += "<label>Firmware Upgrade URL</label><input name='firmware_upgrade_url' value='" + htmlEscape(cfgFirmwareUpgradeUrl) + "'>";
     page += "<p style='margin-top:6px;font-size:12px;color:#666'>URL format: https://xxx.xx.xx</p>";
@@ -710,13 +733,13 @@ void startConfigPortal() {
 
     cfgBoardProfile = profile;
     cfgWifiSsid = ssid;
-    cfgWifiPassword = password;
+    if (password.length() > 0) { cfgWifiPassword = password; }
     cfgMqttHost = host;
     cfgMqttPort = port;
     cfgMqttFallbackHost = fallbackHost;
     cfgMqttFallbackPort = fallbackPort > 0 ? fallbackPort : DEFAULT_MQTT_PORT;
     cfgMqttUsername = username;
-    cfgMqttPassword = mqttPassword;
+    if (mqttPassword.length() > 0) { cfgMqttPassword = mqttPassword; }
     cfgFirmwareUpgradeUrl = fwUrl;
     applyBoardProfile();
     saveConfig();
@@ -791,11 +814,28 @@ void handleCommand(char* topic, byte* payload, unsigned int length) {
 
   const char* command = doc["command"] | "";
   const char* commandId = doc["command_id"] | "";
-  bool metadataChanged = false;
-  if (strlen(commandId) > 0 && lastCommandId != commandId) {
-    lastCommandId = String(commandId);
-    metadataChanged = true;
+  const char* requestedState = doc["state"] | "";
+  bool stopping = (strcmp(command, "relay") == 0 && strcmp(requestedState, "off") == 0)
+      || strcmp(command, "delay_cancel") == 0;
+  uint32_t sequence = doc["command_seq"] | 0;
+  uint32_t expiresAt = doc["expires_at"] | 0;
+  if (!strlen(commandId) || sequence <= lastCommandSeq) {
+    publishStatus();
+    return;
   }
+  if (stopping) {
+    controlInhibit = true;
+    cancelDelayMode();
+  }
+  bool energizing = (strcmp(command, "relay") == 0 && strcmp(requestedState, "on") == 0)
+      || strcmp(command, "delay_start") == 0;
+  if (!stopping && ((timeSynced() && expiresAt <= (uint32_t)time(nullptr)) || (energizing && !timeSynced()))) {
+    publishStatus();
+    return;
+  }
+  lastCommandId = String(commandId);
+  lastCommandSeq = sequence;
+  bool metadataChanged = true;
   if (doc.containsKey("max_on_sec")) {
     uint32_t requestedMaxOnSec = (uint32_t)(doc["max_on_sec"] | 0);
     if (maxOnSec != requestedMaxOnSec) {
@@ -803,29 +843,27 @@ void handleCommand(char* topic, byte* payload, unsigned int length) {
       metadataChanged = true;
     }
   }
-  if (metadataChanged) {
-    saveState();
+  if (metadataChanged && !saveState()) {
+    controlInhibit = true;
+    setRelay(false, false);
+    return;
   }
 
   if (strcmp(command, "relay") == 0) {
-    if (isDelayActive()) {
-      publishStatus();
-      return;
-    }
     const char* state = doc["state"] | "";
     if (strcmp(state, "on") == 0) {
+      controlInhibit = false;
+      delayActive = false;
       setRelay(true);
     } else if (strcmp(state, "off") == 0) {
       setRelay(false);
-    } else if (strcmp(state, "toggle") == 0) {
-      setRelay(!relayOn);
+
     }
     publishStatus();
-  } else if (strcmp(command, "delay_toggle") == 0) {
+  } else if (strcmp(command, "delay_start") == 0) {
     uint32_t durationSec = (uint32_t)(doc["duration_sec"] | 0);
-    if (isDelayActive()) {
-      cancelDelayMode();
-    } else {
+    if (durationSec > 0 && durationSec <= 86400) {
+      controlInhibit = false;
       startDelayMode(durationSec);
     }
     publishStatus();
@@ -856,10 +894,15 @@ void handleCommand(char* topic, byte* payload, unsigned int length) {
       cfgMqttPort = primaryPort > 0 ? primaryPort : DEFAULT_MQTT_PORT;
       cfgMqttFallbackHost = fallbackHost;
       cfgMqttFallbackPort = fallbackPort > 0 ? fallbackPort : DEFAULT_MQTT_PORT;
-      if (otaBaseUrl.length() > 0) {
-        cfgFirmwareUpgradeUrl = otaBaseUrl;
+      cfgFirmwareUpgradeUrl = otaBaseUrl;
+      otaTlsFingerprint = String(doc["ota_tls_fingerprint"] | "");
+      String previousRevision = configRevision;
+      configRevision = String(doc["config_revision"] | "");
+      if (configRevision.length() != 64 || !saveConfig()) {
+        configRevision = previousRevision;
+        publishStatus();
+        return;
       }
-      saveConfig();
       mqttClient.disconnect();
       selectMqttEndpoint(false);
     }
@@ -991,6 +1034,7 @@ void runSafetyWatchdog() {
     return;
   }
   safetyTrip = true;
+  controlInhibit = true;
   delayActive = false;
   delayEndAtMs = 0;
   delayDurationSec = 0;
@@ -1005,7 +1049,7 @@ void publishTelemetry() {
   }
   lastMs = millis();
 
-  StaticJsonDocument<768> doc;
+  StaticJsonDocument<1280> doc;
   doc["rssi"] = WiFi.RSSI();
   doc["uptime_sec"] = millis() / 1000;
   doc["state"] = relayOn ? "on" : "off";
@@ -1027,9 +1071,12 @@ void publishTelemetry() {
   doc["safety_trip"] = safetyTrip;
   if (lastCommandId.length() > 0) {
     doc["last_command_id"] = lastCommandId;
+  doc["command_seq"] = lastCommandSeq;
+  doc["control_inhibit"] = controlInhibit;
+  doc["config_revision"] = configRevision;
   }
 
-  char out[768];
+  char out[1280];
   size_t len = serializeJson(doc, out);
   mqttClient.publish(topicTelemetry.c_str(), reinterpret_cast<const uint8_t*>(out), len, false);
 }
@@ -1067,7 +1114,13 @@ void setup() {
   detectBoardProfileFromPowerOnButton();
 
   mqttClient.setCallback(handleCommand);
-  startConfigPortal();
+  applyBoardProfile();
+  pinMode(buttonPin, INPUT_PULLUP);
+  if (cfgWifiSsid.length() == 0 || cfgMqttHost.length() == 0 || cfgBoardProfile.length() == 0 || digitalRead(buttonPin) == LOW) {
+    startConfigPortal();
+  } else {
+    startRuntime();
+  }
 }
 
 void loop() {
@@ -1103,6 +1156,9 @@ void loop() {
     doUpgrade(otaUrlPending.c_str(), otaFallbackUrlPending.c_str());
   }
   if (delayActive && !isDelayActive()) {
+    delayActive = false;
+    delayEndAtMs = 0;
+    delayDurationSec = 0;
     setRelay(false);
     publishStatus();
   }

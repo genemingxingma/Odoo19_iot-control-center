@@ -14,7 +14,7 @@ _logger = logging.getLogger(__name__)
 class IoTAttendanceDevice(models.Model):
     _name = "iot.attendance.device"
     _description = "IoT Attendance Device"
-    _inherit = ["mail.thread", "mail.activity.mixin"]
+    _inherit = ["mail.thread", "mail.activity.mixin", "iot.access.mixin"]
     _order = "name, id"
 
     name = fields.Char(required=True, tracking=True)
@@ -114,10 +114,12 @@ class IoTAttendanceDevice(models.Model):
             rec.request_count = req_map.get(rec.id, 0)
 
     def action_generate_token(self):
+        self._check_iot_access(manage=True)
         for rec in self:
             rec.webhook_token = secrets.token_urlsafe(24)
 
     def action_test_connection(self):
+        self._check_iot_access(manage=True)
         self.ensure_one()
         if self.protocol == "adms_http":
             raise UserError(_("ADMS devices do not support pull-based connection tests. Point the device to the ADMS URL instead."))
@@ -129,6 +131,7 @@ class IoTAttendanceDevice(models.Model):
         return {"type": "ir.actions.client", "tag": "display_notification", "params": {"title": _("Connection test"), "message": message, "type": "success"}}
 
     def action_sync_now(self):
+        self._check_iot_access(manage=True)
         self.ensure_one()
         created = self._sync_device()
         return {"type": "ir.actions.client", "tag": "display_notification", "params": {"title": _("Synchronization complete"), "message": _("Imported %s punch(es).", created), "type": "success"}}
@@ -204,7 +207,7 @@ class IoTAttendanceDevice(models.Model):
             "raw_payload": False,
         }
 
-    def ingest_webhook_payload(self, punches):
+    def _ingest_webhook_payload(self, punches):
         self.ensure_one()
         Punch = self.env["iot.attendance.punch"].with_context(iot_attendance_ingest=True).sudo()
         created = 0
@@ -232,7 +235,7 @@ class IoTAttendanceDevice(models.Model):
                 return device
         return self.env["iot.attendance.device"]
 
-    def ingest_adms_payload(self, payload_text, table=None, serial_number=None, remote_ip=None, query_params=None):
+    def _ingest_adms_payload(self, payload_text, table=None, serial_number=None, remote_ip=None, query_params=None):
         self.ensure_one()
         Punch = self.env["iot.attendance.punch"].with_context(iot_attendance_ingest=True).sudo()
         created = 0

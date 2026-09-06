@@ -28,13 +28,13 @@
                         </setting>
                         <setting string="Internal OTA HTTPS Port">
                             <field name="iot_internal_ota_port"/>
+                            <field name="iot_ota_tls_fingerprint"/>
                         </setting>
                     </block>
                     <block title="External IoT Middleware">
-                        <setting string="Use External IoT Middleware (MQTT + TH TCP)">
-                            <field name="iot_middleware_enabled"/>
+                        <setting string="Device Connection Service">
                             <div class="text-muted">
-                                Enable this to route both MQTT relay traffic and Temperature/Humidity TCP gateway traffic through middleware.
+                                MQTT and TCP connections are managed by the bridge. Configure listener ports in the bridge service, not in Odoo.
                             </div>
                         </setting>
                         <setting string="Middleware Base URL">
@@ -144,19 +144,13 @@
                         </setting>
                     </block>
                     <block title="Temperature/Humidity TCP Ingest">
-                        <setting string="TCP Listen Host">
-                            <field name="iot_th_tcp_host" placeholder="0.0.0.0"/>
-                        </setting>
-                        <setting string="TCP Listen Port">
-                            <field name="iot_th_tcp_port"/>
-                        </setting>
                         <setting string="TH Online Timeout (sec)">
                             <field name="iot_th_online_timeout_sec"/>
                         </setting>
                         <setting string="TH Raw Retention (days)">
                             <field name="iot_th_raw_retention_days"/>
                             <div class="text-muted">
-                                Raw node-frequency readings older than this are compressed into daily averages unless the sensor keeps full history.
+                                Zero keeps all raw observations. A positive value deletes expired raw samples for this company unless the probe keeps full history.
                             </div>
                         </setting>
                     </block>

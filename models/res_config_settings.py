@@ -7,13 +7,13 @@ from pathlib import Path
 from odoo import SUPERUSER_ID, api, fields, models
 from odoo.tools import config as odoo_config
 
-from ..services.tcp_service import ensure_running as ensure_tcp_running
 
 _logger = logging.getLogger(__name__)
 
 
 class ResConfigSettings(models.TransientModel):
     _inherit = "res.config.settings"
+    iot_ota_tls_fingerprint = fields.Char(related="company_id.iot_ota_tls_fingerprint", readonly=False)
 
     iot_prefer_internal_network = fields.Boolean(
         related="company_id.iot_prefer_internal_network",
@@ -77,24 +77,13 @@ class ResConfigSettings(models.TransientModel):
         config_parameter="iot_control_center.firmware_base_url",
         default="iot.imytest.com",
     )
-    iot_th_tcp_host = fields.Char(
-        string="TCP Listen Host", config_parameter="iot_control_center.th_tcp_host", default="0.0.0.0"
-    )
-    iot_th_tcp_port = fields.Integer(
-        string="TCP Listen Port", config_parameter="iot_control_center.th_tcp_port", default=9910
-    )
     iot_th_online_timeout_sec = fields.Integer(
         string="TH Online Timeout (sec)", config_parameter="iot_control_center.th_online_timeout_sec", default=300
     )
     iot_th_raw_retention_days = fields.Integer(
         string="TH Raw Retention (days)",
-        config_parameter="iot_control_center.th_raw_retention_days",
-        default=30,
-    )
-    iot_middleware_enabled = fields.Boolean(
-        string="Use External IoT Middleware (MQTT + TH TCP)",
-        config_parameter="iot_control_center.middleware_enabled",
-        default=True,
+        related="company_id.iot_history_retention_days",
+        readonly=False,
     )
     iot_middleware_base_url = fields.Char(
         string="Middleware Base URL",
@@ -230,30 +219,9 @@ class ResConfigSettings(models.TransientModel):
             },
         }
 
-    def _run_iot_services_after_commit(self):
-        dbname = self.env.cr.dbname
-        registry = self.env.registry
-        context = dict(self.env.context)
-
-        def _runner():
-            with registry.cursor() as cr:
-                env = api.Environment(cr, SUPERUSER_ID, context)
-                try:
-                    middleware_enabled = str(env["ir.config_parameter"].sudo().get_param("iot_control_center.middleware_enabled", "False")).lower() in ("1", "true", "yes")
-                    if not middleware_enabled:
-                        env["iot.device"]._cron_ensure_mqtt_service()
-                        env["iot.th.gateway"]._cron_ensure_tcp_service()
-                        ensure_tcp_running(env)
-                    cr.commit()
-                except Exception:
-                    cr.rollback()
-                    _logger.exception("Deferred IoT service ensure failed after settings save (db=%s)", dbname)
-
-        self.env.cr.postcommit.add(_runner)
-
     def set_values(self):
         if not (self.iot_middleware_token or "").strip():
             self.iot_middleware_token = secrets.token_urlsafe(24)
         res = super().set_values()
-        self._run_iot_services_after_commit()
+        # V2 connections run only in the external bridge.
         return res

@@ -2,7 +2,7 @@ import hashlib
 import json
 from datetime import timedelta
 
-from odoo import SUPERUSER_ID, api, fields, models
+from odoo import _, SUPERUSER_ID, api, fields, models
 
 
 class IoTAttendancePunch(models.Model):
@@ -28,6 +28,20 @@ class IoTAttendancePunch(models.Model):
     state = fields.Selection([("new", "New"), ("processed", "Processed"), ("ignored", "Ignored"), ("error", "Error")], default="new", required=True, index=True)
     raw_payload = fields.Text()
     message = fields.Char()
+    display_message = fields.Char(compute="_compute_display_message", string="Message")
+
+    @api.depends("message", "error_code", "state")
+    @api.depends_context("lang")
+    def _compute_display_message(self):
+        labels = {
+            "no_employee_mapping": _("No employee mapping found for this punch."),
+            "no_open_attendance": _("Cannot check out without an open attendance."),
+            "stale_open_attendance": _("The open attendance is outside the allowed shift duration."),
+            "open_attendance_exists": _("Employee already has an open attendance."),
+        }
+        for rec in self:
+            rec.display_message = labels.get(rec.error_code) or (_("Processed") if rec.state == "processed" else rec.message)
+
     error_code = fields.Char(index=True)
     unique_hash = fields.Char(required=True, copy=False, index=True)
 
@@ -91,9 +105,7 @@ class IoTAttendancePunch(models.Model):
             return False
         if self.punch_time - attendance.check_in > self._max_open_delta():
             return False
-        punch_local = fields.Datetime.context_timestamp(self, self.punch_time)
-        checkin_local = fields.Datetime.context_timestamp(self, attendance.check_in)
-        return punch_local.date() == checkin_local.date()
+        return True  # A bounded shift may cross midnight; the execution user timezone is irrelevant.
 
     def _get_open_attendance(self):
         self.ensure_one()

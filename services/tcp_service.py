@@ -1,467 +1,93 @@
-import json
-import logging
-import socketserver
-import threading
+"""Odoo transaction boundary. TCP connections belong to the bridge."""
+import base64
+import ipaddress
+import secrets
 import time
-from datetime import datetime, timezone
-
 from psycopg2.extensions import ISOLATION_LEVEL_READ_COMMITTED
-
-from odoo import SUPERUSER_ID, api, fields
+from odoo import SUPERUSER_ID, api
 from odoo.modules.registry import Registry
+from ..core.telemetry import decode_binary, decode_json, envelope, timestamp
 
-try:
-    from psycopg2.errors import SerializationFailure
-except Exception:  # pragma: no cover
-    SerializationFailure = tuple()
-
-_logger = logging.getLogger(__name__)
-
-_instances = {}
-_instances_lock = threading.Lock()
-
-MAX_INGEST_RETRIES = 3
-
-
-class _GatewayTCPHandler(socketserver.BaseRequestHandler):
-    def handle(self):
-        service = getattr(self.server, "service", None)
-        if not service:
-            return
-
-        buffer = bytearray()
-        source_ip = self.client_address[0] if self.client_address else None
-        source_port = self.client_address[1] if self.client_address else None
-        while True:
-            chunk = self.request.recv(4096)
-            if not chunk:
-                service.flush_unparsed_tail(buffer, source_ip=source_ip, source_port=source_port)
-                return
-            buffer.extend(chunk)
-            service.process_buffer(buffer, source_ip=source_ip, source_port=source_port)
-
-
-class _ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
-    allow_reuse_address = True
-    daemon_threads = True
-
+class GatewayNotRegistered(RuntimeError):
+    pass
 
 class TCPIngestService:
-    def __init__(self, dbname, config):
+    def __init__(self, dbname, config=None):
         self.dbname = dbname
-        self.config = config
-        self._server = None
-        self._thread = None
-        self._started = False
-        self._lock = threading.Lock()
 
-    def _parse_reported_at(self, value):
-        if not value:
-            return fields.Datetime.now()
-        try:
-            parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
-            if parsed.tzinfo:
-                parsed = parsed.astimezone(timezone.utc).replace(tzinfo=None)
-            return parsed
-        except Exception:
-            return fields.Datetime.now()
-
-    def _is_retryable_db_error(self, exc):
-        if SerializationFailure and isinstance(exc, SerializationFailure):
-            return True
-        pgcode = getattr(exc, "pgcode", None)
-        if pgcode == "40001":
-            return True
-        cause = getattr(exc, "__cause__", None)
-        cause_pgcode = getattr(cause, "pgcode", None)
-        return cause_pgcode == "40001"
+    @staticmethod
+    def _parse_reported_at(value):
+        return timestamp(value)
 
     @staticmethod
     def _configure_ingest_cursor(cr):
         cr.connection.set_isolation_level(ISOLATION_LEVEL_READ_COMMITTED)
 
-    def _ensure_gateway(self, env, serial):
-        gateway_model = env["iot.th.gateway"].sudo()
-        gateway = gateway_model.search([("serial", "=", serial)], limit=1)
-        if not gateway:
-            gateway = gateway_model.create(
-                {
-                    "name": serial,
-                    "serial": serial,
-                }
-            )
-        return gateway
-
     def _ensure_sensor(self, env, gateway, node_id, probe_code):
-        sensor_model = env["iot.th.sensor"].sudo()
-        normalized_node_id = str(node_id or "unknown").strip().upper()
-        normalized_probe_code = str(probe_code or "").strip().upper()
-        canonical_name = f"{normalized_node_id}-{normalized_probe_code.lower()}"
-        domain = [("node_id", "=", normalized_node_id), ("probe_code", "=", normalized_probe_code)]
-        sensor = sensor_model.search(domain, limit=1)
+        node_id, probe_code = node_id.strip().upper(), probe_code.strip().upper()
+        model = env["iot.th.sensor"].sudo().with_context(active_test=False)
+        domain = [("gateway_id", "=", gateway.id), ("node_id", "=", node_id), ("probe_code", "=", probe_code)]
+        sensor = model.search(domain, limit=1)
+        if sensor and not sensor.active:
+            raise ValueError("probe identity is archived")
         if not sensor:
-            # Under READ COMMITTED, the second lookup sees a sensor created by
-            # another request after waiting for this identity lock.
-            env.cr.execute(
-                "SELECT pg_advisory_xact_lock(hashtext(%s))",
-                [f"iot.th.sensor:{normalized_node_id}:{normalized_probe_code}"],
-            )
-            sensor = sensor_model.search(domain, limit=1)
-        if not sensor:
-            sensor = sensor_model.create(
-                {
-                    "gateway_id": gateway.id,
-                    "node_id": normalized_node_id,
-                    "probe_code": normalized_probe_code,
-                    "name": canonical_name,
-                    "company_id": False,
-                    "stats_window_hours": gateway.statistics_window_hours or 24,
-                }
-            )
-        else:
-            vals = {}
-            if sensor.gateway_id != gateway:
-                vals["gateway_id"] = gateway.id
-            if not (sensor.name or "").strip():
-                vals["name"] = canonical_name
-            if vals:
-                sensor.write(vals)
+            sensor = model.create({"name": f"{node_id}-{probe_code.lower()}", "gateway_id": gateway.id,
+                                   "node_id": node_id, "probe_code": probe_code, "company_id": gateway.company_id.id,
+                                   "stats_window_hours": gateway.statistics_window_hours or 24})
         return sensor
 
-    def _ingest_measurements(
-        self,
-        serial,
-        reported_at,
-        measurements,
-        token=None,
-        extra_gateway_vals=None,
-        node_id=None,
-    ):
+    def ingest(self, data, binary=False):
+        event_id, received_at, digest = envelope(data)
+        if binary:
+            if not isinstance(data.get("source_ip"), str):
+                raise ValueError("binary gateway source address is required")
+            source_address = str(ipaddress.ip_address(data["source_ip"]))
+            readings = decode_binary(base64.b64decode(data.get("frame_b64", ""), validate=True))
+            at, payload = received_at, {}
+        else:
+            payload, at, readings = decode_json(data.get("payload_text", ""), received_at)
         registry = Registry(self.dbname)
-        for attempt in range(1, MAX_INGEST_RETRIES + 1):
+        for attempt in range(3):
             try:
                 with registry.cursor() as cr:
-                    # High-frequency frames update the same gateway and sensor
-                    # rows. READ COMMITTED waits for the latest row instead of
-                    # raising a serialization failure from a stale snapshot.
                     self._configure_ingest_cursor(cr)
                     env = api.Environment(cr, SUPERUSER_ID, {})
-                    reading_model = env["iot.th.reading"].sudo()
-
-                    gateway = self._ensure_gateway(env, serial)
-                    if extra_gateway_vals:
-                        gateway.sudo().write(extra_gateway_vals)
-
-                    if gateway.tcp_token and token is not None and token != gateway.tcp_token:
-                        _logger.warning("TH payload token mismatch for gateway %s", serial)
-                        cr.commit()
-                        return
-
-                    cr.execute(
-                        """
-                        UPDATE iot_th_gateway
-                           SET last_seen = CASE
-                               WHEN last_seen IS NULL OR last_seen <= %(reported_at)s
-                               THEN %(reported_at)s
-                               ELSE last_seen
-                           END
-                         WHERE id = %(gateway_id)s
-                        """,
-                        {"reported_at": reported_at, "gateway_id": gateway.id},
-                    )
-                    gateway.invalidate_recordset(["last_seen"])
-
-                    for m in measurements:
-                        probe_code = m.get("probe_code")
-                        if not probe_code:
-                            continue
-                        temperature = m.get("temperature")
-                        humidity = m.get("humidity")
-                        battery_voltage = m.get("battery_voltage")
-                        if temperature is None or humidity is None:
-                            continue
-                        try:
-                            t_val = float(temperature)
-                            h_val = float(humidity)
-                        except Exception:
-                            continue
-                        # Drop invalid zero-pair samples (T=0 and H=0) from gateway glitches.
-                        if abs(t_val) < 1e-9 and abs(h_val) < 1e-9:
-                            continue
-
-                        sensor_node_id = (m.get("node_id") or node_id or "").strip().upper()
-                        if not sensor_node_id:
-                            sensor_node_id = "unknown"
-
-                        sensor = self._ensure_sensor(env, gateway, sensor_node_id, probe_code)
-                        reading = reading_model.create(
-                            {
-                                "sensor_id": sensor.id,
-                                "gateway_id": gateway.id,
-                                "reported_at": reported_at,
-                                "temperature": t_val,
-                                "humidity": h_val,
-                            }
-                        )
-                        if reading:
-                            sensor.apply_reading(t_val, h_val, reported_at, battery_voltage=battery_voltage)
-
+                    gateways = env["iot.th.gateway"].sudo()
+                    identity = [("source_address", "=", source_address)] if binary else [("serial", "=", payload.get("gateway_serial"))]
+                    gateway = gateways.search(identity + [("active", "=", True), ("company_id", "!=", False)], limit=1)
+                    if not gateway:
+                        raise GatewayNotRegistered("Register the gateway and its company before ingesting")
+                    if not binary and (not gateway.tcp_token or not secrets.compare_digest(gateway.tcp_token, str(payload.get("token") or ""))):
+                        raise ValueError("gateway authentication failed")
+                    if not env["iot.ingest.event"]._claim(event_id, "th.binary" if binary else "th.json", digest, received_at):
+                        return {"ok": True, "event_id": event_id, "duplicate": True}
+                    # Serialize discovery per registered gateway, not across companies.
+                    cr.execute("SELECT id FROM iot_th_gateway WHERE id = %s FOR UPDATE", [gateway.id])
+                    gateway.invalidate_recordset()
+                    if not gateway.last_seen or gateway.last_seen < received_at:
+                        gateway.last_seen = received_at
+                    values, sensors = [], []
+                    for value in readings:
+                        sensor = self._ensure_sensor(env, gateway, value.node, value.channel)
+                        if sensor.company_id != gateway.company_id:
+                            raise ValueError("probe and gateway company mismatch")
+                        sensors.append((sensor, value))
+                        values.append({"sensor_id": sensor.id, "gateway_id": gateway.id, "event_id": event_id,
+                                       "reported_at": at, "received_at": received_at,
+                                       "temperature": value.temperature, "humidity": value.humidity})
+                    env["iot.th.reading"].create(values)
+                    for sensor, value in sensors:
+                        sensor._apply_reading(value.temperature, value.humidity, at, battery_voltage=value.battery)
                     cr.commit()
-                    return
+                    return {"ok": True, "event_id": event_id, "samples": len(values)}
             except Exception as exc:
-                if not self._is_retryable_db_error(exc) or attempt >= MAX_INGEST_RETRIES:
+                if getattr(exc, "pgcode", None) not in ("40001", "40P01") or attempt == 2:
                     raise
-                _logger.warning(
-                    "TH ingest serialization conflict for gateway %s, retry %s/%s",
-                    serial,
-                    attempt,
-                    MAX_INGEST_RETRIES,
-                )
-                time.sleep(0.1 * attempt)
-
-    def process_json_line(self, payload_text, source_ip=None, source_port=None):
-        try:
-            payload = json.loads(payload_text)
-        except Exception:
-            _logger.warning("Invalid TH JSON payload: %s", payload_text)
-            return
-
-        serial = payload.get("gateway_serial") or source_ip
-        if not serial:
-            _logger.warning("TH JSON payload missing gateway_serial: %s", payload_text)
-            return
-        node_id = str(
-            payload.get("node_id")
-            or payload.get("nodeId")
-            or payload.get("gateway_node_id")
-            or ""
-        ).strip().upper() or None
-
-        reported_at = self._parse_reported_at(payload.get("reported_at"))
-        token = payload.get("token")
-
-        probes = payload.get("probes") or []
-        if not probes and payload.get("probe_code"):
-            probes = [payload]
-
-        measurements = []
-        for probe in probes:
-            code = str(probe.get("probe_code") or "").strip()
-            if not code:
-                continue
-            try:
-                t = float(probe.get("temperature"))
-                h = float(probe.get("humidity"))
-            except Exception:
-                continue
-            bv = probe.get("battery_voltage", payload.get("battery_voltage"))
-            try:
-                bv = float(bv) if bv is not None else None
-            except Exception:
-                bv = None
-            measurements.append({"probe_code": code, "node_id": node_id, "temperature": t, "humidity": h, "battery_voltage": bv})
-
-        self._ingest_measurements(serial, reported_at, measurements, token=token, node_id=node_id)
-
-    def process_binary_frame(self, frame, source_ip=None, source_port=None):
-        node_id = f"{((frame[3] << 8) | frame[4]):04X}" if len(frame) >= 5 else None
-        try:
-        # Format per gateway spec:
-        # BYTE0=0xFA BYTE1=0xCE BYTE2=control BYTE3-4=sender addr BYTE5=device info BYTE6=seq BYTE7=data count(16-bit words)
-        # BYTE8.. data area, each word is 16-bit big-endian; 1 channel => temp(signed*10), humidity(unsigned)
-        # Last byte checksum = sum(BYTE0..BYTE(n-1)) & 0xFF
-            if len(frame) < 9:
-                _logger.warning("TH binary frame too short from %s:%s", source_ip, source_port)
-                return
-            if frame[0] != 0xFA or frame[1] != 0xCE:
-                _logger.warning("TH binary frame invalid header from %s:%s", source_ip, source_port)
-                return
-
-            expected_checksum = sum(frame[:-1]) & 0xFF
-            if expected_checksum != frame[-1]:
-                _logger.warning("TH binary checksum mismatch, drop frame: got=%s expected=%s", frame[-1], expected_checksum)
-                return
-
-            data_count = frame[7]
-            if data_count < 2:
-                _logger.warning("TH binary invalid data_count=%s from %s:%s", data_count, source_ip, source_port)
-                return
-
-            data_start = 8
-            data_end = len(frame) - 1
-            data = frame[data_start:data_end]
-
-            if len(data) != data_count * 2:
-                _logger.warning("TH binary length mismatch: data_count=%s bytes=%s", data_count, len(data))
-                return
-
-            addr = (frame[3] << 8) | frame[4]
-            serial = source_ip or "UNKNOWN_GATEWAY"
-            voltage = frame[5] / 10.0
-
-            measurements = []
-            # Multi-channel support: each channel uses two words: temp, humidity
-            pair_count = data_count // 2
-            for i in range(pair_count):
-                off = i * 4
-                temp_raw = int.from_bytes(data[off : off + 2], byteorder="big", signed=True)
-                hum_raw = int.from_bytes(data[off + 2 : off + 4], byteorder="big", signed=False)
-
-                measurements.append(
-                    {
-                        "probe_code": f"CH{i + 1:02d}",
-                        "node_id": node_id,
-                        "temperature": temp_raw / 10.0,
-                        "humidity": float(hum_raw),
-                        "battery_voltage": voltage,
-                    }
-                )
-
-            extra_gateway_vals = {"name": f"Gateway {serial}", "sampling_interval_min": 1}
-            reported_at = fields.Datetime.now()
-
-            self._ingest_measurements(
-                serial,
-                reported_at,
-                measurements,
-                token=None,
-                extra_gateway_vals=extra_gateway_vals,
-                node_id=node_id,
-            )
-        except Exception as exc:
-            _logger.exception("TH binary frame processing failed: %s", exc)
-
-    def process_buffer(self, buffer, source_ip=None, source_port=None):
-        # Mixed protocol parser: legacy JSON lines + binary frames.
-        while buffer:
-            # JSON-line mode (legacy compatibility)
-            if buffer[0] in (ord("{"), ord("[")):
-                nl = buffer.find(b"\n")
-                if nl < 0:
-                    return
-                line = bytes(buffer[:nl]).decode("utf-8", errors="ignore").strip()
-                del buffer[: nl + 1]
-                if line:
-                    self.process_json_line(line, source_ip=source_ip, source_port=source_port)
-                continue
-
-            # Binary frame mode.
-            idx = buffer.find(b"\xFA\xCE")
-            if idx < 0:
-                # Keep the last byte in case it is a partial frame header.
-                if len(buffer) > 1:
-                    del buffer[:-1]
-                return
-
-            if idx > 0:
-                del buffer[:idx]
-
-            if len(buffer) < 9:
-                return
-
-            data_count = buffer[7]
-            frame_len = 9 + data_count * 2
-            if len(buffer) < frame_len:
-                return
-
-            frame = bytes(buffer[:frame_len])
-            del buffer[:frame_len]
-            self.process_binary_frame(frame, source_ip=source_ip, source_port=source_port)
-
-    def flush_unparsed_tail(self, buffer, source_ip=None, source_port=None):
-        if not buffer:
-            return
-        _logger.info(
-            "TH TCP connection closed with %s unparsed bytes from %s:%s, discarded",
-            len(buffer),
-            source_ip,
-            source_port,
-        )
-        buffer.clear()
-
-    def start(self):
-        with self._lock:
-            if self._started:
-                return True
-
-            host = self.config.get("host")
-            port = self.config.get("port")
-            if not host or not port:
-                return False
-
-            try:
-                self._server = _ThreadedTCPServer((host, port), _GatewayTCPHandler)
-            except OSError as exc:
-                _logger.warning("TH TCP service cannot bind %s:%s (%s)", host, port, exc)
-                self._server = None
-                self._thread = None
-                self._started = False
-                return False
-            self._server.service = self
-            self._thread = threading.Thread(target=self._server.serve_forever, daemon=True)
-            self._thread.start()
-            self._started = True
-            _logger.info("TH TCP service started on %s:%s", host, port)
-            return True
-
-    def stop(self):
-        with self._lock:
-            if self._server:
-                self._server.shutdown()
-                self._server.server_close()
-            self._server = None
-            self._thread = None
-            self._started = False
-
-
-def _load_config(env):
-    icp = env["ir.config_parameter"].sudo()
-    host = icp.get_param("iot_control_center.th_tcp_host")
-    port_raw = icp.get_param("iot_control_center.th_tcp_port")
-
-    if host in (False, None, "", "False", "false"):
-        host = "0.0.0.0"
-    try:
-        port = int(port_raw)
-    except (TypeError, ValueError):
-        port = 9910
-    if port <= 0:
-        port = 9910
-
-    return {
-        "host": host,
-        "port": port,
-    }
-
+                time.sleep(0.05 * (attempt + 1))
 
 def ensure_running(env):
-    dbname = env.cr.dbname
-    config = _load_config(env)
+    """Old hook intentionally does not open an Odoo socket."""
+    return None
 
-    key = (dbname, config["host"], config["port"])
-    with _instances_lock:
-        current = _instances.get(dbname)
-        if current and getattr(current, "config", {}) != config:
-            current.stop()
-            _instances.pop(dbname, None)
-            current = None
-
-        if not current:
-            current = TCPIngestService(dbname, config)
-            _instances[dbname] = current
-
-    current.start()
-    return current
-
-
-def process_ingest_payload(env, payload_text=None, frame_bytes=None, source_ip=None, source_port=None):
-    """Process one gateway payload without binding a TCP listener.
-
-    Used by external middleware to forward decoded/received packets into Odoo.
-    """
-    service = TCPIngestService(env.cr.dbname, _load_config(env))
-    if payload_text is not None:
-        service.process_json_line(payload_text, source_ip=source_ip, source_port=source_port)
-        return
-    if frame_bytes is not None:
-        service.process_binary_frame(frame_bytes, source_ip=source_ip, source_port=source_port)
+def process_ingest_payload(env, data, binary=False):
+    return TCPIngestService(env.cr.dbname).ingest(data, binary=binary)

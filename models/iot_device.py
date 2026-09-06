@@ -1,4 +1,5 @@
 import json
+import hashlib
 import logging
 import time
 import uuid
@@ -13,7 +14,6 @@ import pytz
 from odoo import _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 
-from ..services.mqtt_service import ensure_running, publish_once
 
 _logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ _logger = logging.getLogger(__name__)
 class IoTDevice(models.Model):
     _name = "iot.device"
     _description = "IoT Relay Device"
-    _inherit = ["mail.thread"]
+    _inherit = ["mail.thread", "iot.access.mixin"]
 
     name = fields.Char(required=True, tracking=True)
     serial = fields.Char(required=True, tracking=True)
@@ -83,6 +83,7 @@ class IoTDevice(models.Model):
         readonly=True,
     )
     network_config_dirty = fields.Boolean(default=True, readonly=True)
+    safety_critical = fields.Boolean(string="Safety-Critical Equipment", default=False)
     firmware_target_version = fields.Char(tracking=True)
     firmware_upgrade_requested_at = fields.Datetime(tracking=True)
     firmware_upgrade_completed_at = fields.Datetime(tracking=True)
@@ -91,7 +92,7 @@ class IoTDevice(models.Model):
         default="none",
         tracking=True,
     )
-    auth_token = fields.Char(required=True, default=lambda self: uuid.uuid4().hex)
+    auth_token = fields.Char(required=True, default=lambda self: uuid.uuid4().hex, groups="iot_control_center.group_iot_manager", copy=False)
 
     on_since = fields.Datetime()
     total_on_minutes = fields.Integer(default=0, tracking=True)
@@ -304,6 +305,8 @@ class IoTDevice(models.Model):
             "last_command_payload": json.dumps(body, ensure_ascii=False),
         }
         target_state = payload.get("state") if command == "relay" else None
+        if command in ("delay_start", "delay_cancel"):
+            target_state = "on" if command == "delay_start" else "off"
         command_id = payload.get("command_id")
         if target_state in ("on", "off") and command_id:
             vals.update(
@@ -318,6 +321,7 @@ class IoTDevice(models.Model):
 
     @api.model
     def find_bind_candidate(self, serial_or_id, require_online=False):
+        self._check_iot_access(manage=True)
         key = (serial_or_id or "").strip()
         if not key:
             raise UserError(_("Switch ID/Serial is required."))
@@ -354,6 +358,7 @@ class IoTDevice(models.Model):
         return rec.with_env(self.env)
 
     def action_unbind(self):
+        self._check_iot_access(manage=True)
         for rec in self:
             rec.write(
                 {
@@ -380,53 +385,10 @@ class IoTDevice(models.Model):
             )
 
     def _publish_command(self, command, payload=None, raise_on_fail=True, retain=False, return_details=False):
-        icp = self.env["ir.config_parameter"].sudo()
-        middleware_enabled = str(icp.get_param("iot_control_center.middleware_enabled", "False")).lower() in ("1", "true", "yes")
-        if middleware_enabled:
-            return self._publish_command_via_middleware(
-                command,
-                payload=payload,
-                raise_on_fail=raise_on_fail,
-                retain=retain,
-                return_details=return_details,
-            )
-
-        mqtt_host = self.env["ir.config_parameter"].sudo().get_param("iot_control_center.mqtt_host")
-        if not mqtt_host or str(mqtt_host).strip().lower() in ("false", ""):
-            if raise_on_fail:
-                raise UserError(_("MQTT is not configured. Please set broker settings first."))
-            return False
-        payload = payload or {}
-        all_ok = True
-        succeeded = self.browse()
+        commands = self.env["iot.command"].sudo()
         for rec in self:
-            command_id = rec._command_identity()
-            topic = f"{self._mqtt_topic_root()}/{command_id}/command"
-            command_payload = dict(payload)
-            if command == "relay" and command_payload.get("state") in ("on", "off"):
-                command_payload["command_id"] = uuid.uuid4().hex
-            body = {"command": command, **command_payload}
-            ok = publish_once(self.env, topic, json.dumps(body, separators=(",", ":")), retain=retain)
-            if not ok:
-                all_ok = False
-                if raise_on_fail:
-                    raise UserError(_("Failed to publish MQTT command for %s") % rec.display_name)
-                continue
-            succeeded |= rec
-            command_at = fields.Datetime.now()
-            # Metadata write should never block command success.
-            # Under concurrent MQTT/status updates, this row can be hot.
-            try:
-                self._run_with_serialization_retry(
-                    lambda: rec.with_context(**self._system_no_track_context()).write(
-                        self._relay_command_metadata(command, command_payload, body, command_at)
-                    )
-                )
-            except Exception as exc:
-                _logger.warning("Skip command metadata write for %s due to contention: %s", rec.display_name, exc)
-        if return_details:
-            return all_ok, succeeded
-        return all_ok
+            commands._enqueue(rec, command, payload or {})
+        return (True, self) if return_details else True
 
     def _publish_command_via_middleware(self, command, payload=None, raise_on_fail=True, retain=False, return_details=False):
         icp = self.env["ir.config_parameter"].sudo()
@@ -448,7 +410,7 @@ class IoTDevice(models.Model):
             endpoint = f"{base_url}/v1/switch/{urlparse.quote(command_id, safe='')}/command"
             command_payload = dict(payload)
             if command == "relay" and command_payload.get("state") in ("on", "off"):
-                command_payload["command_id"] = uuid.uuid4().hex
+                command_payload.setdefault("command_id", uuid.uuid4().hex)
             body = {"command": command, "payload": command_payload, "retain": bool(retain)}
             req = urlrequest.Request(
                 endpoint,
@@ -505,13 +467,18 @@ class IoTDevice(models.Model):
             fallback_host, fallback_port = "", public_port
         ota_base_url = self.company_id.get_iot_internal_ota_base_url() if self.company_id else False
         ota_base_url = ota_base_url or icp.get_param("iot_control_center.firmware_base_url") or ""
-        return {
+        payload = {
             "mqtt_primary_host": primary_host,
             "mqtt_primary_port": primary_port,
             "mqtt_fallback_host": fallback_host,
             "mqtt_fallback_port": fallback_port,
             "ota_base_url": ota_base_url,
+            "ota_tls_fingerprint": self.company_id.iot_ota_tls_fingerprint or "",
         }
+
+        content = {"company_id": self.company_id.id, **payload}
+        payload["config_revision"] = hashlib.sha256(json.dumps(content, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+        return payload
 
     @api.model
     def _firmware_supports_network_config(self, version):
@@ -519,7 +486,7 @@ class IoTDevice(models.Model):
             parts = tuple(int(part) for part in str(version or "").split(".")[:3])
         except (TypeError, ValueError):
             return False
-        return parts >= (1, 8, 10)
+        return parts >= (2, 0, 0)
 
     def _sync_network_config(self, raise_on_error=False):
         all_ok = True
@@ -535,20 +502,23 @@ class IoTDevice(models.Model):
         return all_ok
 
     def action_sync_network_config(self):
+        self._check_iot_access(manage=True)
         self._sync_network_config(raise_on_error=True)
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",
             "params": {
                 "title": _("Network configuration"),
-                "message": _("Company internal network settings were sent to the selected controller(s)."),
+                "message": _("Company network settings are queued; waiting for device confirmation."),
                 "type": "success",
                 "sticky": False,
             },
         }
 
     def action_turn_on(self):
-        self._ensure_not_delay_locked()
+        self._check_iot_access()
+        if any(rec.safety_critical and rec.max_continuous_on_minutes <= 0 for rec in self):
+            raise ValidationError(_("Set a finite maximum ON time for safety-critical equipment."))
         devices = self.sudo()
         all_ok = True
         for rec in devices:
@@ -564,7 +534,7 @@ class IoTDevice(models.Model):
                 "tag": "display_notification",
                 "params": {
                     "title": _("Switch command"),
-                    "message": _("Turn on command sent; waiting for device confirmation."),
+                    "message": _("Turn on command queued; waiting for device confirmation."),
                     "sticky": False,
                     "type": "success",
                 },
@@ -581,7 +551,7 @@ class IoTDevice(models.Model):
         }
 
     def action_turn_off(self):
-        self._ensure_not_delay_locked()
+        self._check_iot_access()
         devices = self.sudo()
         all_ok = True
         for rec in devices:
@@ -597,7 +567,7 @@ class IoTDevice(models.Model):
                 "tag": "display_notification",
                 "params": {
                     "title": _("Switch command"),
-                    "message": _("Turn off command sent; waiting for device confirmation."),
+                    "message": _("Turn off command queued; waiting for device confirmation."),
                     "sticky": False,
                     "type": "success",
                 },
@@ -617,11 +587,14 @@ class IoTDevice(models.Model):
         return False
 
     def action_delay_toggle(self):
+        self._check_iot_access()
+        if any(not rec.delay_active and rec.safety_critical and rec.max_continuous_on_minutes <= 0 for rec in self):
+            raise ValidationError(_("Set a finite maximum ON time for safety-critical equipment."))
         all_ok = True
         for rec in self.sudo():
             duration_min = max(int(rec.delay_duration_minutes or 0), 1)
             ok = rec._publish_command(
-                "delay_toggle",
+                "delay_cancel" if rec.delay_active else "delay_start",
                 {"duration_sec": duration_min * 60, "max_on_sec": rec._max_on_seconds()},
                 raise_on_fail=False,
             )
@@ -633,7 +606,7 @@ class IoTDevice(models.Model):
                 "tag": "display_notification",
                 "params": {
                     "title": _("Delay switch"),
-                    "message": _("Delay command sent."),
+                    "message": _("Timer command queued; waiting for device confirmation."),
                     "sticky": False,
                     "type": "success",
                 },
@@ -750,9 +723,11 @@ class IoTDevice(models.Model):
                 _logger.warning("Schedule clear failed for %s: %s", rec.display_name, exc)
 
     def action_sync_schedule(self):
+        self._check_iot_access(manage=True)
         self._sync_schedule_payload(raise_on_error=True)
 
     def action_reset_uptime(self):
+        self._check_iot_access(manage=True)
         self.ensure_one()
         return {
             "type": "ir.actions.act_window",
@@ -766,6 +741,7 @@ class IoTDevice(models.Model):
         }
 
     def action_reset_uptime_with_reason(self, reason):
+        self._check_iot_access(manage=True)
         reason = (reason or "").strip()
         if not reason:
             raise UserError(_("Reset reason is required."))
@@ -781,7 +757,7 @@ class IoTDevice(models.Model):
                 % (self.env.user.display_name, reason, round(before_minutes / 60.0, 2))
             )
 
-    def apply_state_report(self, state, reported_at=None):
+    def _apply_state_report(self, state, reported_at=None):
         state = state if state in ("on", "off") else "unknown"
         at = reported_at or fields.Datetime.now()
         for rec in self:
@@ -801,7 +777,7 @@ class IoTDevice(models.Model):
                 rec.delay_started_at = False
                 rec.delay_end_at = False
 
-    def apply_command_ack(self, payload, reported_at=None):
+    def _apply_command_ack(self, payload, reported_at=None):
         if not isinstance(payload, dict):
             return
         command_id = str(payload.get("last_command_id") or payload.get("command_id") or "").strip()
@@ -810,13 +786,28 @@ class IoTDevice(models.Model):
             return
         at = reported_at or fields.Datetime.now()
         for rec in self:
+            delivery = self.env["iot.command"].sudo().search([
+                ("device_id", "=", rec.id), ("command_id", "=", command_id),
+                ("state", "in", ["sent", "expired"]),
+            ], limit=1)
+            confirmed = False
+            if delivery.command == "network_set":
+                confirmed = bool(payload.get("config_revision")) and payload.get("config_revision") == delivery.payload.get("config_revision")
+            elif delivery.command in ("schedule_set", "schedule_clear"):
+                confirmed = payload.get("schedule_version") == delivery.payload.get("version")
+            elif delivery.command == "relay":
+                confirmed = state == delivery.payload.get("state")
+            elif delivery.command in ("delay_start", "delay_cancel"):
+                confirmed = state == ("on" if delivery.command == "delay_start" else "off")
+            if confirmed:
+                delivery.state = "confirmed"
             if command_id != (rec.last_command_id or ""):
                 continue
             if rec.desired_relay_state in ("on", "off") and state == rec.desired_relay_state:
                 rec.relay_command_state = "confirmed"
                 rec.last_command_confirmed_at = at
 
-    def apply_schedule_report(self, payload, reported_at=None):
+    def _apply_schedule_report(self, payload, reported_at=None):
         at = reported_at or fields.Datetime.now()
         for rec in self:
             version = payload.get("schedule_version") if isinstance(payload, dict) else None
@@ -830,7 +821,7 @@ class IoTDevice(models.Model):
             if not rec.last_seen or at >= rec.last_seen:
                 rec.last_seen = at
 
-    def apply_delay_report(self, payload, reported_at=None):
+    def _apply_delay_report(self, payload, reported_at=None):
         at = reported_at or fields.Datetime.now()
         if not isinstance(payload, dict):
             return
@@ -855,7 +846,7 @@ class IoTDevice(models.Model):
                 rec.delay_started_at = False
                 rec.delay_end_at = False
 
-    def apply_manual_override_report(self, payload, reported_at=None):
+    def _apply_manual_override_report(self, payload, reported_at=None):
         at = reported_at or fields.Datetime.now()
         if not isinstance(payload, dict):
             return
@@ -866,7 +857,7 @@ class IoTDevice(models.Model):
             rec.manual_override = bool(override)
             rec.last_seen = at
 
-    def apply_identity_report(self, module_id, reported_at=None):
+    def _apply_identity_report(self, module_id, reported_at=None):
         at = reported_at or fields.Datetime.now()
         for rec in self:
             if module_id and rec.module_id != module_id:
@@ -890,7 +881,7 @@ class IoTDevice(models.Model):
             if not rec.last_seen or at >= rec.last_seen:
                 rec.last_seen = at
 
-    def apply_firmware_report(self, reported_version, reported_at=None, ota_state=None):
+    def _apply_firmware_report(self, reported_version, reported_at=None, ota_state=None):
         at = reported_at or fields.Datetime.now()
         log_model = self.env["iot.firmware.upgrade.log"]
         for rec in self:
@@ -935,7 +926,7 @@ class IoTDevice(models.Model):
                 rec.network_config_dirty = True
                 rec._sync_network_config(raise_on_error=False)
 
-    def apply_runtime_report(self, payload, reported_at=None):
+    def _apply_runtime_report(self, payload, reported_at=None):
         if not isinstance(payload, dict):
             return
         at = reported_at or fields.Datetime.now()
@@ -960,16 +951,14 @@ class IoTDevice(models.Model):
                 vals["mqtt_route"] = route
             if active_host and rec._firmware_supports_network_config(rec.firmware_version):
                 desired = rec._network_config_payload()
-                primary_match = route == "primary" and active_host == desired["mqtt_primary_host"]
-                fallback_match = route == "fallback" and active_host == desired["mqtt_fallback_host"]
-                if primary_match or fallback_match:
+                if payload.get("config_revision") == desired["config_revision"]:
                     vals["network_config_dirty"] = False
             if not rec.last_seen or at >= rec.last_seen:
                 vals["last_seen"] = at
             if vals:
                 rec.write(vals)
 
-    def apply_firmware_upgrade_feedback(self, ota_state, note=None, reported_at=None):
+    def _apply_firmware_upgrade_feedback(self, ota_state, note=None, reported_at=None):
         at = reported_at or fields.Datetime.now()
         log_model = self.env["iot.firmware.upgrade.log"]
         for rec in self:
@@ -1001,6 +990,9 @@ class IoTDevice(models.Model):
             self._sync_schedule_payload(raise_on_error=False)
 
     def write(self, vals):
+        vals = dict(vals)
+        if "company_id" in vals:
+            vals["network_config_dirty"] = True
         needs_auto_sync = bool({"group_ids", "max_continuous_on_minutes"} & set(vals))
         runtime_only = bool(vals) and set(vals).issubset(self._runtime_no_track_fields())
         if runtime_only:
@@ -1009,14 +1001,14 @@ class IoTDevice(models.Model):
             res = super().write(vals)
         if needs_auto_sync:
             self.mark_schedule_dirty(auto_sync=True)
+        if "company_id" in vals:
+            self._sync_network_config(raise_on_error=False)
         return res
 
     @api.model
     def _cron_ensure_mqtt_service(self):
         icp = self.env["ir.config_parameter"].sudo()
         middleware_enabled = str(icp.get_param("iot_control_center.middleware_enabled", "False")).lower() in ("1", "true", "yes")
-        if not middleware_enabled:
-            ensure_running(self.env)
         now = fields.Datetime.now()
         expired = self.with_context(**self._system_no_track_context()).search(
             [("delay_active", "=", True), ("delay_end_at", "!=", False), ("delay_end_at", "<=", now)]
@@ -1088,7 +1080,6 @@ class IoTDevice(models.Model):
             [
                 ("network_config_dirty", "=", True),
                 ("last_seen", ">=", cutoff),
-                ("company_id", "!=", False),
             ],
             limit=200,
         )

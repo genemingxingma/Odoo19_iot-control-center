@@ -11,7 +11,7 @@ from odoo.exceptions import UserError
 class IoTOpenwrtAP(models.Model):
     _name = "iot.openwrt.ap"
     _description = "OpenWrt Access Point"
-    _inherit = ["mail.thread"]
+    _inherit = ["mail.thread", "iot.access.mixin"]
 
     _LIVE_TELEMETRY_FIELDS = {
         "client_count_total",
@@ -364,7 +364,7 @@ class IoTOpenwrtAP(models.Model):
         )
 
     @api.model
-    def get_heartbeat_inventory(self):
+    def _get_heartbeat_inventory(self):
         key_path = (self.env["ir.config_parameter"].sudo().get_param("iot_control_center.openwrt_ssh_private_key_path") or "").strip()
         items = []
         for rec in self.sudo().search([("active", "=", True)]):
@@ -387,13 +387,16 @@ class IoTOpenwrtAP(models.Model):
         }
 
     @api.model
-    def apply_heartbeat_result(self, payload):
+    def _apply_heartbeat_result(self, payload):
         ap_id = int(payload.get("id") or 0)
         auth_token = (payload.get("auth_token") or "").strip()
         rec = self.sudo().search([("id", "=", ap_id), ("auth_token", "=", auth_token)], limit=1)
         if not rec:
             return False
-        now = fields.Datetime.now()
+        from ..core.telemetry import envelope
+        now = envelope(payload)[1]
+        if rec.last_heartbeat_at and now <= rec.last_heartbeat_at:
+            return True
         ok = bool(payload.get("ok"))
         mode = (payload.get("mode") or "heartbeat").strip() or "heartbeat"
         values = {"last_heartbeat_at": now}
@@ -556,6 +559,7 @@ class IoTOpenwrtAP(models.Model):
         return str(int(value))
 
     def action_probe(self):
+        self._check_iot_access(manage=True)
         for rec in self:
             payload = rec._base_payload()
             job = rec._create_job("probe", payload)
@@ -588,6 +592,7 @@ class IoTOpenwrtAP(models.Model):
         return True
 
     def action_apply_template(self):
+        self._check_iot_access(manage=True)
         for rec in self:
             if not rec.template_id:
                 raise UserError(_("Please select a template first."))
@@ -614,6 +619,7 @@ class IoTOpenwrtAP(models.Model):
         return True
 
     def action_reboot(self):
+        self._check_iot_access(manage=True)
         for rec in self:
             payload = rec._base_payload()
             job = rec._create_job("reboot", payload)
@@ -636,6 +642,7 @@ class IoTOpenwrtAP(models.Model):
         return True
 
     def action_start_locate(self):
+        self._check_iot_access(manage=True)
         duration_sec = 300
         for rec in self:
             payload = rec._base_payload()
@@ -666,6 +673,7 @@ class IoTOpenwrtAP(models.Model):
         return True
 
     def action_stop_locate(self):
+        self._check_iot_access(manage=True)
         for rec in self:
             payload = rec._base_payload()
             payload.update({"enable": False})
@@ -694,6 +702,7 @@ class IoTOpenwrtAP(models.Model):
         return True
 
     def action_upgrade_firmware(self):
+        self._check_iot_access(manage=True)
         for rec in self:
             firmware = rec.upgrade_firmware_id
             if not firmware:

@@ -32,7 +32,8 @@
                     <group>
                         <group>
                             <field name="name"/>
-                            <field name="serial" readonly="1"/>
+                            <field name="serial"/>
+                            <field name="source_address"/>
                             <field name="company_id" groups="base.group_multi_company"/>
                             <field name="department_id"/>
                             <field name="location_id"/>
@@ -63,8 +64,8 @@
     </record>
 
     <menuitem id="menu_iot_environment_root" name="Environment" parent="menu_iot_mode_detailed" sequence="70" groups="base.group_erp_manager"/>
-    <menuitem id="menu_iot_th_gateway" name="Gateways" parent="menu_iot_environment_root" action="action_iot_th_gateway" sequence="10" groups="base.group_no_one"/>
+    <menuitem id="menu_iot_th_gateway" name="Gateways" parent="menu_iot_environment_root" action="action_iot_th_gateway" sequence="10" groups="iot_control_center.group_iot_manager"/>
     <record id="menu_iot_th_gateway" model="ir.ui.menu">
-        <field name="group_ids" eval="[(6, 0, [ref('base.group_no_one')])]"/>
+        <field name="group_ids" eval="[(6, 0, [ref('iot_control_center.group_iot_manager')])]"/>
     </record>
 </odoo>

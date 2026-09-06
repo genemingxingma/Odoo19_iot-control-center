@@ -1,127 +1,77 @@
-import base64
 import json
 import logging
 import secrets
 
 from odoo import http
 from odoo.http import request
-
-from ..services.tcp_service import process_ingest_payload
+from ..core.telemetry import MAX_BODY_BYTES, envelope
+from ..services.tcp_service import GatewayNotRegistered, process_ingest_payload
 
 _logger = logging.getLogger(__name__)
-MAX_INTERNAL_BODY_BYTES = 2 * 1024 * 1024
-
 
 class IoTInternalIngestController(http.Controller):
     def _check_token(self):
-        expected = (request.env["ir.config_parameter"].sudo().get_param("iot_control_center.middleware_token") or "").strip()
-        provided = (request.httprequest.headers.get("X-IoT-Middleware-Token") or "").strip()
-        if not expected:
-            _logger.error("IoT internal ingest rejected because middleware token is not configured.")
-            return False
-        return secrets.compare_digest(provided, expected)
+        expected = request.env["ir.config_parameter"].sudo().get_param("iot_control_center.middleware_token") or ""
+        provided = request.httprequest.headers.get("X-IoT-Middleware-Token") or ""
+        return bool(expected) and secrets.compare_digest(expected, provided)
 
     def _parse_json(self):
-        raw = request.httprequest.data or b"{}"
-        if len(raw) > MAX_INTERNAL_BODY_BYTES:
+        length = request.httprequest.content_length
+        if length and length > MAX_BODY_BYTES:
             raise ValueError("payload too large")
-        return json.loads(raw.decode("utf-8"))
+        raw = request.httprequest.stream.read(MAX_BODY_BYTES + 1)
+        if len(raw) > MAX_BODY_BYTES:
+            raise ValueError("payload too large")
+        data = json.loads(raw or b"{}")
+        if not isinstance(data, dict):
+            raise ValueError("object required")
+        return data
+
+    def _dispatch(self, route, handler, receipt=True):
+        if not self._check_token():
+            return request.make_json_response({"ok": False, "error": "unauthorized"}, status=401)
+        try:
+            data = self._parse_json()
+            with request.env.cr.savepoint():
+                if receipt:
+                    event_id, received_at, digest = envelope(data)
+                    if not request.env["iot.ingest.event"].sudo()._claim(event_id, route, digest, received_at):
+                        return request.make_json_response({"ok": True, "event_id": event_id, "duplicate": True})
+                result = handler(data)
+            return request.make_json_response(result)
+        except GatewayNotRegistered:
+            return request.make_json_response({"ok": False, "error": "gateway registration required"}, status=503)
+        except (ValueError, TypeError, KeyError, OverflowError):
+            return request.make_json_response({"ok": False, "error": "invalid event"}, status=400)
+        except Exception:
+            _logger.exception("IoT event transaction failed on %s", route)
+            return request.make_json_response({"ok": False, "error": "temporary ingest failure"}, status=503)
 
     @http.route("/iot_control_center/internal/mqtt_ingest", type="http", auth="none", methods=["POST"], csrf=False)
     def mqtt_ingest(self, **kwargs):
-        try:
-            if not self._check_token():
-                return request.make_json_response({"ok": False, "error": "unauthorized"}, status=401)
-            data = self._parse_json()
-            topic = data.get("topic")
-            payload = data.get("payload")
-            if not topic or payload is None:
-                return request.make_json_response({"ok": False, "error": "missing topic/payload"}, status=400)
-            request.env["iot.mqtt.message"].sudo().create_from_mqtt(
-                topic,
-                str(payload),
-                retained=bool(data.get("retained")),
-            )
-            return request.make_json_response({"ok": True})
-        except ValueError as exc:
-            return request.make_json_response({"ok": False, "error": str(exc)}, status=400)
-        except Exception as exc:
-            _logger.exception("Internal MQTT ingest failed: %s", exc)
-            return request.make_json_response({"ok": False, "error": "internal error"}, status=500)
+        def apply(data):
+            if not isinstance(data.get("topic"), str) or not isinstance(data.get("payload"), str):
+                raise ValueError("topic and payload are required")
+            request.env["iot.mqtt.message"].sudo()._create_from_mqtt(data["topic"], data["payload"], retained=bool(data.get("retained")), received_at=envelope(data)[1])
+            return {"ok": True, "event_id": data["event_id"]}
+        return self._dispatch("mqtt", apply)
 
     @http.route("/iot_control_center/internal/th_ingest_json", type="http", auth="none", methods=["POST"], csrf=False)
     def th_ingest_json(self, **kwargs):
-        try:
-            if not self._check_token():
-                return request.make_json_response({"ok": False, "error": "unauthorized"}, status=401)
-            data = self._parse_json()
-            payload_text = data.get("payload_text")
-            source_ip = data.get("source_ip")
-            source_port = data.get("source_port")
-            if not payload_text:
-                return request.make_json_response({"ok": False, "error": "missing payload_text"}, status=400)
-            process_ingest_payload(
-                request.env,
-                payload_text=str(payload_text),
-                source_ip=source_ip,
-                source_port=source_port,
-            )
-            return request.make_json_response({"ok": True})
-        except ValueError as exc:
-            return request.make_json_response({"ok": False, "error": str(exc)}, status=400)
-        except Exception as exc:
-            _logger.exception("Internal TH JSON ingest failed: %s", exc)
-            return request.make_json_response({"ok": False, "error": "internal error"}, status=500)
+        return self._dispatch("th.json", lambda data: process_ingest_payload(request.env, data), receipt=False)
 
     @http.route("/iot_control_center/internal/th_ingest_binary", type="http", auth="none", methods=["POST"], csrf=False)
     def th_ingest_binary(self, **kwargs):
-        try:
-            if not self._check_token():
-                return request.make_json_response({"ok": False, "error": "unauthorized"}, status=401)
-            data = self._parse_json()
-            frame_b64 = data.get("frame_b64")
-            source_ip = data.get("source_ip")
-            source_port = data.get("source_port")
-            if not frame_b64:
-                return request.make_json_response({"ok": False, "error": "missing frame_b64"}, status=400)
-            frame = base64.b64decode(frame_b64)
-            process_ingest_payload(
-                request.env,
-                frame_bytes=frame,
-                source_ip=source_ip,
-                source_port=source_port,
-            )
-            return request.make_json_response({"ok": True})
-        except ValueError as exc:
-            return request.make_json_response({"ok": False, "error": str(exc)}, status=400)
-        except Exception as exc:
-            _logger.exception("Internal TH binary ingest failed: %s", exc)
-            return request.make_json_response({"ok": False, "error": "internal error"}, status=500)
+        return self._dispatch("th.binary", lambda data: process_ingest_payload(request.env, data, binary=True), receipt=False)
 
     @http.route("/iot_control_center/internal/openwrt_inventory", type="http", auth="none", methods=["POST"], csrf=False)
     def openwrt_inventory(self, **kwargs):
-        try:
-            if not self._check_token():
-                return request.make_json_response({"ok": False, "error": "unauthorized"}, status=401)
-            payload = request.env["iot.openwrt.ap"].sudo().get_heartbeat_inventory()
-            payload["ok"] = True
-            return request.make_json_response(payload)
-        except Exception as exc:
-            _logger.exception("Internal OpenWrt inventory failed: %s", exc)
-            return request.make_json_response({"ok": False, "error": "internal error"}, status=500)
+        return self._dispatch("openwrt.inventory", lambda data: {"ok": True, **request.env["iot.openwrt.ap"].sudo()._get_heartbeat_inventory()}, receipt=False)
 
     @http.route("/iot_control_center/internal/openwrt_heartbeat", type="http", auth="none", methods=["POST"], csrf=False)
     def openwrt_heartbeat(self, **kwargs):
-        try:
-            if not self._check_token():
-                return request.make_json_response({"ok": False, "error": "unauthorized"}, status=401)
-            data = self._parse_json()
-            applied = request.env["iot.openwrt.ap"].sudo().apply_heartbeat_result(data)
-            if not applied:
-                return request.make_json_response({"ok": False, "error": "ap not found"}, status=404)
-            return request.make_json_response({"ok": True})
-        except ValueError as exc:
-            return request.make_json_response({"ok": False, "error": str(exc)}, status=400)
-        except Exception as exc:
-            _logger.exception("Internal OpenWrt heartbeat failed: %s", exc)
-            return request.make_json_response({"ok": False, "error": "internal error"}, status=500)
+        def apply(data):
+            if not request.env["iot.openwrt.ap"].sudo()._apply_heartbeat_result(data):
+                raise ValueError("unknown AP")
+            return {"ok": True, "event_id": data["event_id"]}
+        return self._dispatch("openwrt.heartbeat", apply)

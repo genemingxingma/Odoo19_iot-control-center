@@ -119,7 +119,7 @@ class IoTAttendanceController(http.Controller):
         punches = payload.get("punches") if isinstance(payload, dict) else None
         if punches is None:
             punches = [payload]
-        created = device.ingest_webhook_payload(punches)
+        created = device._ingest_webhook_payload(punches)
         return request.make_json_response({"ok": True, "created": created})
 
     @http.route(["/getrequest", "/iclock", "/iclock/getrequest"], type="http", auth="none", methods=["GET", "POST"], csrf=False)
@@ -161,7 +161,7 @@ class IoTAttendanceController(http.Controller):
         self._touch_device(device, serial_number, payload_text)
         if payload_text.strip():
             try:
-                created = device.ingest_adms_payload(payload_text=payload_text, table=table, serial_number=serial_number, remote_ip=remote_ip, query_params=request.params)
+                created = device._ingest_adms_payload(payload_text=payload_text, table=table, serial_number=serial_number, remote_ip=remote_ip, query_params=request.params)
                 if log:
                     log.write({"status": "parsed", "note": f"table={table or '-'} created={created}"})
             except Exception as exc:
@@ -222,7 +222,7 @@ class IoTAttendanceController(http.Controller):
         self._touch_device(device, serial_number, payload_text)
         if device and payload_text.strip():
             try:
-                created = device.ingest_adms_payload(
+                created = device._ingest_adms_payload(
                     payload_text=payload_text,
                     table=table,
                     serial_number=serial_number,

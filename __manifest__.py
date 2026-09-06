@@ -1,7 +1,7 @@
 {
     "name": "IoT Control Center",
-    "summary": "ESP8266 relay management via MQTT",
-    "version": "19.0.1.0.19",
+    "summary": "Company-isolated device control and immutable environmental monitoring",
+    "version": "19.0.2.0.0",
     "category": "IoT",
     "author": "mamingxing",
     "maintainer": "mamingxing",
@@ -14,6 +14,7 @@
         "security/ir.model.access.csv",
         "data/ir_cron.xml",
         "views/iot_device_views.xml",
+        "views/iot_command_views.xml",
         "views/iot_schedule_views.xml",
         "views/iot_firmware_views.xml",
         "views/iot_firmware_upgrade_log_views.xml",
@@ -61,6 +62,6 @@
     "application": True,
     "pre_init_hook": "pre_init_check",
     "external_dependencies": {
-        "python": ["paho.mqtt.client", "pytz"],
+        "python": ["pytz"],
     },
 }

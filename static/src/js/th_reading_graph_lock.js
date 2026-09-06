@@ -1,61 +1,14 @@
 /** @odoo-module **/
 
-import { patch } from "@web/core/utils/patch";
+import { registry } from "@web/core/registry";
+import { graphView } from "@web/views/graph/graph_view";
+import { deserializeDate, deserializeDateTime, formatDate, formatDateTime } from "@web/core/l10n/dates";
 import { _t } from "@web/core/l10n/translation";
 import { GraphRenderer } from "@web/views/graph/graph_renderer";
 import { GraphModel } from "@web/views/graph/graph_model";
 
 function isTHReading(renderer) {
     return renderer?.model?.metaData?.resModel === "iot.th.reading";
-}
-
-function parseServerDateTime(value) {
-    if (!value || typeof value !== "string") {
-        return null;
-    }
-    const match = value.match(
-        /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?)?$/
-    );
-    if (!match) {
-        return null;
-    }
-    const [, year, month, day, hour = "00", minute = "00", second = "00"] = match;
-    const utcMillis = Date.UTC(
-        Number(year),
-        Number(month) - 1,
-        Number(day),
-        Number(hour),
-        Number(minute),
-        Number(second)
-    );
-    return new Date(utcMillis);
-}
-
-function formatDateBucketLabel(value, type) {
-    if (!value) {
-        return "";
-    }
-    if (type === "date") {
-        const dateOnly = parseServerDateTime(`${value} 00:00:00`);
-        return dateOnly
-            ? new Intl.DateTimeFormat(undefined, {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-              }).format(dateOnly)
-            : String(value);
-    }
-    const dateTime = parseServerDateTime(value);
-    return dateTime
-        ? new Intl.DateTimeFormat(undefined, {
-              year: "numeric",
-              month: "2-digit",
-              day: "2-digit",
-              hour: "2-digit",
-              minute: "2-digit",
-              hour12: false,
-          }).format(dateTime)
-        : String(value);
 }
 
 function normalizeMeasures(renderer) {
@@ -68,16 +21,45 @@ function normalizeMeasures(renderer) {
     return ["temperature"];
 }
 
-patch(GraphRenderer.prototype, {
+class THGraphRenderer extends GraphRenderer {
+    _iotGetMeasures() {
+        const measures = this.model.metaData.measures;
+        return Object.fromEntries(["temperature", "humidity"].map((name) => [name, measures[name]]));
+    }
+
+    getChartConfig() {
+        const config = super.getChartConfig();
+        const active = normalizeMeasures(this);
+        config.options.scales.y.title.display = true;
+        if (active.length === 2) {
+            config.options.scales.y.title.text = `${_t("Temperature")} (\u00b0C)`;
+            config.options.scales.humidity = {
+                type: "linear", position: "right", min: 0, max: 100,
+                title: { display: true, text: `${_t("Humidity")} (%RH)` },
+                grid: { drawOnChartArea: false },
+            };
+            for (const dataset of config.data.datasets) {
+                dataset.yAxisID = String(dataset.label).includes("(%RH)") ? "humidity" : "y";
+            }
+        }
+        for (const dataset of config.data.datasets) {
+            dataset.tension = 0;
+        }
+        return config;
+    }
+
     _iotGetActiveMeasures() {
         if (!isTHReading(this)) {
             return [this.model.metaData.measure];
         }
         return normalizeMeasures(this);
-    },
+    }
 
     onMeasureSelected({ measure }) {
         if (isTHReading(this)) {
+            if (!["temperature", "humidity"].includes(measure)) {
+                return;
+            }
             const selected = normalizeMeasures(this);
             let next = selected.slice();
             if (next.includes(measure)) {
@@ -94,10 +76,10 @@ patch(GraphRenderer.prototype, {
             return;
         }
         return super.onMeasureSelected({ measure });
-    },
-});
+    }
+}
 
-patch(GraphModel.prototype, {
+class THGraphModel extends GraphModel {
     _getData(dataPoints, forceUseAllDataPoints) {
         const result = super._getData(dataPoints, forceUseAllDataPoints);
         if (this.metaData?.resModel !== "iot.th.reading" || this.metaData?.mode !== "line") {
@@ -117,11 +99,15 @@ patch(GraphModel.prototype, {
             }
         }
         return result;
-    },
+    }
 
     async _loadDataPoints(metaData) {
         if (metaData?.resModel !== "iot.th.reading") {
             return super._loadDataPoints(metaData);
+        }
+        Object.assign(metaData, { stacked: false, cumulated: false, cumulatedStart: false, order: null });
+        if (metaData.mode === "pie") {
+            metaData.mode = "line";
         }
         const { domain, fields, groupBy, resModel } = metaData;
         const timeMode = (this.searchParams?.context?.iot_time_mode || metaData?.context?.iot_time_mode || "hour").toLowerCase();
@@ -175,9 +161,12 @@ patch(GraphModel.prototype, {
                 {
                     context: { ...this.searchParams.context },
                     order: "reported_at desc,id desc",
-                    limit: 10000,
+                    limit: 10001,
                 }
             );
+            if (descendingRecords.length > 10000) {
+                throw new Error(_t("Too many raw samples. Narrow the date range or select Hourly Average."));
+            }
             const records = [...(descendingRecords || [])].reverse();
             const dataPoints = [];
             for (const record of records || []) {
@@ -196,7 +185,7 @@ patch(GraphModel.prototype, {
                     rawValues.push({ [gb.spec]: value });
                     let label;
                     if (["date", "datetime"].includes(type)) {
-                        label = formatDateBucketLabel(value, type);
+                        label = type === "datetime" ? formatDateTime(deserializeDateTime(value)) : value;
                     } else if (["many2many", "many2one"].includes(type) && Array.isArray(value)) {
                         label = value[1] || "";
                     } else if (value === false || value === null || value === undefined) {
@@ -278,8 +267,13 @@ patch(GraphModel.prototype, {
                     const selected = (fieldDef.selection || []).find((s) => s[0] === val);
                     label = selected ? selected[1] : val;
                 } else if (["date", "datetime"].includes(type)) {
-                    const bucketValue = Array.isArray(val) ? (val[0] ?? val[1] ?? "") : (val ?? "");
-                    label = formatDateBucketLabel(bucketValue, type);
+                    // The server hour label may use 12-hour time without AM/PM.
+                    // GraphModel keys by label, so include 24-hour time and offset
+                    // to avoid merging noon/midnight or repeated DST hours.
+                    const start = Array.isArray(val) ? val[0] : val;
+                    label = type === "datetime"
+                        ? formatDateTime(deserializeDateTime(start), { format: "yyyy-MM-dd HH:mm ZZ" })
+                        : formatDate(deserializeDate(start), { format: "yyyy-MM-dd" });
                 } else {
                     label = val;
                 }
@@ -318,5 +312,7 @@ patch(GraphModel.prototype, {
         metaData.measure = useTemperature ? "temperature" : "humidity";
         metaData.allIntegers = false;
         return [dataPoints, new Set()];
-    },
-});
+    }
+}
+
+registry.category("views").add("iot_th_graph", { ...graphView, Model: THGraphModel, Renderer: THGraphRenderer, buttonTemplate: "iot_control_center.GraphViewButtons" });

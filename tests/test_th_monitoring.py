@@ -4,6 +4,7 @@ from unittest.mock import Mock
 
 from psycopg2.extensions import ISOLATION_LEVEL_READ_COMMITTED
 from odoo import fields
+from odoo.exceptions import ValidationError
 from odoo.tests import tagged
 from odoo.tests.common import TransactionCase
 
@@ -88,20 +89,11 @@ class TestTHMonitoring(TransactionCase):
 
         cursor.connection.set_isolation_level.assert_called_once_with(ISOLATION_LEVEL_READ_COMMITTED)
 
-    def test_duplicate_sensor_timestamp_is_idempotent(self):
-        reported_at = fields.Datetime.now()
-
-        first = self.env["iot.th.reading"].create(self._reading_values(reported_at))
-        duplicate = self.env["iot.th.reading"].create(self._reading_values(reported_at))
-
-        self.assertTrue(first)
-        self.assertFalse(duplicate)
-        self.assertEqual(
-            self.env["iot.th.reading"].search_count(
-                [("sensor_id", "=", self.sensor.id), ("reported_at", "=", reported_at)]
-            ),
-            1,
-        )
+    def test_equal_timestamps_can_have_distinct_event_identities(self):
+        at = fields.Datetime.now()
+        first = self.env["iot.th.reading"].create(self._reading_values(at))
+        second = self.env["iot.th.reading"].create(self._reading_values(at))
+        self.assertNotEqual(first.event_id, second.event_id)
 
     def test_raw_reading_initializes_extrema_and_sample_count(self):
         reading = self.env["iot.th.reading"].create(self._reading_values())
@@ -114,36 +106,18 @@ class TestTHMonitoring(TransactionCase):
         self.assertEqual(self.env["iot.th.reading"]._fields["temperature"].aggregator, "avg")
         self.assertEqual(self.env["iot.th.reading"]._fields["sample_count"].aggregator, "sum")
 
-    def test_sensor_statistics_weight_rollups_and_keep_extrema(self):
+    def test_statistics_aggregate_only_raw_samples(self):
         now = fields.Datetime.now()
-        self.sensor.stats_window_hours = 24
-        self.env["iot.th.reading"].create(
-            self._reading_values(
-                now - timedelta(hours=1),
-                temperature=10.0,
-                humidity=50.0,
-                temperature_min=5.0,
-                temperature_max=15.0,
-                humidity_min=40.0,
-                humidity_max=60.0,
-                sample_count=10,
-                is_daily_rollup=True,
-            )
-        )
-        self.env["iot.th.reading"].create(
-            self._reading_values(
-                now,
-                temperature=20.0,
-                humidity=70.0,
-            )
-        )
-
+        self.env["iot.th.reading"].create([
+            self._reading_values(now - timedelta(minutes=i+1), temperature=10, humidity=50) for i in range(10)
+        ] + [self._reading_values(now, temperature=20, humidity=70)])
+        self.env.flush_all()
         self.assertAlmostEqual(self.sensor.avg_temperature, 120.0 / 11.0, places=4)
         self.assertAlmostEqual(self.sensor.avg_humidity, 570.0 / 11.0, places=4)
-        self.assertEqual(self.sensor.min_temperature, 5.0)
-        self.assertEqual(self.sensor.max_temperature, 20.0)
-        self.assertEqual(self.sensor.min_humidity, 40.0)
-        self.assertEqual(self.sensor.max_humidity, 70.0)
+        self.assertEqual(self.sensor.min_temperature, 10)
+        self.assertEqual(self.sensor.max_temperature, 20)
+        with self.assertRaises(ValidationError):
+            self.env["iot.th.reading"].create(self._reading_values(sample_count=10))
 
     def test_sensor_trend_action_is_scoped_to_sensor(self):
         action = self.sensor.action_open_readings()
@@ -153,9 +127,9 @@ class TestTHMonitoring(TransactionCase):
 
     def test_stale_reading_does_not_replace_latest_sensor_state(self):
         latest_at = fields.Datetime.now()
-        self.sensor.apply_reading(6.0, 60.0, latest_at, battery_voltage=3.2)
+        self.sensor._apply_reading(6.0, 60.0, latest_at, battery_voltage=3.2)
 
-        self.sensor.apply_reading(30.0, 20.0, latest_at - timedelta(hours=1), battery_voltage=2.0)
+        self.sensor._apply_reading(30.0, 20.0, latest_at - timedelta(hours=1), battery_voltage=2.0)
 
         self.assertEqual(self.sensor.last_reported_at, latest_at)
         self.assertEqual(self.sensor.last_temperature, 6.0)

@@ -3,6 +3,7 @@ from datetime import datetime
 from datetime import timedelta
 
 from odoo import api, fields, models
+from ..core.telemetry import timestamp
 
 
 class IoTMQTTMessage(models.Model):
@@ -59,82 +60,6 @@ class IoTMQTTMessage(models.Model):
         return (value or "").strip().lower()
 
     @api.model
-    def _is_noise_prone_message_type(self, message_type):
-        return message_type in ("status", "telemetry")
-
-    @api.model
-    def _dedupe_window_seconds(self, message_type):
-        return 15 if message_type == "status" else 10
-
-    @api.model
-    def _telemetry_sample_window_seconds(self):
-        raw = self.env["ir.config_parameter"].sudo().get_param(
-            "iot_control_center.mqtt_telemetry_sample_window_seconds",
-            "60",
-        )
-        try:
-            return max(int(raw or 60), 5)
-        except Exception:
-            return 60
-
-    @api.model
-    def _find_recent_duplicate(self, serial_key, message_type, topic, payload_text, now_value):
-        if not serial_key or not self._is_noise_prone_message_type(message_type):
-            return self.browse()
-        self.env.cr.execute(
-            """
-            SELECT id
-            FROM iot_mqtt_message
-            WHERE lower(device_serial) = %s
-              AND message_type = %s
-              AND topic = %s
-              AND payload = %s
-              AND (
-                    state = 'new'
-                    OR (
-                        state = 'done'
-                        AND received_at >= %s
-                    )
-              )
-            ORDER BY id DESC
-            LIMIT 1
-            """,
-            [
-                serial_key,
-                message_type,
-                topic,
-                payload_text,
-                now_value - timedelta(seconds=self._dedupe_window_seconds(message_type)),
-            ],
-        )
-        row = self.env.cr.fetchone()
-        return self.browse(row[0]) if row else self.browse()
-
-    @api.model
-    def _find_recent_telemetry_slot(self, serial_key, topic, now_value):
-        if not serial_key:
-            return self.browse()
-        self.env.cr.execute(
-            """
-            SELECT id
-            FROM iot_mqtt_message
-            WHERE lower(device_serial) = %s
-              AND message_type = 'telemetry'
-              AND topic = %s
-              AND received_at >= %s
-            ORDER BY received_at DESC, id DESC
-            LIMIT 1
-            """,
-            [
-                serial_key,
-                topic,
-                now_value - timedelta(seconds=self._telemetry_sample_window_seconds()),
-            ],
-        )
-        row = self.env.cr.fetchone()
-        return self.browse(row[0]) if row else self.browse()
-
-    @api.model
     def _find_or_create_device_by_key(self, key):
         key = self._normalize_device_key(key)
         if not key:
@@ -177,47 +102,13 @@ class IoTMQTTMessage(models.Model):
         return device_model.with_context(iot_auto_discovery=True).create({"name": key, "serial": key, "company_id": False})
 
     @api.model
-    def create_from_mqtt(self, topic, payload_text, retained=False):
-        serial = False
-        msg_type = "unknown"
-        retained = bool(retained)
+    def _create_from_mqtt(self, topic, payload_text, retained=False, received_at=None):
         parts = (topic or "").split("/")
-        if len(parts) >= 3:
-            serial = parts[-2]
-            msg_type = parts[-1] if parts[-1] in ("status", "telemetry") else "unknown"
-        serial_key = self._normalize_device_key(serial)
-        if serial_key and self._is_noise_prone_message_type(msg_type):
-            self.env.cr.execute(
-                "SELECT pg_advisory_xact_lock(hashtext(%s))",
-                [f"iot.mqtt.message:{serial_key}:{msg_type}"],
-            )
-            now_value = fields.Datetime.now()
-            duplicate = self._find_recent_duplicate(serial_key, msg_type, topic, payload_text, now_value)
-            if duplicate:
-                duplicate.sudo().write({"received_at": now_value, "retained": retained})
-                return duplicate
-            if msg_type == "telemetry":
-                slot = self._find_recent_telemetry_slot(serial_key, topic, now_value)
-                if slot:
-                    slot.sudo().write(
-                        {
-                            "payload": payload_text,
-                            "retained": retained,
-                            "received_at": now_value,
-                            "state": "new",
-                            "processed_at": False,
-                            "error": False,
-                        }
-                    )
-                    return slot
-        vals = {
-            "topic": topic,
-            "payload": payload_text,
-            "retained": retained,
-            "device_serial": serial,
-            "message_type": msg_type,
-        }
-        return self.sudo().create(vals)
+        serial = parts[-2] if len(parts) >= 3 else False
+        kind = parts[-1] if parts and parts[-1] in ("status", "telemetry") else "unknown"
+        return self.sudo().create({"topic": topic, "payload": payload_text,
+            "retained": bool(retained), "device_serial": serial, "message_type": kind,
+            "received_at": received_at or fields.Datetime.now()})
 
     def _parse_payload(self):
         self.ensure_one()
@@ -234,7 +125,7 @@ class IoTMQTTMessage(models.Model):
         if not value:
             return self.received_at or fields.Datetime.now()
         try:
-            return datetime.fromisoformat(value.replace("Z", "+00:00")).replace(tzinfo=None)
+            return timestamp(value)
         except Exception:
             return self.received_at or fields.Datetime.now()
 
@@ -292,26 +183,26 @@ class IoTMQTTMessage(models.Model):
                 self.with_context(**no_track_ctx).write(done_vals)
                 return
             if state in ("on", "off", "unknown"):
-                device.apply_state_report(state, reported_at=reported_at)
-                device.apply_command_ack(payload, reported_at=reported_at)
+                device._apply_state_report(state, reported_at=reported_at)
+                device._apply_command_ack(payload, reported_at=reported_at)
             else:
                 device.last_seen = reported_at
 
             fw = payload.get("firmware_version") if isinstance(payload, dict) else None
             if fw:
-                device.apply_firmware_report(fw, reported_at=reported_at, ota_state=ota_state)
+                device._apply_firmware_report(fw, reported_at=reported_at, ota_state=ota_state)
             if isinstance(payload, dict):
-                device.apply_runtime_report(payload, reported_at=reported_at)
+                device._apply_runtime_report(payload, reported_at=reported_at)
             if module_id:
-                device.apply_identity_report(str(module_id), reported_at=reported_at)
+                device._apply_identity_report(str(module_id), reported_at=reported_at)
             if isinstance(payload, dict) and "manual_override" in payload:
-                device.apply_manual_override_report(payload, reported_at=reported_at)
+                device._apply_manual_override_report(payload, reported_at=reported_at)
             if isinstance(payload, dict) and "delay_active" in payload:
-                device.apply_delay_report(payload, reported_at=reported_at)
+                device._apply_delay_report(payload, reported_at=reported_at)
             if ota_state:
-                device.apply_firmware_upgrade_feedback(ota_state, note=ota_note, reported_at=reported_at)
+                device._apply_firmware_upgrade_feedback(ota_state, note=ota_note, reported_at=reported_at)
             if isinstance(payload, dict) and "schedule_version" in payload:
-                device.apply_schedule_report(payload, reported_at=reported_at)
+                device._apply_schedule_report(payload, reported_at=reported_at)
 
         self.with_context(**no_track_ctx).write(done_vals)
 
@@ -390,26 +281,8 @@ class IoTMQTTMessage(models.Model):
         if not messages:
             return
 
-        # Keep only the latest message per (device_serial, message_type) in this batch.
-        # Older duplicates are marked as done directly to reduce write amplification.
-        latest_by_key = {}
-        for msg in messages:
-            serial_key = (msg.device_serial or "").strip().lower()
-            if serial_key:
-                key = (serial_key, msg.message_type or "unknown")
-            else:
-                key = (f"__msg_{msg.id}", msg.message_type or "unknown")
-            latest_by_key[key] = msg
-
-        selected = self.browse([m.id for m in latest_by_key.values()])
-        skipped = messages - selected
-        if skipped:
-            skipped.with_context(**no_track_ctx).write(
-                {
-                    "state": "done",
-                    "processed_at": fields.Datetime.now(),
-                }
-            )
+        # Every committed transition matters for uptime and command acknowledgement.
+        selected = messages.sorted(key=lambda msg: (msg.received_at, msg.id))
         serials = selected.mapped("device_serial")
         device_map = self._preload_devices(serials)
         for msg in selected:

@@ -31,6 +31,7 @@ class IoTFirmwarePushWizard(models.TransientModel):
         if not devices:
             raise UserError(_("No matched devices for push."))
 
+        devices._check_iot_access(manage=True)
         firmware = self.firmware_id
         if firmware.quarantined or not firmware.image_compatible:
             raise UserError(
@@ -41,37 +42,38 @@ class IoTFirmwarePushWizard(models.TransientModel):
         failed = []
         for device in devices:
             try:
-                url, fallback_url = firmware.build_download_urls(device)
-                payload = {
-                    "url": url,
-                    "version": firmware.version,
-                }
-                if fallback_url:
-                    payload["fallback_url"] = fallback_url
-                # Keep batch push robust: one failure should not abort all devices.
-                published = device._publish_command("upgrade", payload, raise_on_fail=False)
-                if not published:
-                    failed.append("%s: MQTT publish failed" % (device.switch_id_display or device.display_name))
-                    continue
-                now = fields.Datetime.now()
-                device.write(
-                    {
-                        "firmware_target_version": firmware.version,
-                        "firmware_upgrade_requested_at": now,
-                        "firmware_upgrade_state": "pending",
+                with self.env.cr.savepoint():
+                    url, fallback_url = firmware.build_download_urls(device)
+                    payload = {
+                        "url": url,
+                        "version": firmware.version,
                     }
-                )
-                self.env["iot.firmware.upgrade.log"].create(
-                    {
-                        "device_id": device.id,
-                        "firmware_id": firmware.id,
-                        "target_version": firmware.version or "",
-                        "state": "pending",
-                        "requested_at": now,
-                        "command_payload": json.dumps(payload, ensure_ascii=False),
-                    }
-                )
-                ok_count += 1
+                    if fallback_url:
+                        payload["fallback_url"] = fallback_url
+                    # Keep batch push robust: one failure should not abort all devices.
+                    published = device._publish_command("upgrade", payload, raise_on_fail=False)
+                    if not published:
+                        failed.append("%s: MQTT publish failed" % (device.switch_id_display or device.display_name))
+                        continue
+                    now = fields.Datetime.now()
+                    device.write(
+                        {
+                            "firmware_target_version": firmware.version,
+                            "firmware_upgrade_requested_at": now,
+                            "firmware_upgrade_state": "pending",
+                        }
+                    )
+                    self.env["iot.firmware.upgrade.log"].sudo().create(
+                        {
+                            "device_id": device.id,
+                            "firmware_id": firmware.id,
+                            "target_version": firmware.version or "",
+                            "state": "pending",
+                            "requested_at": now,
+                            "command_payload": json.dumps(payload, ensure_ascii=False),
+                        }
+                    )
+                    ok_count += 1
             except Exception as exc:
                 failed.append("%s: %s" % ((device.switch_id_display or device.display_name), str(exc)))
 
@@ -79,7 +81,7 @@ class IoTFirmwarePushWizard(models.TransientModel):
             detail = "\n".join(failed[:5]) if failed else _("Unknown error")
             raise UserError(_("No upgrade command could be sent.\n%s") % detail)
 
-        msg = _("Upgrade command sent to %s device(s).") % ok_count
+        msg = _("Upgrade command queued for %s device(s).") % ok_count
         if failed:
             msg += "\n" + _("Failed: %s") % len(failed)
             msg += "\n" + "\n".join(failed[:3])

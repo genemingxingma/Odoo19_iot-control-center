@@ -1,84 +1,63 @@
-# IoT Control Center (Odoo 19)
+# IoT Control Center V2 (Odoo 19)
 
-Manage ESP8266 relay modules (Wi-Fi + MQTT + OTA).
+Company-isolated environmental monitoring, relay control, attendance and OpenWrt management.
+This is a breaking architecture release: Odoo `19.0.2.0.0`, bridge protocol `2`, relay firmware `2.0.0`.
+The candidate is for isolated validation, not permission to upgrade a production database or real devices.
 
-## Features
-- Remote relay ON/OFF control and state reporting.
-- Scheduled switching is pushed to device-local storage and continues during network outages.
-- Accumulated ON duration statistics (minute precision, displayed as HH:MM).
-- Accumulated ON duration reset.
-- Firmware upload and batch OTA push.
-- Multi-company, multi-department, and multi-location management.
-- Temperature/Humidity sensors connected through TCP gateway, with data logging, analysis, trends, and threshold alerts.
+## Boundaries
 
-## Odoo Dependencies
-- Python: `pytz` (`paho-mqtt` only if you disable the Rust middleware and use legacy in-Odoo MQTT)
+- Rust owns MQTT/TCP connections, a durable receipt outbox, HTTP forwarding and bounded OpenWrt probes. Odoo never opens an MQTT/TCP listener.
+- A receipt contains `protocol_version`, `event_id`, `received_at_ms` and a typed payload. Persist before forwarding; only the matching successful receipt removes an outbox file.
+- Odoo commits receipt identity, raw readings and current probe state together. A repeated identity with different content is rejected.
+- Gateways must be registered to a company. Binary gateway source IPs are explicitly mapped to stable gateway identities. JSON gateways require their individual token.
+- Probe identity is `(gateway, node, channel)`. Changing company/identity requires a new registration, not automatic reassignment.
+- Observations are raw and immutable, with company/location snapshots. Native averages now operate on equal-weight raw samples; no raw/summary mixture exists.
+- Retention is company-owned and defaults to zero (no expiry). Positive retention authorizes deletion, not conversion into daily means. Receipts remain for deduplication.
+- Relay intent is written to a transactional command outbox before dispatch. Retries retain identity, sequence and expiry; physical state is confirmed separately.
+- Country, timezone, internal routes and OTA trust come from company configuration. There are no deployment-specific Wi-Fi credentials, MQTT hosts or OTA URLs compiled into new firmware.
 
-## MQTT Topic Convention
-- Odoo -> device command: `{topic_root}/{serial}/command`
-- Device -> Odoo status: `{topic_root}/{serial}/status`
-- Device -> Odoo telemetry: `{topic_root}/{serial}/telemetry`
+## Operations
 
-## Command Payload
-### Relay Control
-```json
-{"command":"relay","state":"on"}
-```
-`state` supports `on/off/toggle`.
+1. Assign viewers `IoT User`, device operators `IoT Operator`, and configuration administrators `IoT Manager`.
+2. Configure the company's country, internal WireGuard endpoint, port numbers, retention and trusted OTA certificate fingerprint.
+3. Provision a relay with the correct hardware profile and bootstrap network settings. Configured devices expose the setup portal only when the physical button is held at boot.
+4. Register each temperature/humidity gateway and its source address or JSON token before sending samples. The bridge retries unregistered gateways rather than guessing ownership.
+5. Name probes by equipment/location. Monitoring supports raw/hour/day views; raw requests exceeding 10000 samples explicitly require a narrower range or aggregation.
+6. Inspect **Command Delivery** to distinguish queued, published, confirmed and expired commands. A publish is not proof that a relay switched.
+7. Mark UV lamps and similar devices safety-critical and configure a finite maximum ON duration. Explicit OFF cancels the delay and inhibits scheduled ON until an explicit new ON/start command. Boot and watchdog cutoff also fail closed.
+8. Provision SSH host keys for OpenWrt before probing. Heartbeats have bounded concurrency and SSH deadlines; the bridge no longer silently trusts a new SSH host key.
 
-### Upgrade Command
-```json
-{"command":"upgrade","url":"https://.../download?...","version":"1.0.2","checksum":"sha256"}
-```
+## Bridge Contract
 
-### Schedule Push
-```json
-{
-  "command":"schedule_set",
-  "version":3,
-  "entries":[
-    {"weekday":0,"hour":8,"minute":0,"action":"on","offset_min":480},
-    {"weekday":0,"hour":20,"minute":0,"action":"off","offset_min":480}
-  ]
-}
-```
-
-### Clear Schedule
-```json
-{"command":"schedule_clear","version":4}
-```
-
-## Temperature/Humidity TCP Report Protocol
-The gateway sends line-delimited JSON to Odoo TCP listener (`th_tcp_host:th_tcp_port`):
+Internal ingestion routes require `X-IoT-Middleware-Token`. A binary event body is:
 
 ```json
 {
-  "gateway_serial": "th-gw-001",
-  "token": "optional-secret",
-  "reported_at": "2026-02-12T14:00:00Z",
-  "probes": [
-    {"probe_code": "A1", "temperature": 24.5, "humidity": 56.2},
-    {"probe_code": "A2", "temperature": 25.1, "humidity": 58.8}
-  ]
+  "protocol_version": 2,
+  "event_id": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "received_at_ms": 1788602400000,
+  "source_ip": "192.0.2.10",
+  "source_port": 50000,
+  "frame_b64": "BASE64_FRAME"
 }
 ```
 
-Server behavior:
-- Auto-create gateway and probes on first report.
-- Store temperature/humidity readings for statistics.
-- Open/close temperature/humidity alerts according to sensor thresholds.
+JSON gateway events carry `payload_text`; MQTT events carry `topic`, `payload`, `retained`.
+Successful ingestion returns `ok: true` and the matching `event_id`. Permanent validation failures, including invalid JSON gateway tokens, go to the bridge's rejected directory. Missing gateway registration, database outages and invalid bridge-to-Odoo credentials remain retryable.
 
-## Installation
-1. Add `iot_control_center` to Odoo addons path.
-2. Install Python dependencies: `pip install pytz  # add paho-mqtt only for legacy in-Odoo MQTT mode`
-3. Update Apps list and install this module.
-4. Configure MQTT settings in system settings.
-5. Create departments/locations and register devices (`serial` must match firmware).
+`IOT_BRIDGE_QUEUE_PATH` must designate a private, durable V2 directory, not the old JSONL file. Set it explicitly in the protected bridge service configuration. Archive the V1 queue separately; old entries lack trustworthy receipt time and identity and are intentionally not replayed into V2.
 
-## Test Preset
-- WiFi SSID: `iMyTest_IoT`
-- WiFi password: `iMyTest_IoT`
-- Odoo 19 CE URL: `http://192.168.10.155:8069`
-- Default MQTT host: `192.168.10.155`
+The durability boundary starts when persistence succeeds. Device transmissions lost before reaching the bridge, physical power failures before durable write, MQTT QoS 0 delivery and hardware failures are not end-to-end exactly-once guarantees.
 
-Also confirm Odoo system parameter `web.base.url` is `http://192.168.10.155:8069` for OTA download URL generation.
+## Validation
+
+```text
+python -m unittest discover -s core_tests -v
+python tools/check_i18n.py
+cargo test --locked --offline --manifest-path middleware/iot_bridge/Cargo.toml
+python -m platformio run --project-dir firmware/esp8266_relay
+```
+
+Run Odoo tests with `--test-tags=/iot_control_center` in an isolated database, alternate loopback HTTP ports and `--max-cron-threads=0`. Test mode can bind HTTP despite `--no-http`; never share production ports.
+
+See [the multilingual manual](README_MANUAL_zh_en_th.md), [the V2 cutover runbook](deploy/UPGRADE_V2.md) and [isolated validation results](deploy/V2_VALIDATION_2026-09-06.md). No credentials, database dumps or built firmware images belong in Git.

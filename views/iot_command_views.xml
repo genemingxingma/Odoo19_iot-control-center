@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_iot_command_list" model="ir.ui.view">
+        <field name="name">iot.command.list</field>
+        <field name="model">iot.command</field>
+        <field name="arch" type="xml">
+            <list create="false" edit="false" delete="false" decoration-danger="state == 'expired'">
+                <field name="create_date"/>
+                <field name="device_id"/>
+                <field name="command"/>
+                <field name="state" widget="badge"/>
+                <field name="attempts"/>
+                <field name="sent_at"/>
+                <field name="expires_at"/>
+                <field name="command_id" optional="hide"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+                <button name="action_open_device" type="object" string="Open Device"/>
+            </list>
+        </field>
+    </record>
+    <record id="action_iot_command" model="ir.actions.act_window">
+        <field name="name">Command Delivery</field>
+        <field name="res_model">iot.command</field>
+        <field name="view_mode">list</field>
+    </record>
+    <menuitem id="menu_iot_command" name="Command Delivery" parent="menu_iot_mode_detailed" action="action_iot_command" sequence="85" groups="iot_control_center.group_iot_manager"/>
+</odoo>

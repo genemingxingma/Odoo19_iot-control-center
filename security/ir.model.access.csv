@@ -1,4 +1,6 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_iot_command_manager,IoT Command manager,model_iot_command,iot_control_center.group_iot_manager,1,0,0,0
+access_iot_receipt_system,IoT Event receipt admin,model_iot_ingest_event,base.group_system,1,0,0,0
 access_iot_department_user,access.iot.department.user,model_iot_department,iot_control_center.group_iot_user,1,0,0,0
 access_iot_department_manager,access.iot.department.manager,model_iot_department,iot_control_center.group_iot_manager,1,1,1,1
 access_iot_location_user,access.iot.location.user,model_iot_location,iot_control_center.group_iot_user,1,0,0,0

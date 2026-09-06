@@ -4877,3 +4877,283 @@ msgstr "SSH User"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__tcp_token
 msgid "TCP Token"
 msgstr "TCP Token"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Archive the gateway and register a new identity when moving companies."
+msgstr ""
+"Archive the gateway and register a new identity when moving companies."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Archive the probe and register a new identity when moving companies."
+msgstr "Archive the probe and register a new identity when moving companies."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Attempts"
+msgstr "Attempts"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Cancelled"
+msgstr "Cancelled"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Cannot check out without an open attendance."
+msgstr "Cannot check out without an open attendance."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Committed IoT Event Receipt"
+msgstr "Committed IoT Event Receipt"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Digest"
+msgstr "Digest"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Employee already has an open attendance."
+msgstr "Employee already has an open attendance."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Enter a canonical gateway IP address."
+msgstr "Enter a canonical gateway IP address."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Event"
+msgstr "Event"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Expired"
+msgstr "Expired"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Expires At"
+msgstr "Expires At"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Gateway Source Address"
+msgstr "Gateway Source Address"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "History retention must be zero or a positive number of days."
+msgstr "History retention must be zero or a positive number of days."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Invalid temperature or humidity sample."
+msgstr "Invalid temperature or humidity sample."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT - Dispatch Committed Commands"
+msgstr "IoT - Dispatch Committed Commands"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Command Delivery"
+msgstr "IoT Command Delivery"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Operation Authorization"
+msgstr "IoT Operation Authorization"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Raw History Retention (Days)"
+msgstr "IoT Raw History Retention (Days)"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "No employee mapping found for this punch."
+msgstr "No employee mapping found for this punch."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Only raw samples are accepted."
+msgstr "Only raw samples are accepted."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Probe company must match its gateway company."
+msgstr "Probe company must match its gateway company."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Queued"
+msgstr "Queued"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Raw observations are immutable."
+msgstr "Raw observations are immutable."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Required token for JSON gateway authentication."
+msgstr "Required token for JSON gateway authentication."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Route"
+msgstr "Route"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Safety-Critical Equipment"
+msgstr "Safety-Critical Equipment"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Sent"
+msgstr "Sent"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Sent At"
+msgstr "Sent At"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Set a finite maximum ON time for safety-critical equipment."
+msgstr "Set a finite maximum ON time for safety-critical equipment."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Source IP seen by the bridge for binary frames. Register each gateway "
+"explicitly."
+msgstr ""
+"Source IP seen by the bridge for binary frames. Register each gateway "
+"explicitly."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "The device belongs to another company."
+msgstr "The device belongs to another company."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "The open attendance is outside the allowed shift duration."
+msgstr "The open attendance is outside the allowed shift duration."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "The probe must belong to a registered company gateway."
+msgstr "The probe must belong to a registered company gateway."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Too many raw samples. Narrow the date range or select Hourly Average."
+msgstr "Too many raw samples. Narrow the date range or select Hourly Average."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "You are not authorized to control these IoT devices."
+msgstr "You are not authorized to control these IoT devices."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Zero keeps all raw observations. A positive value deletes expired raw "
+"samples for this company unless the probe keeps full history."
+msgstr ""
+"Zero keeps all raw observations. A positive value deletes expired raw "
+"samples for this company unless the probe keeps full history."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Zero keeps raw observations indefinitely. A positive value explicitly "
+"authorizes expiry deletion."
+msgstr ""
+"Zero keeps raw observations indefinitely. A positive value explicitly "
+"authorizes expiry deletion."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Command Delivery"
+msgstr "Command Delivery"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Company network settings are queued; waiting for device confirmation."
+msgstr "Company network settings are queued; waiting for device confirmation."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Enter a valid 20-byte SHA-1 certificate fingerprint."
+msgstr "Enter a valid 20-byte SHA-1 certificate fingerprint."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Keep all raw readings for this probe, exempt from the company retention "
+"period."
+msgstr ""
+"Keep all raw readings for this probe, exempt from the company retention "
+"period."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "OTA TLS Certificate Fingerprint"
+msgstr "OTA TLS Certificate Fingerprint"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Open Device"
+msgstr "Open Device"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Timer command queued; waiting for device confirmation."
+msgstr "Timer command queued; waiting for device confirmation."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Trusted SHA-1 certificate fingerprint provisioned by an administrator. OTA "
+"fails closed when absent."
+msgstr ""
+"Trusted SHA-1 certificate fingerprint provisioned by an administrator. OTA "
+"fails closed when absent."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Turn off command queued; waiting for device confirmation."
+msgstr "Turn off command queued; waiting for device confirmation."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Turn on command queued; waiting for device confirmation."
+msgstr "Turn on command queued; waiting for device confirmation."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Upgrade command queued for %s device(s)."
+msgstr "Upgrade command queued for %s device(s)."
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Device Connection Service"
+msgstr "Device Connection Service"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"MQTT and TCP connections are managed by the bridge. Configure listener ports"
+" in the bridge service, not in Odoo."
+msgstr ""
+"MQTT and TCP connections are managed by the bridge. Configure listener ports"
+" in the bridge service, not in Odoo."

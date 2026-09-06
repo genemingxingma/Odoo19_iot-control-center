@@ -4853,3 +4853,270 @@ msgstr "SSH 用户"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__tcp_token
 msgid "TCP Token"
 msgstr "TCP 令牌"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Archive the gateway and register a new identity when moving companies."
+msgstr "网关转移公司时，请归档旧网关并注册新身份。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Archive the probe and register a new identity when moving companies."
+msgstr "探头转移公司时，请归档旧探头并注册新身份。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Attempts"
+msgstr "尝试次数"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Cancelled"
+msgstr "已取消"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Cannot check out without an open attendance."
+msgstr "没有待签退的签到记录，无法签退。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Committed IoT Event Receipt"
+msgstr "IoT 事件入库确认"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Digest"
+msgstr "内容摘要"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Employee already has an open attendance."
+msgstr "该员工已有尚未签退的记录。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Enter a canonical gateway IP address."
+msgstr "请输入格式规范的网关 IP 地址。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Event"
+msgstr "事件"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Expired"
+msgstr "已过期"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Expires At"
+msgstr "有效期至"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Gateway Source Address"
+msgstr "网关来源地址"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "History retention must be zero or a positive number of days."
+msgstr "历史保留天数必须为零或正整数。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Invalid temperature or humidity sample."
+msgstr "温湿度采样值无效。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT - Dispatch Committed Commands"
+msgstr "IoT - 下发已入队指令"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Command Delivery"
+msgstr "IoT 指令下发记录"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Operation Authorization"
+msgstr "IoT 操作权限"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Raw History Retention (Days)"
+msgstr "IoT 原始记录保留天数"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "No employee mapping found for this punch."
+msgstr "此打卡记录尚未关联员工。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Only raw samples are accepted."
+msgstr "这里只接受原始采样记录。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Probe company must match its gateway company."
+msgstr "探头与网关必须属于同一家公司。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Queued"
+msgstr "已入队"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Raw observations are immutable."
+msgstr "原始监测记录不可修改。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Required token for JSON gateway authentication."
+msgstr "JSON 网关接入时必须提供此验证令牌。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Route"
+msgstr "处理路径"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Safety-Critical Equipment"
+msgstr "安全关键设备"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Sent"
+msgstr "已下发"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Sent At"
+msgstr "下发时间"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Set a finite maximum ON time for safety-critical equipment."
+msgstr "安全关键设备必须设置最大连续开启时长。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Source IP seen by the bridge for binary frames. Register each gateway "
+"explicitly."
+msgstr "中间件收到二进制数据时看到的来源 IP。请逐一注册网关。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "The device belongs to another company."
+msgstr "该设备属于另一家公司。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "The open attendance is outside the allowed shift duration."
+msgstr "待签退记录已超过允许的班次时长。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "The probe must belong to a registered company gateway."
+msgstr "探头必须归属于已注册到公司的网关。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Too many raw samples. Narrow the date range or select Hourly Average."
+msgstr "原始样本过多，请缩小时间范围或选择“小时均值”。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "You are not authorized to control these IoT devices."
+msgstr "你没有操作这些 IoT 设备的权限。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Zero keeps all raw observations. A positive value deletes expired raw "
+"samples for this company unless the probe keeps full history."
+msgstr "零表示保留全部原始记录；正数会删除本公司已过期的样本，但保留完整历史的探头除外。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Zero keeps raw observations indefinitely. A positive value explicitly "
+"authorizes expiry deletion."
+msgstr "零表示永久保留原始记录；正数表示授权删除超过保留天数的记录。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Command Delivery"
+msgstr "指令下发记录"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Company network settings are queued; waiting for device confirmation."
+msgstr "公司网络配置已入队，等待设备确认。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Enter a valid 20-byte SHA-1 certificate fingerprint."
+msgstr "请输入有效的 20 字节 SHA-1 证书指纹。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Keep all raw readings for this probe, exempt from the company retention "
+"period."
+msgstr "保留此探头的全部原始记录，不受公司保留期限限制。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "OTA TLS Certificate Fingerprint"
+msgstr "OTA TLS 证书指纹"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Open Device"
+msgstr "查看设备"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Timer command queued; waiting for device confirmation."
+msgstr "倒计时指令已入队，等待设备确认。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Trusted SHA-1 certificate fingerprint provisioned by an administrator. OTA "
+"fails closed when absent."
+msgstr "由管理员配置可信的 SHA-1 证书指纹；未配置时禁止 OTA 更新。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Turn off command queued; waiting for device confirmation."
+msgstr "关闭指令已入队，等待设备确认。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Turn on command queued; waiting for device confirmation."
+msgstr "开启指令已入队，等待设备确认。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Upgrade command queued for %s device(s)."
+msgstr "已为 %s 台设备加入升级队列。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Device Connection Service"
+msgstr "设备接入服务"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"MQTT and TCP connections are managed by the bridge. Configure listener ports"
+" in the bridge service, not in Odoo."
+msgstr "MQTT 和 TCP 连接由中间件统一管理，请在中间件服务中配置监听端口，无需在 Odoo 中设置。"

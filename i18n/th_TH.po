@@ -4893,3 +4893,283 @@ msgstr "ผู้ใช้ SSH"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__tcp_token
 msgid "TCP Token"
 msgstr "โทเค็น TCP"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Archive the gateway and register a new identity when moving companies."
+msgstr "เมื่อย้ายบริษัท ให้เก็บเกตเวย์เดิมเข้าคลังและลงทะเบียนใหม่"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Archive the probe and register a new identity when moving companies."
+msgstr "เมื่อย้ายบริษัท ให้เก็บเซ็นเซอร์เดิมเข้าคลังและลงทะเบียนใหม่"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Attempts"
+msgstr "จำนวนครั้งที่ลอง"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Cancelled"
+msgstr "ยกเลิกแล้ว"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Cannot check out without an open attendance."
+msgstr "ไม่พบรายการเข้างานที่รอลงเวลาออก"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Committed IoT Event Receipt"
+msgstr "การยืนยันบันทึกเหตุการณ์ IoT"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Digest"
+msgstr "ค่าแฮชของเนื้อหา"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Employee already has an open attendance."
+msgstr "พนักงานมีรายการเข้างานที่ยังไม่ได้ลงเวลาออก"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Enter a canonical gateway IP address."
+msgstr "กรุณาระบุ IP ของเกตเวย์ในรูปแบบมาตรฐาน"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Event"
+msgstr "เหตุการณ์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Expired"
+msgstr "หมดอายุแล้ว"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Expires At"
+msgstr "หมดอายุเมื่อ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Gateway Source Address"
+msgstr "IP ต้นทางของเกตเวย์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "History retention must be zero or a positive number of days."
+msgstr "ระยะเวลาเก็บข้อมูลต้องเป็นศูนย์หรือจำนวนวันมากกว่าศูนย์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Invalid temperature or humidity sample."
+msgstr "ค่าอุณหภูมิหรือความชื้นไม่ถูกต้อง"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT - Dispatch Committed Commands"
+msgstr "IoT - ส่งคำสั่งที่บันทึกในคิวแล้ว"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Command Delivery"
+msgstr "ประวัติการส่งคำสั่ง IoT"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Operation Authorization"
+msgstr "สิทธิ์การใช้งาน IoT"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "IoT Raw History Retention (Days)"
+msgstr "ระยะเวลาเก็บข้อมูลดิบ IoT (วัน)"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "No employee mapping found for this punch."
+msgstr "รายการลงเวลานี้ยังไม่ได้เชื่อมโยงกับพนักงาน"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Only raw samples are accepted."
+msgstr "รับเฉพาะค่าดิบที่อ่านจากเซ็นเซอร์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Probe company must match its gateway company."
+msgstr "เซ็นเซอร์และเกตเวย์ต้องอยู่ในบริษัทเดียวกัน"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Queued"
+msgstr "เข้าคิวแล้ว"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Raw observations are immutable."
+msgstr "ไม่สามารถแก้ไขข้อมูลดิบที่บันทึกแล้ว"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Required token for JSON gateway authentication."
+msgstr "โทเคนที่จำเป็นสำหรับยืนยันตัวตนเกตเวย์ JSON"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Route"
+msgstr "เส้นทางการประมวลผล"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Safety-Critical Equipment"
+msgstr "อุปกรณ์ที่ต้องควบคุมความปลอดภัยเป็นพิเศษ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Sent"
+msgstr "ส่งแล้ว"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Sent At"
+msgstr "เวลาที่ส่ง"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Set a finite maximum ON time for safety-critical equipment."
+msgstr ""
+"ต้องกำหนดระยะเวลาเปิดสูงสุดสำหรับอุปกรณ์ที่ต้องควบคุมความปลอดภัยเป็นพิเศษ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Source IP seen by the bridge for binary frames. Register each gateway "
+"explicitly."
+msgstr ""
+"IP ต้นทางที่บริดจ์เห็นเมื่อรับข้อมูลไบนารี "
+"ต้องลงทะเบียนแต่ละเกตเวย์ก่อนใช้งาน"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "The device belongs to another company."
+msgstr "อุปกรณ์นี้อยู่ในบริษัทอื่น"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "The open attendance is outside the allowed shift duration."
+msgstr "รายการเข้างานเกินระยะเวลากะที่อนุญาต"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "The probe must belong to a registered company gateway."
+msgstr "เซ็นเซอร์ต้องอยู่ในเกตเวย์ที่ลงทะเบียนกับบริษัทแล้ว"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Too many raw samples. Narrow the date range or select Hourly Average."
+msgstr "มีข้อมูลดิบมากเกินไป กรุณาลดช่วงเวลาหรือเลือกค่าเฉลี่ยรายชั่วโมง"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "You are not authorized to control these IoT devices."
+msgstr "คุณไม่มีสิทธิ์ควบคุมอุปกรณ์ IoT เหล่านี้"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Zero keeps all raw observations. A positive value deletes expired raw "
+"samples for this company unless the probe keeps full history."
+msgstr ""
+"ศูนย์หมายถึงเก็บข้อมูลดิบทั้งหมด "
+"ค่ามากกว่าศูนย์จะลบข้อมูลที่หมดอายุของบริษัทนี้ "
+"ยกเว้นเซ็นเซอร์ที่ตั้งให้เก็บประวัติทั้งหมด"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Zero keeps raw observations indefinitely. A positive value explicitly "
+"authorizes expiry deletion."
+msgstr ""
+"ศูนย์หมายถึงเก็บข้อมูลดิบไม่จำกัดเวลา "
+"ค่ามากกว่าศูนย์อนุญาตให้ลบข้อมูลที่เกินระยะเวลาเก็บ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Command Delivery"
+msgstr "ประวัติการส่งคำสั่ง"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Company network settings are queued; waiting for device confirmation."
+msgstr "การตั้งค่าเครือข่ายของบริษัทเข้าคิวแล้ว รออุปกรณ์ยืนยัน"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Enter a valid 20-byte SHA-1 certificate fingerprint."
+msgstr "กรุณาระบุลายนิ้วมือใบรับรอง SHA-1 ขนาด 20 ไบต์ที่ถูกต้อง"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Keep all raw readings for this probe, exempt from the company retention "
+"period."
+msgstr ""
+"เก็บข้อมูลดิบทั้งหมดของเซ็นเซอร์นี้ โดยไม่ใช้ระยะเวลาเก็บข้อมูลของบริษัท"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "OTA TLS Certificate Fingerprint"
+msgstr "ลายนิ้วมือใบรับรอง TLS สำหรับ OTA"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Open Device"
+msgstr "ดูอุปกรณ์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Timer command queued; waiting for device confirmation."
+msgstr "คำสั่งตั้งเวลาเข้าคิวแล้ว รออุปกรณ์ยืนยัน"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Trusted SHA-1 certificate fingerprint provisioned by an administrator. OTA "
+"fails closed when absent."
+msgstr ""
+"ผู้ดูแลระบบต้องกำหนดลายนิ้วมือ SHA-1 ของใบรับรองที่เชื่อถือได้ "
+"หากยังไม่ได้กำหนดจะไม่อนุญาตให้อัปเดต OTA"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Turn off command queued; waiting for device confirmation."
+msgstr "คำสั่งปิดเข้าคิวแล้ว รออุปกรณ์ยืนยัน"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Turn on command queued; waiting for device confirmation."
+msgstr "คำสั่งเปิดเข้าคิวแล้ว รออุปกรณ์ยืนยัน"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Upgrade command queued for %s device(s)."
+msgstr "นำคำสั่งอัปเกรดอุปกรณ์ %s เครื่องเข้าคิวแล้ว"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Device Connection Service"
+msgstr "บริการเชื่อมต่ออุปกรณ์"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"MQTT and TCP connections are managed by the bridge. Configure listener ports"
+" in the bridge service, not in Odoo."
+msgstr ""
+"บริดจ์เป็นผู้จัดการการเชื่อมต่อ MQTT และ TCP "
+"ให้กำหนดพอร์ตรับการเชื่อมต่อในบริการบริดจ์ ไม่ใช่ใน Odoo"

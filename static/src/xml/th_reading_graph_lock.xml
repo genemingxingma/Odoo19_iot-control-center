@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
-    <t t-name="iot_control_center.GraphViewButtonsPatch" t-inherit="web.GraphView.Buttons" t-inherit-mode="extension">
+    <t t-name="iot_control_center.GraphViewButtons" t-inherit="web.GraphView.Buttons" t-inherit-mode="primary">
         <xpath expr="//ReportViewMeasures" position="attributes">
             <attribute name="activeMeasures">this._iotGetActiveMeasures()</attribute>
+            <attribute name="measures">this._iotGetMeasures()</attribute>
         </xpath>
+        <xpath expr="//button[@data-mode='pie']" position="replace"/>
+        <xpath expr="//button[@t-on-click='toggleStacked']/.." position="replace"/>
+        <xpath expr="//button[@t-on-click='toggleCumulated']/.." position="replace"/>
+        <xpath expr="//div[@name='toggleOrderToolbar']" position="replace"/>
     </t>
 </templates>

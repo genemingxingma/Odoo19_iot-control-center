@@ -34,6 +34,58 @@ SOURCE_TERM_RENAMES = {
 # Terms absent from older catalogs plus wording overrides found during review.
 # Each value is (Simplified Chinese, Thai).
 TRANSLATIONS = {
+    "Device Connection Service": ("设备接入服务", "บริการเชื่อมต่ออุปกรณ์"),
+    "MQTT and TCP connections are managed by the bridge. Configure listener ports in the bridge service, not in Odoo.": ("MQTT 和 TCP 连接由中间件统一管理，请在中间件服务中配置监听端口，无需在 Odoo 中设置。", "บริดจ์เป็นผู้จัดการการเชื่อมต่อ MQTT และ TCP ให้กำหนดพอร์ตรับการเชื่อมต่อในบริการบริดจ์ ไม่ใช่ใน Odoo"),
+    "Upgrade command queued for %s device(s).": ("已为 %s 台设备加入升级队列。", "นำคำสั่งอัปเกรดอุปกรณ์ %s เครื่องเข้าคิวแล้ว"),
+    "Command Delivery": ("指令下发记录", "ประวัติการส่งคำสั่ง"),
+    "Open Device": ("查看设备", "ดูอุปกรณ์"),
+    "OTA TLS Certificate Fingerprint": ("OTA TLS 证书指纹", "ลายนิ้วมือใบรับรอง TLS สำหรับ OTA"),
+    "Trusted SHA-1 certificate fingerprint provisioned by an administrator. OTA fails closed when absent.": ("由管理员配置可信的 SHA-1 证书指纹；未配置时禁止 OTA 更新。", "ผู้ดูแลระบบต้องกำหนดลายนิ้วมือ SHA-1 ของใบรับรองที่เชื่อถือได้ หากยังไม่ได้กำหนดจะไม่อนุญาตให้อัปเดต OTA"),
+    "Enter a valid 20-byte SHA-1 certificate fingerprint.": ("请输入有效的 20 字节 SHA-1 证书指纹。", "กรุณาระบุลายนิ้วมือใบรับรอง SHA-1 ขนาด 20 ไบต์ที่ถูกต้อง"),
+    "Keep all raw readings for this probe, exempt from the company retention period.": ("保留此探头的全部原始记录，不受公司保留期限限制。", "เก็บข้อมูลดิบทั้งหมดของเซ็นเซอร์นี้ โดยไม่ใช้ระยะเวลาเก็บข้อมูลของบริษัท"),
+    "Company network settings are queued; waiting for device confirmation.": ("公司网络配置已入队，等待设备确认。", "การตั้งค่าเครือข่ายของบริษัทเข้าคิวแล้ว รออุปกรณ์ยืนยัน"),
+    "Turn on command queued; waiting for device confirmation.": ("开启指令已入队，等待设备确认。", "คำสั่งเปิดเข้าคิวแล้ว รออุปกรณ์ยืนยัน"),
+    "Turn off command queued; waiting for device confirmation.": ("关闭指令已入队，等待设备确认。", "คำสั่งปิดเข้าคิวแล้ว รออุปกรณ์ยืนยัน"),
+    "Timer command queued; waiting for device confirmation.": ("倒计时指令已入队，等待设备确认。", "คำสั่งตั้งเวลาเข้าคิวแล้ว รออุปกรณ์ยืนยัน"),
+    "Archive the gateway and register a new identity when moving companies.": ("网关转移公司时，请归档旧网关并注册新身份。", "เมื่อย้ายบริษัท ให้เก็บเกตเวย์เดิมเข้าคลังและลงทะเบียนใหม่"),
+    "Archive the probe and register a new identity when moving companies.": ("探头转移公司时，请归档旧探头并注册新身份。", "เมื่อย้ายบริษัท ให้เก็บเซ็นเซอร์เดิมเข้าคลังและลงทะเบียนใหม่"),
+    "Attempts": ("尝试次数", "จำนวนครั้งที่ลอง"),
+    "Cancelled": ("已取消", "ยกเลิกแล้ว"),
+    "Cannot check out without an open attendance.": ("没有待签退的签到记录，无法签退。", "ไม่พบรายการเข้างานที่รอลงเวลาออก"),
+    "Committed IoT Event Receipt": ("IoT 事件入库确认", "การยืนยันบันทึกเหตุการณ์ IoT"),
+    "Digest": ("内容摘要", "ค่าแฮชของเนื้อหา"),
+    "Employee already has an open attendance.": ("该员工已有尚未签退的记录。", "พนักงานมีรายการเข้างานที่ยังไม่ได้ลงเวลาออก"),
+    "Enter a canonical gateway IP address.": ("请输入格式规范的网关 IP 地址。", "กรุณาระบุ IP ของเกตเวย์ในรูปแบบมาตรฐาน"),
+    "Event": ("事件", "เหตุการณ์"),
+    "Expired": ("已过期", "หมดอายุแล้ว"),
+    "Expires At": ("有效期至", "หมดอายุเมื่อ"),
+    "Gateway Source Address": ("网关来源地址", "IP ต้นทางของเกตเวย์"),
+    "History retention must be zero or a positive number of days.": ("历史保留天数必须为零或正整数。", "ระยะเวลาเก็บข้อมูลต้องเป็นศูนย์หรือจำนวนวันมากกว่าศูนย์"),
+    "Invalid temperature or humidity sample.": ("温湿度采样值无效。", "ค่าอุณหภูมิหรือความชื้นไม่ถูกต้อง"),
+    "IoT - Dispatch Committed Commands": ("IoT - 下发已入队指令", "IoT - ส่งคำสั่งที่บันทึกในคิวแล้ว"),
+    "IoT Command Delivery": ("IoT 指令下发记录", "ประวัติการส่งคำสั่ง IoT"),
+    "IoT Operation Authorization": ("IoT 操作权限", "สิทธิ์การใช้งาน IoT"),
+    "IoT Raw History Retention (Days)": ("IoT 原始记录保留天数", "ระยะเวลาเก็บข้อมูลดิบ IoT (วัน)"),
+    "IoT Operator": ("IoT 操作员", "ผู้ควบคุมอุปกรณ์ IoT"),
+    "No employee mapping found for this punch.": ("此打卡记录尚未关联员工。", "รายการลงเวลานี้ยังไม่ได้เชื่อมโยงกับพนักงาน"),
+    "Only raw samples are accepted.": ("这里只接受原始采样记录。", "รับเฉพาะค่าดิบที่อ่านจากเซ็นเซอร์"),
+    "Probe company must match its gateway company.": ("探头与网关必须属于同一家公司。", "เซ็นเซอร์และเกตเวย์ต้องอยู่ในบริษัทเดียวกัน"),
+    "Queued": ("已入队", "เข้าคิวแล้ว"),
+    "Raw observations are immutable.": ("原始监测记录不可修改。", "ไม่สามารถแก้ไขข้อมูลดิบที่บันทึกแล้ว"),
+    "Required token for JSON gateway authentication.": ("JSON 网关接入时必须提供此验证令牌。", "โทเคนที่จำเป็นสำหรับยืนยันตัวตนเกตเวย์ JSON"),
+    "Route": ("处理路径", "เส้นทางการประมวลผล"),
+    "Safety-Critical Equipment": ("安全关键设备", "อุปกรณ์ที่ต้องควบคุมความปลอดภัยเป็นพิเศษ"),
+    "Sent": ("已下发", "ส่งแล้ว"),
+    "Sent At": ("下发时间", "เวลาที่ส่ง"),
+    "Set a finite maximum ON time for safety-critical equipment.": ("安全关键设备必须设置最大连续开启时长。", "ต้องกำหนดระยะเวลาเปิดสูงสุดสำหรับอุปกรณ์ที่ต้องควบคุมความปลอดภัยเป็นพิเศษ"),
+    "Source IP seen by the bridge for binary frames. Register each gateway explicitly.": ("中间件收到二进制数据时看到的来源 IP。请逐一注册网关。", "IP ต้นทางที่บริดจ์เห็นเมื่อรับข้อมูลไบนารี ต้องลงทะเบียนแต่ละเกตเวย์ก่อนใช้งาน"),
+    "The device belongs to another company.": ("该设备属于另一家公司。", "อุปกรณ์นี้อยู่ในบริษัทอื่น"),
+    "The open attendance is outside the allowed shift duration.": ("待签退记录已超过允许的班次时长。", "รายการเข้างานเกินระยะเวลากะที่อนุญาต"),
+    "The probe must belong to a registered company gateway.": ("探头必须归属于已注册到公司的网关。", "เซ็นเซอร์ต้องอยู่ในเกตเวย์ที่ลงทะเบียนกับบริษัทแล้ว"),
+    "Too many raw samples. Narrow the date range or select Hourly Average.": ("原始样本过多，请缩小时间范围或选择“小时均值”。", "มีข้อมูลดิบมากเกินไป กรุณาลดช่วงเวลาหรือเลือกค่าเฉลี่ยรายชั่วโมง"),
+    "You are not authorized to control these IoT devices.": ("你没有操作这些 IoT 设备的权限。", "คุณไม่มีสิทธิ์ควบคุมอุปกรณ์ IoT เหล่านี้"),
+    "Zero keeps raw observations indefinitely. A positive value explicitly authorizes expiry deletion.": ("零表示永久保留原始记录；正数表示授权删除超过保留天数的记录。", "ศูนย์หมายถึงเก็บข้อมูลดิบไม่จำกัดเวลา ค่ามากกว่าศูนย์อนุญาตให้ลบข้อมูลที่เกินระยะเวลาเก็บ"),
+    "Zero keeps all raw observations. A positive value deletes expired raw samples for this company unless the probe keeps full history.": ("零表示保留全部原始记录；正数会删除本公司已过期的样本，但保留完整历史的探头除外。", "ศูนย์หมายถึงเก็บข้อมูลดิบทั้งหมด ค่ามากกว่าศูนย์จะลบข้อมูลที่หมดอายุของบริษัทนี้ ยกเว้นเซ็นเซอร์ที่ตั้งให้เก็บประวัติทั้งหมด"),
     "192.168.10.15": ("192.168.10.15", "192.168.10.15"),
     "192.168.10.50, 192.168.10.51": ("192.168.10.50, 192.168.10.51", "192.168.10.50, 192.168.10.51"),
     "2.4 GHz SSID Count": ("2.4 GHz SSID 数量", "จำนวน SSID ย่าน 2.4 GHz"),
@@ -649,7 +701,7 @@ def _xml_terms() -> set[str]:
                     value
                     and element.tag != "field"
                     and re.search(r"[A-Za-z]{2}", value)
-                    and value != "this._iotGetActiveMeasures()"
+                    and (element.tag != "attribute" or element.attrib.get("name") in ("string", "help", "title", "placeholder"))
                 ):
                     terms.add(value)
         for record in root.findall(".//record"):

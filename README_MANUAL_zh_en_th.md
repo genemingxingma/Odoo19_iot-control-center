@@ -1,224 +1,71 @@
-# iMyTest IoT Control Center User Manual (中文 | English | ไทย)
+# IoT Control Center V2 / 使用手册 / คู่มือผู้ใช้
 
-## 中文（简体）
+## 中文
 
-### 1. 系统简介
-`iMyTest IoT Control Center` 用于在 Odoo 19 中管理两类设备：
-1. `Switch`（ESP8266 继电器模块，MQTT）
-2. `Environment`（温湿度节点，TCP 网关上报）
+### 公司与权限
 
-支持：多公司、按 ID 绑定、定时控制、分组管理、告警、OTA 升级、趋势分析。
+国家与时区、内网主机、MQTT/OTA 端口及原始记录保留天数都从公司配置读取。保留天数为零时不自动删除；正数表示授权清理超过该天数的样本。“保留完整历史”的探头不参与清理。
 
-### 2. 安装前置
-1. Odoo Python 依赖：`pytz`；仅在关闭 Rust 中间件并使用 Odoo 内置 MQTT 时才需要 `paho-mqtt`
-2. MQTT Broker 可达（建议端口 `1883`）
-3. 温湿度 TCP 上报端口可达（默认 `9910`）
-4. 安装模块：`IoT Control Center`
+IoT 用户只能查看；IoT 操作员可以控制本公司设备；IoT 管理员负责配置、绑定、固件和网络维护。查看权限不再隐含控制权限。
 
-### 3. 角色权限
-1. `IoT User`：查看与日常操作
-2. `IoT Manager`：绑定、计划、分组、固件
-3. `System Admin`：全部权限
+### 温湿度
 
-### 4. 菜单
-1. `Control Cards`
-2. `Switch`
-3. `Environment`
+在“环境 / 网关”先注册网关及公司。二进制网关填写中间件实际看到的来源 IP；JSON 网关填写独立验证令牌。探头按“网关、节点、通道”识别，不同公司相同编号不会自动合并。
 
-### 5. 继电器操作
-#### 5.1 按 ID 绑定
-1. `Switch -> Bind by ID`
-2. 输入 `Switch ID`，点 `Search ID`
-3. 校验通过后点 `Confirm Bind`
+为探头填写直观名称和位置，图例保留技术编号用于排查。原始记录不可编辑，采样时的公司和位置不会随探头改名、搬动而重写。曲线支持原始样本、小时均值和每日概览。原始样本超过 10000 条会明确提示缩小范围，不会悄悄截断。
 
-#### 5.2 开关与延时
-1. 在列表/卡片点 `ON/OFF`
-2. `Delay` 启动倒计时开，倒计时中再点 `Delay` 取消并关
-3. Delay 期间优先级最高，屏蔽普通软件开关和计划动作
+同时选择温度和湿度时，左轴为温度、右轴为相对湿度。小时标签采用日期、24 小时制与时区偏移，避免不同时段重名。趋势图不提供温湿度累加、堆叠或饼图；极值和样本数请在透视统计中查看。
 
-#### 5.3 定时计划
-1. `Switch -> Schedules`
-2. 选择对象（设备/组）、动作、日期、时间
-3. 保存后系统自动下发并刷新设备计划
+旧版原始记录与均值混存结构不再兼容。正式切换前备份；启用明确的 V2 历史清理标记后，标准升级会清除本模块旧温湿度记录与告警，不清除 HR 考勤或其他业务记录。
 
-#### 5.4 累积时长
-1. `Total ON Hours` 显示累计开启小时
-2. 重置时必须填写原因，写入操作记录
+### 继电器
 
-### 6. 固件 OTA
-1. `Switch -> Firmware Management` 上传 `.bin`
-2. 填写版本号保存
-3. `Batch Push Upgrade` 选择设备批量下发
-4. `Upgrade Logs` 查看结果
+“指令下发记录”区分已入队、已发送、设备已确认和过期。网页提交成功不等于设备已经动作。
 
-### 7. 温湿度操作
-#### 7.1 绑定节点
-1. `Environment -> Bind Node by ID`
-2. 输入 `Node ID`（区分大小写）
-3. `Search ID` 后 `Confirm Bind`
+明确“关闭”会取消延时并锁止自动开启；下一次明确“开启”或“开始延时”才解除锁止。重启与最大开启时长保护也采用安全关闭。紫外灯等设备勾选“安全关键设备”并设置有限的最大连续开启时长。软件不能代替门联锁、急停开关和现场验证。
 
-#### 7.2 探头分组与阈值覆盖
-1. `Environment -> Sensor Groups` 创建分组
-2. 设置组温湿度上下限
-3. 探头加入组后：组阈值覆盖探头自身阈值
-4. 探头界面查看 `Threshold Source` 与 `Effective ...`
+新固件不内置公司的 Wi-Fi 密码、服务器地址或网络端点。首次配置选择正确硬件型号并填写引导网络参数；之后从控制中心接收公司配置，保存成功后回报配置摘要。已经配置的设备，只有按住实体按钮开机才进入配置入口。
 
-#### 7.3 分析与告警
-1. `Readings & Analysis` 查看趋势
-2. 超限自动生成 `Open` 告警
-3. 恢复正常后自动 `Closed`
+OTA 必须配置可信服务器证书指纹；未配置时拒绝升级，不再跳过 HTTPS 证书校验。主、备用 OTA 地址必须使用受信任的证书。不要在聊天、日志或 Git 中提交密码。
 
-### 8. 多公司规则
-1. 未绑定设备默认不在公司业务中使用
-2. 绑定到公司后仅该公司可见可管
-3. 解绑后可被其他公司重新绑定
+### OpenWrt 与考勤
 
----
+OpenWrt 首次连接前由管理员核实并安装 SSH 主机密钥。心跳最多并行检查 8 台 AP，单次 SSH 有超时，补传的旧状态不会覆盖较新状态。
+
+考勤在允许的最长班次时长内支持跨午夜匹配，不再受执行任务用户的时区或自然日切换影响。错误提示按当前界面语言展示，技术原始消息保留用于排查。
 
 ## English
 
-### 1. Overview
-`iMyTest IoT Control Center` manages:
-1. `Switch` devices (ESP8266 relay via MQTT)
-2. `Environment` sensors (temperature/humidity via TCP gateway)
+Configure country, timezone, private routes, OTA certificate trust and retention on the company. Zero retention keeps all raw history; positive retention authorizes expiry deletion, except probes marked to keep full history.
 
-Features: multi-company, ID binding, scheduling, grouping, alerts, OTA, trend analytics.
+Viewers, operators and managers have separate privileges. Register gateways before ingestion. Binary source IPs must map to known company gateways; JSON gateways require their own token. Probe identities are scoped to gateways.
 
-### 2. Prerequisites
-1. Python deps in Odoo runtime: `pytz`; install `paho-mqtt` only for legacy in-Odoo MQTT mode
-2. Reachable MQTT broker (recommended port `1883`)
-3. Reachable TH TCP ingest port (default `9910`)
-4. Install module `IoT Control Center`
+Raw observations are immutable and keep collection-time company/location snapshots. Use meaningful probe names, then select raw, hourly or daily chart views. Oversized raw requests require narrowing the range or using an aggregate.
 
-### 3. Roles
-1. `IoT User`: view and daily operations
-2. `IoT Manager`: binding, schedules, groups, firmware
-3. `System Admin`: full access
+When both metrics are selected, temperature uses the left axis and humidity the right. Hour labels include the date, 24-hour time and UTC offset. Cumulative, stacked and pie displays are not offered for these measurements; use the pivot for extrema and sample counts.
 
-### 4. Menus
-1. `Control Cards`
-2. `Switch`
-3. `Environment`
+Command Delivery distinguishes durable intent, publication and device confirmation. OFF cancels delays and inhibits automatic ON. An explicit ON/start resumes operation. Boot/watchdog cutoff fail closed. Configure finite limits for safety-critical equipment and retain physical interlocks.
 
-### 5. Switch
-#### 5.1 Bind by ID
-1. Go to `Switch -> Bind by ID`
-2. Enter `Switch ID`, click `Search ID`
-3. Click `Confirm Bind` after validation
+Firmware has no company-specific network defaults. Provision the correct hardware profile and bootstrap connection, then apply company settings from the control center. OTA requires a trusted TLS certificate fingerprint. Configured devices enter the setup portal only with the physical boot button held.
 
-#### 5.2 ON/OFF and Delay
-1. Use `ON/OFF` in list/card view
-2. `Delay` turns ON with countdown; click again to cancel and turn OFF
-3. Delay mode has top priority over normal switch/schedule actions
+OpenWrt requires pre-verified SSH host keys. Heartbeats use bounded concurrency/timeouts and ignore stale replay. Attendance can cross midnight within the allowed shift duration and no longer depends on the background user's timezone.
 
-#### 5.3 Schedules
-1. Open `Switch -> Schedules`
-2. Select target (device/group), action, days, time
-3. Save to auto-sync full schedule set to devices
-
-#### 5.4 Total ON Hours
-1. `Total ON Hours` records cumulative ON duration
-2. Reset requires a mandatory reason and logs the operation
-
-### 6. Firmware OTA
-1. Upload `.bin` in `Switch -> Firmware Management`
-2. Set version and save
-3. Use `Batch Push Upgrade` for target devices
-4. Check `Upgrade Logs`
-
-### 7. Environment
-#### 7.1 Bind node
-1. Go to `Environment -> Bind Node by ID`
-2. Enter case-sensitive `Node ID`
-3. Click `Search ID` then `Confirm Bind`
-
-#### 7.2 Sensor groups and threshold override
-1. Create groups in `Environment -> Sensor Groups`
-2. Configure group temp/humidity limits
-3. Once a sensor is in a group, group thresholds override local sensor thresholds
-4. Check `Threshold Source` and `Effective ...` fields on sensor form
-
-#### 7.3 Readings and alerts
-1. `Readings & Analysis` for trend lines
-2. Out-of-range values create `Open` alerts
-3. Alerts auto-close when values return to normal
-
-### 8. Multi-company
-1. Unbound devices are not used in company operations
-2. Bound devices are visible/controllable only within bound company
-3. After unbind, another company can bind them
-
----
+V2 is a breaking release. Back up first and explicitly authorize removal of old module temperature/humidity observations and alerts. HR attendance and unrelated business data are not part of this reset. Do not upgrade production or real devices on the strength of compilation alone.
 
 ## ภาษาไทย
 
-### 1. ภาพรวม
-`iMyTest IoT Control Center` ใช้จัดการ:
-1. `Switch` (รีเลย์ ESP8266 ผ่าน MQTT)
-2. `Environment` (โหนดอุณหภูมิ/ความชื้นผ่าน TCP Gateway)
+ตั้งค่าประเทศ เขตเวลา เครือข่ายภายใน ใบรับรอง OTA และระยะเวลาเก็บข้อมูลที่บริษัท ค่า 0 หมายถึงเก็บข้อมูลดิบโดยไม่ลบอัตโนมัติ ค่ามากกว่า 0 อนุญาตให้ลบข้อมูลที่เกินระยะเวลาที่กำหนด ยกเว้นเซ็นเซอร์ที่ตั้งให้เก็บประวัติทั้งหมด
 
-รองรับหลายบริษัท, ผูกด้วย ID, ตั้งเวลา, จัดกลุ่ม, แจ้งเตือน, OTA, วิเคราะห์แนวโน้ม
+แยกสิทธิ์ผู้ดูข้อมูล ผู้ควบคุมอุปกรณ์ และผู้ดูแลระบบ ต้องลงทะเบียนเกตเวย์กับบริษัทก่อนรับข้อมูล ระบุ IP ต้นทางสำหรับเกตเวย์ไบนารี และโทเคนเฉพาะสำหรับเกตเวย์ JSON หมายเลขเซ็นเซอร์ซ้ำกันได้เมื่ออยู่คนละเกตเวย์
 
-### 2. ข้อกำหนดก่อนใช้งาน
-1. Python dependencies: `pytz`; install `paho-mqtt` only for legacy in-Odoo MQTT mode
-2. MQTT broker เข้าถึงได้ (แนะนำพอร์ต `1883`)
-3. พอร์ต TCP ของ TH Gateway เข้าถึงได้ (ค่าเริ่มต้น `9910`)
-4. ติดตั้งโมดูล `IoT Control Center`
+ข้อมูลดิบที่บันทึกแล้วแก้ไขไม่ได้ และเก็บบริษัทกับตำแหน่ง ณ เวลาที่อ่านค่า ตั้งชื่อเซ็นเซอร์ให้สื่อถึงอุปกรณ์หรือสถานที่ กราฟเลือกดูข้อมูลดิบ ค่าเฉลี่ยรายชั่วโมง หรือรายวันได้ หากข้อมูลดิบเกิน 10000 รายการ ระบบจะแจ้งให้ลดช่วงเวลาหรือเลือกค่าเฉลี่ย
 
-### 3. สิทธิ์
-1. `IoT User`: ดูข้อมูลและใช้งานทั่วไป
-2. `IoT Manager`: ผูกอุปกรณ์, ตั้งเวลา, จัดกลุ่ม, เฟิร์มแวร์
-3. `System Admin`: สิทธิ์ทั้งหมด
+เมื่อเลือกทั้งสองค่า แกนซ้ายแสดงอุณหภูมิและแกนขวาแสดงความชื้น ป้ายเวลามีวันที่ เวลาแบบ 24 ชั่วโมง และส่วนต่างจาก UTC ไม่ใช้กราฟสะสม กราฟซ้อน หรือกราฟวงกลมกับค่าเหล่านี้ ดูค่าสูงสุด ต่ำสุด และจำนวนตัวอย่างได้ในตาราง Pivot
 
-### 4. เมนูหลัก
-1. `Control Cards`
-2. `Switch`
-3. `Environment`
+หน้าประวัติคำสั่งแยกสถานะเข้าคิว ส่งแล้ว และอุปกรณ์ยืนยันแล้ว คำสั่งปิดจะยกเลิกตัวจับเวลาและระงับการเปิดอัตโนมัติ ต้องสั่งเปิดหรือเริ่มจับเวลาใหม่เพื่อกลับมาทำงาน การเริ่มระบบใหม่และการตัดเมื่อเปิดนานเกินกำหนดจะเข้าสู่สถานะปิดอย่างปลอดภัย อุปกรณ์สำคัญด้านความปลอดภัยต้องมีเวลาสูงสุดและระบบตัดทางกายภาพ
 
-### 5. การใช้งาน Switch
-#### 5.1 ผูกด้วย ID
-1. ไปที่ `Switch -> Bind by ID`
-2. กรอก `Switch ID` แล้วกด `Search ID`
-3. ตรวจสอบผ่านแล้วกด `Confirm Bind`
+เฟิร์มแวร์ไม่ฝังรหัสผ่านหรือที่อยู่เครือข่ายของบริษัท ตั้งค่ารุ่นฮาร์ดแวร์และการเชื่อมต่อเริ่มต้นก่อน จากนั้นรับการตั้งค่าบริษัทจากศูนย์ควบคุม OTA ต้องมีลายนิ้วมือใบรับรอง TLS ที่เชื่อถือได้ อุปกรณ์ที่ตั้งค่าแล้วจะเปิดหน้าตั้งค่าเมื่อกดปุ่มบนตัวอุปกรณ์ขณะเปิดเครื่องเท่านั้น
 
-#### 5.2 ON/OFF และ Delay
-1. กด `ON/OFF` จากรายการหรือการ์ด
-2. `Delay` จะเปิดรีเลย์พร้อมนับถอยหลัง; กดซ้ำเพื่อยกเลิกและปิด
-3. ระหว่าง Delay คำสั่งทั่วไปและตารางเวลาจะถูกบล็อก
+OpenWrt ต้องตรวจสอบและติดตั้ง SSH host key ก่อนใช้งาน ตรวจสอบพร้อมกันได้ไม่เกิน 8 เครื่องและมีเวลารอสูงสุด ข้อมูลย้อนหลังจะไม่ทับสถานะที่ใหม่กว่า การลงเวลางานรองรับกะข้ามเที่ยงคืนภายในระยะเวลาที่อนุญาต
 
-#### 5.3 ตารางเวลา
-1. ไปที่ `Switch -> Schedules`
-2. เลือกเป้าหมาย (อุปกรณ์/กลุ่ม), คำสั่ง, วัน, เวลา
-3. บันทึกแล้วระบบซิงก์ตารางทั้งหมดลงอุปกรณ์อัตโนมัติ
-
-#### 5.4 ชั่วโมงทำงานสะสม
-1. `Total ON Hours` คือเวลาทำงานสะสม
-2. การรีเซ็ตต้องกรอกเหตุผลและระบบจะบันทึก log
-
-### 6. OTA เฟิร์มแวร์
-1. อัปโหลด `.bin` ใน `Switch -> Firmware Management`
-2. กำหนดเวอร์ชันและบันทึก
-3. ใช้ `Batch Push Upgrade` เพื่อส่งแบบกลุ่ม
-4. ตรวจสอบผลที่ `Upgrade Logs`
-
-### 7. Environment
-#### 7.1 ผูกโหนด
-1. ไปที่ `Environment -> Bind Node by ID`
-2. กรอก `Node ID` ให้ตรงตัวพิมพ์ใหญ่/เล็ก
-3. กด `Search ID` แล้ว `Confirm Bind`
-
-#### 7.2 กลุ่ม Sensor และการ override threshold
-1. สร้างกลุ่มที่ `Environment -> Sensor Groups`
-2. ตั้งค่าอุณหภูมิ/ความชื้นของกลุ่ม
-3. เมื่อ sensor อยู่ในกลุ่ม จะใช้ค่ากลุ่มแทนค่าของ sensor
-4. ตรวจสอบได้จาก `Threshold Source` และ `Effective ...`
-
-#### 7.3 กราฟและการแจ้งเตือน
-1. `Readings & Analysis` สำหรับกราฟแนวโน้ม
-2. เกินช่วงจะสร้างแจ้งเตือน `Open`
-3. กลับสู่ปกติแล้วจะปิดแจ้งเตือนอัตโนมัติ
-
-### 8. หลายบริษัท
-1. อุปกรณ์ที่ยังไม่ผูก จะไม่ถูกใช้ใน workflow ของบริษัท
-2. ผูกแล้วจะเห็นและควบคุมได้เฉพาะบริษัทนั้น
-3. เมื่อ unbind แล้ว บริษัทอื่นสามารถ bind ต่อได้
+V2 เปลี่ยนโครงสร้างข้อมูล ต้องสำรองข้อมูลและอนุญาตการลบประวัติอุณหภูมิ/ความชื้นกับการแจ้งเตือนเดิมก่อนอัปเกรด ข้อมูลลงเวลาของ HR และข้อมูลธุรกิจอื่นไม่อยู่ในขอบเขตการลบ ต้องทดสอบในฐานข้อมูลแยกก่อนใช้งานจริง

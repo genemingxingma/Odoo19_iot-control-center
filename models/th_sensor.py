@@ -57,7 +57,7 @@ class IoTTHSensor(models.Model):
     keep_full_history = fields.Boolean(
         string="Keep Full History",
         default=False,
-        help="If enabled, this node keeps all raw readings and skips historical daily rollup.",
+        help="Keep all raw readings for this probe, exempt from the company retention period.",
     )
     avg_temperature = fields.Float(compute="_compute_stats")
     avg_humidity = fields.Float(compute="_compute_stats")
@@ -69,7 +69,7 @@ class IoTTHSensor(models.Model):
     reading_ids = fields.One2many("iot.th.reading", "sensor_id")
 
     _node_probe_uniq = models.Constraint(
-        "UNIQUE(node_id, probe_code)",
+        "UNIQUE(gateway_id, node_id, probe_code)",
         "Sensor Channel must be unique by Node ID + Channel.",
     )
 
@@ -120,6 +120,12 @@ class IoTTHSensor(models.Model):
 
     def write(self, vals):
         v = dict(vals)
+        if {"gateway_id", "company_id", "node_id", "probe_code"} & set(v):
+            for rec in self:
+                for key in ("gateway_id", "company_id", "node_id", "probe_code"):
+                    current = rec[key].id if key in ("gateway_id", "company_id") else rec[key]
+                    if key in v and v[key] != current:
+                        raise ValidationError(_("Archive the probe and register a new identity when moving companies."))
         if v.get("node_id"):
             v["node_id"] = str(v["node_id"]).strip().upper()
         if v.get("probe_code"):
@@ -135,7 +141,7 @@ class IoTTHSensor(models.Model):
         probe = (probe_code or "").strip().upper()
         if probe:
             domain.append(("probe_code", "=", probe))
-        sensors = self.sudo().search(domain, order="last_reported_at desc, id desc")
+        sensors = self.search(domain, order="last_reported_at desc, id desc")
         if not sensors:
             raise UserError(_("No sensor found for this Node ID."))
         if require_online:
@@ -148,7 +154,7 @@ class IoTTHSensor(models.Model):
                 sensors = sensors - offline
                 if not sensors:
                     raise UserError(_("All matched sensors are offline. Please wait for fresh data before binding."))
-        return sensors.sudo()
+        return sensors
 
     @api.model
     def bind_by_node(self, node_id, probe_code=None, company=None, location=None, location_detail=None):
@@ -157,7 +163,7 @@ class IoTTHSensor(models.Model):
         conflict = sensors.filtered(lambda s: s.company_id and s.company_id != target_company)
         if conflict:
             raise UserError(_("This node is already bound to another company."))
-        vals = {"company_id": target_company.id}
+        vals = {}
         if location:
             vals["location_id"] = location.id
         if location_detail is not None:
@@ -166,7 +172,7 @@ class IoTTHSensor(models.Model):
         return sensors.with_env(self.env)
 
     def action_unbind(self):
-        self.write({"company_id": False, "group_id": False, "location_id": False, "location_detail": False})
+        self.write({"active": False})
 
     def action_open_readings(self):
         self.ensure_one()
@@ -223,7 +229,6 @@ class IoTTHSensor(models.Model):
                 WHERE sensor_id = ANY(%s)
                   AND reported_at >= %s
                   AND (temperature <> 0 OR humidity <> 0)
-                  AND COALESCE(is_hourly_rollup, FALSE) = FALSE
                 GROUP BY sensor_id
                 """,
                 [records.ids, since],
@@ -240,9 +245,11 @@ class IoTTHSensor(models.Model):
                 rec.min_humidity = min_h or 0.0
                 rec.max_humidity = max_h or 0.0
 
-    @api.constrains("company_id", "group_id")
+    @api.constrains("company_id", "group_id", "gateway_id")
     def _check_group_company(self):
         for rec in self:
+            if rec.company_id != rec.gateway_id.company_id:
+                raise ValidationError(_("Probe company must match its gateway company."))
             if rec.group_id and rec.company_id and rec.group_id.company_id and rec.group_id.company_id != rec.company_id:
                 raise UserError(_("Sensor Group company must match the sensor company."))
 
@@ -256,7 +263,7 @@ class IoTTHSensor(models.Model):
             if rec.stats_window_hours <= 0:
                 raise ValidationError(_("Statistics window must be greater than 0 hours."))
 
-    def apply_reading(self, temperature, humidity, reported_at, battery_voltage=None):
+    def _apply_reading(self, temperature, humidity, reported_at, battery_voltage=None):
         alert_model = self.env["iot.th.alert"]
         for rec in self:
             self.env.cr.execute(

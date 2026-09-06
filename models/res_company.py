@@ -10,11 +10,28 @@ from odoo.exceptions import ValidationError
 class ResCompany(models.Model):
     _inherit = "res.company"
 
+    iot_history_retention_days = fields.Integer(string="IoT Raw History Retention (Days)", default=0,
+        help="Zero keeps raw observations indefinitely. A positive value explicitly authorizes expiry deletion.")
+
     iot_prefer_internal_network = fields.Boolean(string="Prefer IoT Internal Network", default=True)
     iot_internal_host = fields.Char(string="IoT Internal Server Host")
     iot_internal_odoo_port = fields.Integer(string="IoT Internal Odoo Port", default=8069)
     iot_internal_mqtt_port = fields.Integer(string="IoT Internal MQTT Port", default=1883)
     iot_internal_ota_port = fields.Integer(string="IoT Internal OTA HTTPS Port", default=8443)
+    iot_ota_tls_fingerprint = fields.Char(string="OTA TLS Certificate Fingerprint", copy=False,
+        help="Trusted SHA-1 certificate fingerprint provisioned by an administrator. OTA fails closed when absent.")
+
+    @api.constrains("iot_history_retention_days")
+    def _check_history_retention(self):
+        if any(company.iot_history_retention_days < 0 for company in self):
+            raise ValidationError(_("History retention must be zero or a positive number of days."))
+
+    @api.constrains("iot_ota_tls_fingerprint")
+    def _check_ota_tls_fingerprint(self):
+        for company in self:
+            fingerprint = (company.iot_ota_tls_fingerprint or "").strip()
+            if fingerprint and not re.fullmatch(r"(?:[0-9A-Fa-f]{2}[ :]){19}[0-9A-Fa-f]{2}|[0-9A-Fa-f]{40}", fingerprint):
+                raise ValidationError(_("Enter a valid 20-byte SHA-1 certificate fingerprint."))
 
     def write(self, vals):
         network_fields = {
@@ -23,6 +40,7 @@ class ResCompany(models.Model):
             "iot_internal_odoo_port",
             "iot_internal_mqtt_port",
             "iot_internal_ota_port",
+            "iot_ota_tls_fingerprint",
         }
         changed = bool(network_fields & set(vals))
         result = super().write(vals)

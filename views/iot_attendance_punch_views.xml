@@ -12,7 +12,7 @@
                 <field name="direction"/>
                 <field name="source"/>
                 <field name="state"/>
-                <field name="message"/>
+                <field name="display_message"/>
             </list>
         </field>
     </record>
@@ -36,7 +36,7 @@
                             <field name="direction"/>
                             <field name="source"/>
                             <field name="state"/>
-                            <field name="message"/>
+                            <field name="display_message"/>
                         </group>
                     </group>
                     <group>

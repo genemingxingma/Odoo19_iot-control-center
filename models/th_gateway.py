@@ -1,6 +1,8 @@
 from datetime import timedelta
 
-from odoo import api, fields, models
+import ipaddress
+from odoo import _, api, fields, models
+from odoo.exceptions import ValidationError
 
 from ..services.tcp_service import ensure_running as ensure_tcp_running
 
@@ -11,6 +13,10 @@ class IoTTHGateway(models.Model):
 
     name = fields.Char(required=True)
     serial = fields.Char(string="Gateway ID", required=True, index=True)
+    source_address = fields.Char(string="Gateway Source Address", index=True,
+                                 help="Source IP seen by the bridge for binary frames. Register each gateway explicitly.")
+    _serial_unique = models.Constraint("UNIQUE(serial)", "Gateway identity must be unique.")
+    _source_unique = models.Constraint("UNIQUE(source_address)", "Gateway source address must be unique.")
     active = fields.Boolean(default=True)
 
     company_id = fields.Many2one("res.company", index=True)
@@ -18,7 +24,8 @@ class IoTTHGateway(models.Model):
     location_id = fields.Many2one("stock.location", domain="['|', ('company_id', '=', False), ('company_id', '=', company_id)]")
     location_detail = fields.Char(string="Location Detail", translate=True)
 
-    tcp_token = fields.Char(string="TCP Token", help="Optional token for gateway payload authentication.")
+    tcp_token = fields.Char(string="TCP Token", groups="iot_control_center.group_iot_manager", copy=False,
+                           help="Required token for JSON gateway authentication.")
     sampling_interval_min = fields.Integer(default=5, help="Recommended gateway upload interval in minutes.")
     statistics_window_hours = fields.Integer(default=24, help="Default analysis window in hours.")
 
@@ -28,6 +35,23 @@ class IoTTHGateway(models.Model):
     sensor_ids = fields.One2many("iot.th.sensor", "gateway_id")
     sensor_count = fields.Integer(compute="_compute_counts")
     alert_count = fields.Integer(compute="_compute_counts")
+
+    @api.constrains("source_address")
+    def _check_source_address(self):
+        for rec in self:
+            if rec.source_address:
+                try:
+                    if str(ipaddress.ip_address(rec.source_address)) != rec.source_address:
+                        raise ValueError()
+                except ValueError as exc:
+                    raise ValidationError(_("Enter a canonical gateway IP address.")) from exc
+
+    def write(self, vals):
+        if "company_id" in vals:
+            for rec in self:
+                if rec.sensor_ids and rec.company_id.id != vals["company_id"]:
+                    raise ValidationError(_("Archive the gateway and register a new identity when moving companies."))
+        return super().write(vals)
 
     @api.depends("sensor_ids")
     def _compute_counts(self):

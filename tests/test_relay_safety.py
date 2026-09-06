@@ -52,7 +52,7 @@ class TestRelaySafety(TransactionCase):
         now = fields.Datetime.now()
         self.device.write({"relay_state": "off", "last_seen": now})
 
-        self.device.apply_state_report("on", reported_at=now - timedelta(minutes=5))
+        self.device._apply_state_report("on", reported_at=now - timedelta(minutes=5))
 
         self.assertEqual(self.device.relay_state, "off")
         self.assertEqual(self.device.last_seen, now)
@@ -130,15 +130,16 @@ class TestRelaySafety(TransactionCase):
                 "iot_internal_mqtt_port": 1883,
             }
         )
-        self.device.write({"firmware_version": "1.8.10", "network_config_dirty": True})
+        self.device.write({"firmware_version": "2.0.0", "network_config_dirty": True})
 
-        self.device.apply_runtime_report(
+        self.device._apply_runtime_report(
             {
                 "hardware_profile": "esp8266-1m-dout-64kfs",
                 "flash_real_size": 4194304,
                 "free_heap": 40000,
                 "mqtt_host": "192.168.10.15",
                 "mqtt_route": "primary",
+                "config_revision": self.device._network_config_payload()["config_revision"],
             }
         )
 
