@@ -31,7 +31,7 @@ const char* PROFILE_RELAY = "IoT-Relay";
 const char* PROFILE_OUTLET = "IoT-Outlet";
 
 #include "protocol_guard.h"
-const char* FIRMWARE_VERSION = "2.0.1";
+const char* FIRMWARE_VERSION = "2.0.2";
 const char* FIRMWARE_HARDWARE_PROFILE = "esp8266-1m-dout-64kfs";
 
 const char* NTP_SERVER_1 = "pool.ntp.org";
@@ -490,9 +490,21 @@ void detectBoardProfileFromPowerOnButton() {
   }
 }
 
+void publishReport(const String& topic, JsonDocument& doc, bool retained) {
+  if (doc.overflowed()) { return; }
+  size_t bytes = measureJson(doc);
+  if (bytes >= 1280) { return; }
+  // MQTT callbacks share a 4KB continuation stack. Keep both large report
+  // buffers off that stack, including when a retained schedule is applied.
+  String out;
+  if (!out.reserve(bytes)) { return; }
+  if (serializeJson(doc, out) != bytes) { return; }
+  mqttClient.publish(topic.c_str(), reinterpret_cast<const uint8_t*>(out.c_str()), bytes, retained);
+}
+
 void publishStatus() {
   bool active = isDelayActive();
-  StaticJsonDocument<1280> doc;
+  DynamicJsonDocument doc(1280);
   doc["state"] = relayOn ? "on" : "off";
   doc["module_id"] = moduleId;
   doc["firmware_version"] = FIRMWARE_VERSION;
@@ -500,6 +512,9 @@ void publishStatus() {
   doc["hardware_profile"] = FIRMWARE_HARDWARE_PROFILE;
   doc["flash_real_size"] = ESP.getFlashChipRealSize();
   doc["free_heap"] = ESP.getFreeHeap();
+  doc["free_stack"] = ESP.getFreeContStack();
+  doc["uptime_sec"] = millis() / 1000;
+  doc["reset_reason"] = ESP.getResetReason();
   doc["mqtt_host"] = activeMqttHost;
   doc["mqtt_route"] = mqttUsingFallback ? "fallback" : "primary";
   doc["schedule_version"] = scheduleVersion;
@@ -516,14 +531,12 @@ void publishStatus() {
   doc["safety_trip"] = safetyTrip;
   if (lastCommandId.length() > 0) {
     doc["last_command_id"] = lastCommandId;
+  }
   doc["command_seq"] = lastCommandSeq;
   doc["control_inhibit"] = controlInhibit;
   doc["config_revision"] = configRevision;
-  }
 
-  char out[1280];
-  size_t len = serializeJson(doc, out);
-  mqttClient.publish(topicStatus.c_str(), reinterpret_cast<const uint8_t*>(out), len, true);
+  publishReport(topicStatus, doc, true);
 }
 
 void otaProgress(int, int) {
@@ -561,6 +574,17 @@ void applyScheduleSet(JsonDocument& doc) {
     tmp[newCount].offsetMin = (int16_t)offsetMin;
     tmp[newCount].turnOn = strcmp(action, "on") == 0;
     newCount += 1;
+  }
+
+  bool changed = newCount != scheduleCount || version != scheduleVersion;
+  for (size_t i = 0; !changed && i < newCount; ++i) {
+    changed = schedules[i].weekday != tmp[i].weekday || schedules[i].hour != tmp[i].hour
+        || schedules[i].minute != tmp[i].minute || schedules[i].offsetMin != tmp[i].offsetMin
+        || schedules[i].turnOn != tmp[i].turnOn;
+  }
+  if (!changed) {
+    publishStatus();
+    return;
   }
 
   for (size_t i = 0; i < newCount; ++i) {
@@ -872,7 +896,7 @@ void handleCommand(char* topic, byte* payload, unsigned int length) {
     legacyReceipts[legacyReceiptNext] = lastCommandId;
     legacyReceiptNext = (legacyReceiptNext + 1) % LEGACY_RECEIPT_COUNT;
   }
-  bool metadataChanged = true;
+  bool metadataChanged = strlen(commandId) > 0 || sequence > 0;
   if (doc.containsKey("max_on_sec")) {
     uint32_t requestedMaxOnSec = (uint32_t)(doc["max_on_sec"] | 0);
     if (maxOnSec != requestedMaxOnSec) {
@@ -1096,7 +1120,7 @@ void publishTelemetry() {
   }
   lastMs = millis();
 
-  StaticJsonDocument<1280> doc;
+  DynamicJsonDocument doc(1280);
   doc["rssi"] = WiFi.RSSI();
   doc["uptime_sec"] = millis() / 1000;
   doc["protocol_version"] = legacyProtocolEnabled ? 1 : 2;
@@ -1106,6 +1130,8 @@ void publishTelemetry() {
   doc["hardware_profile"] = FIRMWARE_HARDWARE_PROFILE;
   doc["flash_real_size"] = ESP.getFlashChipRealSize();
   doc["free_heap"] = ESP.getFreeHeap();
+  doc["free_stack"] = ESP.getFreeContStack();
+  doc["reset_reason"] = ESP.getResetReason();
   doc["mqtt_host"] = activeMqttHost;
   doc["mqtt_route"] = mqttUsingFallback ? "fallback" : "primary";
   doc["schedule_version"] = scheduleVersion;
@@ -1119,14 +1145,12 @@ void publishTelemetry() {
   doc["safety_trip"] = safetyTrip;
   if (lastCommandId.length() > 0) {
     doc["last_command_id"] = lastCommandId;
+  }
   doc["command_seq"] = lastCommandSeq;
   doc["control_inhibit"] = controlInhibit;
   doc["config_revision"] = configRevision;
-  }
 
-  char out[1280];
-  size_t len = serializeJson(doc, out);
-  mqttClient.publish(topicTelemetry.c_str(), reinterpret_cast<const uint8_t*>(out), len, false);
+  publishReport(topicTelemetry, doc, false);
 }
 
 void startRuntime() {

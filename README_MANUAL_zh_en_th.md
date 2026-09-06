@@ -2,7 +2,7 @@
 
 ## 中文
 
-本手册描述 V2 候选架构，不代表生产已切换。2026-09-06 的 2.0.1 插座式继电器试点出现持续重连，状态恢复未通过，固件已隔离并暂停后续升级；详见 `deploy/CANARY_V2_2026-09-06.md`。
+本手册描述 V2 候选架构，不代表生产服务器已切换。2.0.1 固件保持隔离；2.0.2 已修复定时配置处理问题，并通过两种板型的开关、保护和倒计时测试。11 台在线继电器已逐台升级、恢复原状态并通过短时联合验收；另有两台长期离线设备待处理。记录见 `deploy/RELAY_2_0_2_VALIDATION_2026-09-06.md`。
 
 ### 公司与权限
 
@@ -28,7 +28,9 @@ IoT 用户只能查看；IoT 操作员可以控制本公司设备；IoT 管理�
 
 V2 控制器与 1.8.x 固件的倒计时协议不兼容，不能只升级服务器。需先使用隔离控制器和非关键测试设备完成验证，再安排控制器、中间件及固件的配套切换。
 
-2.0.1 候选支持从旧状态文件进入单向 V1 迁移模式，供旧中心暂时控制已配置设备。收到有效的有序 V2 指令后永久停止接受 V1 指令；新设备不启用迁移模式。旧协议缺少序列、到期时间或指令 ID 时，不能提供完整防重放保证。逐台升级必须分别记录状态、确认新版本和恢复结果；出现持续重连或确认超时立即停止，不能只看“在线”。
+2.0.2 支持从旧状态文件进入单向 V1 迁移模式，供旧中心暂时控制已配置设备。收到有效的有序 V2 指令后永久停止接受 V1 指令；新设备不启用迁移模式。旧协议缺少序列、到期时间或指令 ID 时，不能提供完整防重放保证。逐台升级必须分别记录状态、确认新版本和恢复结果；出现持续重连或确认超时立即停止，不能只看“在线”。
+
+排查反复重连时，先核对运行时长、复位原因和保留指令。诊断中如需移除保留指令，应先备份，不能清空所有设备的配置。旧版后台会复用消息记录，最新回报应按接收时间判断，不能只按记录编号判断。升级验收还须匹配实时回报中的指令编号和配置版本，并交叉检查后台状态；发送成功不等于设备已执行。
 
 明确“关闭”会取消延时并锁止自动开启；下一次明确“开启”或“开始延时”才解除锁止。重启与最大开启时长保护也采用安全关闭。紫外灯等设备勾选“安全关键设备”并设置有限的最大连续开启时长。软件不能代替门联锁、急停开关和现场验证。
 
@@ -44,7 +46,7 @@ OpenWrt 首次连接前由管理员核实并安装 SSH 主机密钥。心跳最�
 
 ## English
 
-This manual describes the V2 candidate, not a completed production cutover. The 2026-09-06 firmware 2.0.1 IoT-Outlet canary repeatedly reconnected and did not confirm state restoration. The firmware is quarantined and further rollout is stopped; see `deploy/CANARY_V2_2026-09-06.md`.
+This manual describes the V2 candidate, not a completed production backend cutover. Firmware 2.0.1 remains quarantined. The 2.0.2 fix passed switching, watchdog and timer tests on both board profiles. All 11 online relays passed serial upgrade, state restoration and bounded fleet observation; two long-offline devices remain pending. See `deploy/RELAY_2_0_2_VALIDATION_2026-09-06.md`.
 
 Configure country, timezone, private routes, OTA certificate trust and retention on the company. Zero retention keeps all raw history; positive retention authorizes expiry deletion, except probes marked to keep full history.
 
@@ -58,7 +60,9 @@ When both metrics are selected, temperature uses the left axis and humidity the 
 
 Command Delivery distinguishes durable intent, publication and device confirmation. OFF cancels delays and inhibits automatic ON. An explicit ON/start resumes operation. Boot/watchdog cutoff fail closed. Configure finite limits for safety-critical equipment and retain physical interlocks.
 
-The 2.0.1 candidate can load a one-way V1 migration mode from an existing V1 state file. A valid sequenced V2 command permanently disables V1 commands; fresh devices do not enter migration mode. Legacy traffic missing sequence, expiry or command identity cannot provide full replay protection. Capture and verify each device separately during rolling updates. Repeated reconnects or missing confirmations stop the rollout, even if the page says online.
+Firmware 2.0.2 can load a one-way V1 migration mode from an existing V1 state file. A valid sequenced V2 command permanently disables V1 commands; fresh devices do not enter migration mode. Legacy traffic missing sequence, expiry or command identity cannot provide full replay protection. Capture and verify each device separately during rolling updates. Repeated reconnects or missing confirmations stop the rollout, even if the page says online.
+
+For repeated reconnects, inspect uptime, reset reason and retained commands first. Back up any retained command before a targeted diagnostic removal; never clear the fleet's configuration. V1 can reuse message rows, so determine the latest report by reception time rather than row ID. Upgrade acceptance also requires matching live command identities and configuration revisions, cross-checked against backend state. Publication is not proof of device execution.
 
 Firmware has no company-specific network defaults. Provision the correct hardware profile and bootstrap connection, then apply company settings from the control center. OTA requires a trusted TLS certificate fingerprint. Configured devices enter the setup portal only with the physical boot button held.
 
@@ -68,7 +72,7 @@ V2 is a breaking release. Back up first and explicitly authorize removal of old 
 
 ## ภาษาไทย
 
-คู่มือนี้อธิบายสถาปัตยกรรม V2 ที่อยู่ระหว่างทดสอบ ไม่ได้หมายความว่าระบบใช้งานจริงเปลี่ยนเป็น V2 แล้ว การทดสอบเฟิร์มแวร์ 2.0.1 กับ IoT-Outlet เมื่อวันที่ 2026-09-06 พบว่าอุปกรณ์เชื่อมต่อซ้ำและไม่ยืนยันการคืนสถานะ จึงระงับการใช้เฟิร์มแวร์นี้และหยุดอัปเกรดเครื่องอื่น ดูรายละเอียดที่ `deploy/CANARY_V2_2026-09-06.md`
+คู่มือนี้อธิบายสถาปัตยกรรม V2 ที่อยู่ระหว่างทดสอบ ไม่ได้หมายความว่าเซิร์ฟเวอร์ใช้งานจริงเปลี่ยนเป็น V2 แล้ว เฟิร์มแวร์ 2.0.1 ยังถูกระงับการใช้งาน ส่วน 2.0.2 แก้ปัญหาการประมวลผลตารางเวลาแล้ว และผ่านการทดสอบเปิดปิด การตัดเมื่อเปิดนานเกินกำหนด และตัวจับเวลากับฮาร์ดแวร์ทั้งสองรุ่น รีเลย์ออนไลน์ทั้ง 11 เครื่องอัปเกรดทีละเครื่อง คืนสถานะเดิม และผ่านการตรวจสอบร่วมกันในช่วงเวลาทดสอบแล้ว อีกสองเครื่องที่ออฟไลน์มานานยังรอดำเนินการ ดูบันทึกที่ `deploy/RELAY_2_0_2_VALIDATION_2026-09-06.md`
 
 ตั้งค่าประเทศ เขตเวลา เครือข่ายภายใน ใบรับรอง OTA และระยะเวลาเก็บข้อมูลที่บริษัท ค่า 0 หมายถึงเก็บข้อมูลดิบโดยไม่ลบอัตโนมัติ ค่ามากกว่า 0 อนุญาตให้ลบข้อมูลที่เกินระยะเวลาที่กำหนด ยกเว้นเซ็นเซอร์ที่ตั้งให้เก็บประวัติทั้งหมด
 
@@ -82,7 +86,9 @@ V2 is a breaking release. Back up first and explicitly authorize removal of old 
 
 หน้าประวัติคำสั่งแยกสถานะเข้าคิว ส่งแล้ว และอุปกรณ์ยืนยันแล้ว คำสั่งปิดจะยกเลิกตัวจับเวลาและระงับการเปิดอัตโนมัติ ต้องสั่งเปิดหรือเริ่มจับเวลาใหม่เพื่อกลับมาทำงาน การเริ่มระบบใหม่และการตัดเมื่อเปิดนานเกินกำหนดจะเข้าสู่สถานะปิดอย่างปลอดภัย อุปกรณ์สำคัญด้านความปลอดภัยต้องมีเวลาสูงสุดและระบบตัดทางกายภาพ
 
-เฟิร์มแวร์ 2.0.1 ที่อยู่ระหว่างทดสอบรองรับโหมดเปลี่ยนผ่าน V1 เฉพาะอุปกรณ์ที่มีไฟล์สถานะ V1 เดิม เมื่อรับคำสั่ง V2 ที่มีลำดับถูกต้องแล้ว จะไม่รับคำสั่ง V1 อีก อุปกรณ์ใหม่ไม่ใช้โหมดนี้ คำสั่งเก่าที่ไม่มีลำดับ เวลาหมดอายุ หรือหมายเลขคำสั่งยังป้องกันการเล่นซ้ำได้ไม่ครบ ต้องบันทึกและตรวจสอบสถานะก่อนและหลังอัปเกรดทีละเครื่อง หากเชื่อมต่อซ้ำหรือไม่ได้รับการยืนยัน ให้หยุดอัปเกรด แม้หน้าจอจะแสดงว่าออนไลน์
+เฟิร์มแวร์ 2.0.2 รองรับโหมดเปลี่ยนผ่าน V1 เฉพาะอุปกรณ์ที่มีไฟล์สถานะ V1 เดิม เมื่อรับคำสั่ง V2 ที่มีลำดับถูกต้องแล้ว จะไม่รับคำสั่ง V1 อีก อุปกรณ์ใหม่ไม่ใช้โหมดนี้ คำสั่งเก่าที่ไม่มีลำดับ เวลาหมดอายุ หรือหมายเลขคำสั่งยังป้องกันการเล่นซ้ำได้ไม่ครบ ต้องบันทึกและตรวจสอบสถานะก่อนและหลังอัปเกรดทีละเครื่อง หากเชื่อมต่อซ้ำหรือไม่ได้รับการยืนยัน ให้หยุดอัปเกรด แม้หน้าจอจะแสดงว่าออนไลน์
+
+หากอุปกรณ์เชื่อมต่อซ้ำ ให้ตรวจสอบระยะเวลาทำงาน สาเหตุการรีเซ็ต และคำสั่งที่โบรกเกอร์เก็บไว้ก่อน หากต้องนำคำสั่งที่เก็บไว้ออกเพื่อวิเคราะห์ ให้สำรองและดำเนินการเฉพาะเครื่องนั้น ห้ามล้างการตั้งค่าทุกเครื่อง ระบบ V1 อาจใช้แถวข้อความเดิมซ้ำ จึงต้องดูเวลารับข้อความแทนหมายเลขแถวเมื่อตรวจสอบข้อมูลล่าสุด การตรวจรับหลังอัปเกรดต้องตรวจสอบหมายเลขคำสั่งและรุ่นการตั้งค่าจากข้อความสดให้ตรงกัน พร้อมตรวจสอบสถานะในระบบ การส่งสำเร็จไม่ได้ยืนยันว่าอุปกรณ์ทำงานตามคำสั่งแล้ว
 
 เฟิร์มแวร์ไม่ฝังรหัสผ่านหรือที่อยู่เครือข่ายของบริษัท ตั้งค่ารุ่นฮาร์ดแวร์และการเชื่อมต่อเริ่มต้นก่อน จากนั้นรับการตั้งค่าบริษัทจากศูนย์ควบคุม OTA ต้องมีลายนิ้วมือใบรับรอง TLS ที่เชื่อถือได้ อุปกรณ์ที่ตั้งค่าแล้วจะเปิดหน้าตั้งค่าเมื่อกดปุ่มบนตัวอุปกรณ์ขณะเปิดเครื่องเท่านั้น
 

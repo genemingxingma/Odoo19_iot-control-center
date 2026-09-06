@@ -1,9 +1,9 @@
 # IoT Control Center V2 (Odoo 19)
 
 Company-isolated environmental monitoring, relay control, attendance and OpenWrt management.
-This is a breaking architecture candidate: Odoo `19.0.2.0.0`, bridge protocol `2`, relay firmware `2.0.1`.
+This is a breaking architecture candidate: Odoo `19.0.2.0.0`, bridge protocol `2`, relay firmware `2.0.2`.
 
-**Firmware rollout is stopped.** The 2.0.1 IoT-Outlet canary repeatedly reconnected and did not confirm state restoration. Production firmware record 15 is quarantined; production Odoo remains on V1. See [the canary incident and recovery record](deploy/CANARY_V2_2026-09-06.md). Do not treat the passing build or isolated backend tests as fleet acceptance.
+**2.0.1 remains quarantined.** Firmware 2.0.2 fixes the retained-schedule stack failure and passed both board-profile canaries. All 11 online relays passed serial upgrade, restoration and bounded fleet observation; two long-offline devices remain pending. See [the 2.0.2 hardware validation](deploy/RELAY_2_0_2_VALIDATION_2026-09-06.md). Production Odoo remains on V1; firmware acceptance is not a backend cutover.
 The candidate is for isolated validation, not permission to upgrade a production database or real devices.
 
 ## Boundaries
@@ -58,6 +58,7 @@ python -m unittest discover -s core_tests -v
 python tools/check_i18n.py
 cargo test --locked --offline --manifest-path middleware/iot_bridge/Cargo.toml
 python -m platformio run --project-dir firmware/esp8266_relay
+python tools/check_relay_stack.py
 ```
 
 Run Odoo tests with `--test-tags=/iot_control_center` in an isolated database, alternate loopback HTTP ports and `--max-cron-threads=0`. Test mode can bind HTTP despite `--no-http`; never share production ports.

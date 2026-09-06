@@ -7,7 +7,7 @@ print("CANARY_INVENTORY_AT", str(fields.Datetime.now()))
 for device in env["iot.device"].with_context(active_test=False).search([]):
     schedules = env["iot.schedule"].search(["|", ("device_id", "=", device.id),
                                            ("group_id", "in", device.group_ids.ids)])
-    messages = env["iot.mqtt.message"].search([("device_id", "=", device.id)], order="id desc", limit=1)
+    messages = env["iot.mqtt.message"].search([("device_id", "=", device.id)], order="received_at desc, id desc", limit=1)
     payload = {}
     if messages:
         try:

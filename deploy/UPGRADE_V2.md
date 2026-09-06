@@ -4,9 +4,9 @@ This runbook is preparation. Deployment authorization remains conditional on eve
 
 V1 firmware is not compatible with V2 control semantics. In particular, 1.8.x does not implement `delay_start`, command expiry or monotonic command sequences. Do not deploy the backend alone and leave 1.8.x devices operating under it, or assume that a successful MQTT publish proves compatibility.
 
-## Current Hardware Hold
+## Firmware and Backend Gates
 
-The 2026-09-06 2.0.1 rolling-migration trial stopped after the IoT-Outlet canary repeatedly reconnected and did not acknowledge configuration or state restoration. Firmware record 15 is quarantined. Only the IoT-Relay canary confirmed its original OFF state; no fleet rollout or backend cutover took place. See `CANARY_V2_2026-09-06.md` before any further action.
+The initial 2026-09-06 2.0.1 rolling-migration trial stopped after the IoT-Outlet canary repeatedly reconnected. Record 15 remains quarantined. Firmware 2.0.2 fixes the retained-schedule/report stack path and passed both board-profile canaries; see `RELAY_2_0_2_VALIDATION_2026-09-06.md` for the separate serial rollout. This does not clear the V2 database/bridge cutover gates below. The original incident remains in `CANARY_V2_2026-09-06.md`.
 
 The candidate has a one-way V1 migration mode loaded only from an existing V1 state file. A valid sequenced V2 command permanently closes that mode. Fresh devices remain strict V2. Migration mode does not add missing sequence/expiry fields to V1 traffic and only deduplicates identified V1 commands within a 16-entry receipt cache. Unidentified legacy commands retain V1 behavior. This compatibility path is not evidence that the physical hardware release gates have passed.
 

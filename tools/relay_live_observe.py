@@ -13,7 +13,8 @@ identity = device._command_identity()
 root = device._mqtt_topic_root()
 allowed = ("firmware_version", "protocol_version", "board_profile", "state", "ota_state",
            "schedule_count", "max_on_sec", "delay_active", "control_inhibit", "config_revision",
-           "last_command_id", "command_seq", "mqtt_route", "uptime_sec", "free_heap", "module_id")
+           "last_command_id", "command_seq", "mqtt_route", "uptime_sec", "free_heap", "module_id",
+           "reset_reason", "free_stack")
 config = _load_config(env)
 client = mqtt.Client(client_id="codex-readonly-" + uuid.uuid4().hex, clean_session=True)
 if config.get("username"):
