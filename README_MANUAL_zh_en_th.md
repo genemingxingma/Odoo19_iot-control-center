@@ -2,7 +2,13 @@
 
 ## 中文
 
-本手册描述 V2 候选架构，不代表生产服务器已切换。2.0.1 固件保持隔离；2.0.2 已修复定时配置处理问题，并通过两种板型的开关、保护和倒计时测试。11 台在线继电器已逐台升级、恢复原状态并通过短时联合验收；另有两台长期离线设备待处理。记录见 `deploy/RELAY_2_0_2_VALIDATION_2026-09-06.md`。
+生产服务器现已安装 V2 模块 `19.0.2.0.4`，发布验收记录见 `deploy/PRODUCTION_V2_2026-09-06.md`。2.0.1 固件保持隔离；2.0.2 已修复定时配置处理问题，并通过两种板型的开关、保护和倒计时测试。11 台在线继电器已逐台升级、恢复原状态并通过短时联合验收；另有两台长期离线设备保持归档，待现场升级。固件测试记录见 `deploy/RELAY_2_0_2_VALIDATION_2026-09-06.md`。
+
+### 网关公网与内网切换
+
+温湿度网关可暂时保留现有公网接入，待现场修改目的地址后再切换 WireGuard。切换时核实中间件实际看到的来源 IP，在原公司的原网关记录中更新来源地址，不新建重复网关、不改变探头编号与绑定。确认新的实时记录正常后再关闭原公网入口。公司地址不写死在固件中，身份验证不能因切换网络而取消。
+
+`19.0.2.0.4` 修复旧版位置字段仍为 JSON 导致新读数无法入库的问题。已持久化的待处理报文沿用原事件编号和接收时间重试；不要删除队列或伪造补传时间。旧温湿度历史已按授权重置，但员工、打卡原始记录、HR 考勤和临床业务记录保留。历史待复核打卡和温度告警仍需按实际情况处理，不能把软件升级当作业务核验完成。
 
 ### 归档设备保护（19.0.2.0.2）
 
@@ -20,7 +26,7 @@ ADMS 使用设备的考勤状态，而不是指纹/刷卡等验证方式决定�
 
 本版支持 ATTLOG 标准文本上传和 JSON Webhook；表单编码导致请求正文不可用时明确拒绝。终端的特殊初始化握手、自动补传及重试间隔仍需对具体型号验证，不应把隔离接口测试当作设备端验收。
 
-界面示例均为合成数据：[中文总览](docs/screenshots/overview-zh-desktop.png)、[探头卡片](docs/screenshots/probes-zh-desktop.png)、[手机总览](docs/screenshots/overview-zh-mobile.png)。本版仍是 V2 候选，未据此更新生产后端。
+界面示例均为合成数据：[中文总览](docs/screenshots/overview-zh-desktop.png)、[探头卡片](docs/screenshots/probes-zh-desktop.png)、[手机总览](docs/screenshots/overview-zh-mobile.png)。生产发布状态以发布验收记录为准。
 
 ### 公司与权限
 
@@ -76,9 +82,13 @@ For attendance, check connection and last contact first, then review pending pun
 
 ADMS direction comes from attendance status, not the verification method. Batches are sorted; replays are deduplicated; one employee's matching error remains reviewable without discarding other employees. Failed imports are not acknowledged as successful. Synchronization never clears terminal logs, including the former automatic-clear option. Historical HR attendance is not silently recalculated, closed or deleted. Model-specific initialization and device retry behavior still require hardware validation.
 
-All screenshots use synthetic data: [English overview](docs/screenshots/overview-en-desktop.png). This is a V2 candidate, not a production backend deployment.
+All screenshots use synthetic data: [English overview](docs/screenshots/overview-en-desktop.png). See the production acceptance record for the deployed scope.
 
-This manual describes the V2 candidate, not a completed production backend cutover. Firmware 2.0.1 remains quarantined. The 2.0.2 fix passed switching, watchdog and timer tests on both board profiles. All 11 online relays passed serial upgrade, state restoration and bounded fleet observation; two long-offline devices remain pending. See `deploy/RELAY_2_0_2_VALIDATION_2026-09-06.md`.
+Production now runs module `19.0.2.0.4`; see `deploy/PRODUCTION_V2_2026-09-06.md`. Firmware 2.0.1 remains quarantined. The 2.0.2 fix passed switching, watchdog and timer tests on both board profiles. All 11 online relays passed serial upgrade, state restoration and bounded fleet observation; two long-offline devices remain archived pending onsite upgrade. See `deploy/RELAY_2_0_2_VALIDATION_2026-09-06.md`.
+
+Keep the gateway's current public route until its destination is changed onsite. For WireGuard cutover, verify the source address seen by the bridge and update the same company's existing gateway through Odoo. Preserve probe identities and bindings. Confirm fresh samples before closing public access. Never disable authentication or hard-code company endpoints in firmware.
+
+Version `19.0.2.0.4` converts legacy JSON location columns to text snapshots. Retry durable events with their original identities and reception times; never purge the queue or invent backfill timestamps. The authorized reset affects old environmental history, not employee, punch, HR attendance or clinical records. Historical punches needing review and threshold alerts still require operational review.
 
 Configure country, timezone, private routes, OTA certificate trust and retention on the company. Zero retention keeps all raw history; positive retention authorizes expiry deletion, except probes marked to keep full history.
 
@@ -116,9 +126,13 @@ V2 is a breaking release. Back up first and explicitly authorize removal of old 
 
 ADMS ใช้สถานะลงเวลา ไม่ใช้วิธียืนยันตัวตนเพื่อตัดสินเข้า/ออก ระบบเรียงข้อมูลตามเวลาและไม่สร้างรายการซ้ำ ข้อผิดพลาดของพนักงานคนหนึ่งจะไม่ทำให้ข้อมูลของคนอื่นหาย การนำเข้าที่ล้มเหลวจะไม่ตอบว่าสำเร็จ การซิงค์ไม่ล้างข้อมูลในเครื่อง แม้เคยเปิดตัวเลือกล้างอัตโนมัติ ประวัติ HR จะไม่ถูกคำนวณใหม่ ปิดรายการ หรือลบโดยอัตโนมัติ ยังต้องทดสอบขั้นตอนเริ่มเชื่อมต่อและการส่งซ้ำกับเครื่องรุ่นจริง
 
-ภาพตัวอย่างเป็นข้อมูลจำลองทั้งหมด: [ภาพรวมภาษาไทย](docs/screenshots/overview-th-desktop.png) และ [หน้าจอโทรศัพท์](docs/screenshots/overview-th-mobile.png) รุ่นนี้ยังเป็น V2 สำหรับการทดสอบ ไม่ใช่การอัปเดตระบบใช้งานจริง
+ภาพตัวอย่างเป็นข้อมูลจำลองทั้งหมด: [ภาพรวมภาษาไทย](docs/screenshots/overview-th-desktop.png) และ [หน้าจอโทรศัพท์](docs/screenshots/overview-th-mobile.png) ขอบเขตการใช้งานจริงให้ดูจากบันทึกตรวจรับ
 
-คู่มือนี้อธิบายสถาปัตยกรรม V2 ที่อยู่ระหว่างทดสอบ ไม่ได้หมายความว่าเซิร์ฟเวอร์ใช้งานจริงเปลี่ยนเป็น V2 แล้ว เฟิร์มแวร์ 2.0.1 ยังถูกระงับการใช้งาน ส่วน 2.0.2 แก้ปัญหาการประมวลผลตารางเวลาแล้ว และผ่านการทดสอบเปิดปิด การตัดเมื่อเปิดนานเกินกำหนด และตัวจับเวลากับฮาร์ดแวร์ทั้งสองรุ่น รีเลย์ออนไลน์ทั้ง 11 เครื่องอัปเกรดทีละเครื่อง คืนสถานะเดิม และผ่านการตรวจสอบร่วมกันในช่วงเวลาทดสอบแล้ว อีกสองเครื่องที่ออฟไลน์มานานยังรอดำเนินการ ดูบันทึกที่ `deploy/RELAY_2_0_2_VALIDATION_2026-09-06.md`
+ระบบใช้งานจริงติดตั้งโมดูล `19.0.2.0.4` แล้ว ดูบันทึกที่ `deploy/PRODUCTION_V2_2026-09-06.md` เฟิร์มแวร์ 2.0.1 ยังถูกระงับการใช้งาน ส่วน 2.0.2 แก้ปัญหาการประมวลผลตารางเวลาแล้ว และผ่านการทดสอบเปิดปิด การตัดเมื่อเปิดนานเกินกำหนด และตัวจับเวลากับฮาร์ดแวร์ทั้งสองรุ่น รีเลย์ออนไลน์ทั้ง 11 เครื่องอัปเกรดทีละเครื่อง คืนสถานะเดิม และผ่านการตรวจสอบร่วมกันในช่วงเวลาทดสอบแล้ว อีกสองเครื่องที่ออฟไลน์มานานยังคงเก็บถาวรเพื่อรออัปเกรดหน้างาน ดูบันทึกที่ `deploy/RELAY_2_0_2_VALIDATION_2026-09-06.md`
+
+เกตเวย์อุณหภูมิและความชื้นใช้เส้นทางสาธารณะเดิมต่อไปได้จนกว่าจะเปลี่ยนปลายทางที่หน้างาน เมื่อเปลี่ยนเป็น WireGuard ให้ตรวจสอบ IP ต้นทางที่บริดจ์เห็นจริง แล้วแก้ที่เกตเวย์เดิมของบริษัทใน Odoo โดยไม่สร้างเกตเวย์ซ้ำหรือเปลี่ยนการผูกเซ็นเซอร์ ตรวจสอบว่ามีข้อมูลใหม่ก่อนปิดช่องทางสาธารณะ ห้ามปิดการยืนยันตัวตนหรือฝังที่อยู่ของบริษัทลงในเฟิร์มแวร์
+
+รุ่น `19.0.2.0.4` แปลงคอลัมน์ตำแหน่งแบบ JSON เดิมให้เป็นข้อความ เพื่อรับค่าที่อ่านใหม่ได้ ข้อความที่เก็บในคิวต้องส่งซ้ำโดยใช้หมายเลขเหตุการณ์และเวลารับเดิม ห้ามล้างคิวหรือสร้างเวลาย้อนหลังขึ้นเอง การรีเซ็ตที่ได้รับอนุญาตครอบคลุมเฉพาะประวัติสิ่งแวดล้อมเดิม ไม่รวมพนักงาน ข้อมูลลงเวลา ประวัติ HR หรือข้อมูลทางคลินิก รายการลงเวลาที่รอตรวจสอบและการแจ้งเตือนเกินเกณฑ์ยังต้องตรวจสอบตามข้อเท็จจริง
 
 ตั้งค่าประเทศ เขตเวลา เครือข่ายภายใน ใบรับรอง OTA และระยะเวลาเก็บข้อมูลที่บริษัท ค่า 0 หมายถึงเก็บข้อมูลดิบโดยไม่ลบอัตโนมัติ ค่ามากกว่า 0 อนุญาตให้ลบข้อมูลที่เกินระยะเวลาที่กำหนด ยกเว้นเซ็นเซอร์ที่ตั้งให้เก็บประวัติทั้งหมด
 

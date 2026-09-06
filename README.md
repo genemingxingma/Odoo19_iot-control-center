@@ -1,12 +1,12 @@
 # IoT Control Center V2 (Odoo 19)
 
 Company-isolated environmental monitoring, relay control, attendance and OpenWrt management.
-This is a breaking architecture candidate: Odoo `19.0.2.0.2`, bridge protocol `2`, relay firmware `2.0.2`.
+Production release: Odoo `19.0.2.0.4`, bridge protocol `2`, relay firmware `2.0.2`.
 
 Archived relay identities remain quarantined when retained or late reports arrive. Pending commands are cancelled instead of being dispatched to archived or unbound devices.
 
-**2.0.1 remains quarantined.** Firmware 2.0.2 fixes the retained-schedule stack failure and passed both board-profile canaries. All 11 online relays passed serial upgrade, restoration and bounded fleet observation; two long-offline devices remain pending. See [the 2.0.2 hardware validation](deploy/RELAY_2_0_2_VALIDATION_2026-09-06.md). Production Odoo remains on V1; firmware acceptance is not a backend cutover.
-The candidate is for isolated validation, not permission to upgrade a production database or real devices.
+**2.0.1 remains quarantined.** Firmware 2.0.2 fixes the retained-schedule stack failure and passed both board-profile canaries. All 11 online relays passed serial upgrade, restoration and bounded fleet observation; two long-offline devices remain archived pending an onsite upgrade. See [the 2.0.2 hardware validation](deploy/RELAY_2_0_2_VALIDATION_2026-09-06.md) and [production acceptance](deploy/PRODUCTION_V2_2026-09-06.md).
+The authorized production cutover includes the native HTTP ingestion fixes and an end-migration that converts legacy translated location columns into writable text snapshots. A real queued gateway frame and exact replay were validated against a restored production clone, alongside 70 native Odoo tests.
 
 ## Boundaries
 
@@ -32,6 +32,8 @@ Start with **Overview** for company-scoped priorities and four workspaces. The o
 6. Inspect **Command Delivery** to distinguish queued, published, confirmed and expired commands. A publish is not proof that a relay switched.
 7. Mark UV lamps and similar devices safety-critical and configure a finite maximum ON duration. Explicit OFF cancels the delay and inhibits scheduled ON until an explicit new ON/start command. Boot and watchdog cutoff also fail closed.
 8. Provision SSH host keys for OpenWrt before probing. Heartbeats have bounded concurrency and SSH deadlines; the bridge no longer silently trusts a new SSH host key.
+
+A gateway may retain its existing public route until its onsite destination has been configured. When switching it to WireGuard, verify the source address actually observed by the bridge and update the existing company's gateway mapping through Odoo. Do not create a second gateway or change probe identities. Confirm fresh readings before retiring public access; do not weaken authentication or compile company endpoints into firmware.
 
 ## Bridge Contract
 

@@ -56,3 +56,25 @@ class TestV2Cutover(TransactionCase):
 
     def test_registered_identity_passes_preflight(self):
         self.migration._check_gateway_identities(self.cr)
+
+
+@tagged("post_install", "-at_install")
+class TestV2SnapshotColumnMigration(TransactionCase):
+    def test_translated_legacy_column_becomes_writable_text_without_losing_labels(self):
+        path = Path(__file__).parents[1] / "migrations/19.0.2.0.4/end-migration.py"
+        spec = importlib.util.spec_from_file_location("iot_v2_snapshot_cutover", path)
+        migration = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(migration)
+        self.cr.execute("CREATE TEMP TABLE iot_th_reading (id int, sensor_location_detail jsonb) ON COMMIT DROP")
+        self.cr.execute("""
+            INSERT INTO iot_th_reading VALUES
+            (1, '{"en_US":"Cold room","th_TH":"Room TH"}'),
+            (2, '{"th_TH":"Room TH"}'), (3, NULL)
+        """)
+        migration.migrate(self.cr, "19.0.2.0.2")
+        self.cr.execute("SELECT sensor_location_detail FROM iot_th_reading ORDER BY id")
+        self.assertEqual(self.cr.fetchall(), [("Cold room",), ("Room TH",), (None,)])
+        self.cr.execute("INSERT INTO iot_th_reading VALUES (4, 'New immutable snapshot')")
+        migration.migrate(self.cr, "19.0.2.0.2")
+        self.cr.execute("SELECT sensor_location_detail FROM iot_th_reading WHERE id=4")
+        self.assertEqual(self.cr.fetchone()[0], "New immutable snapshot")

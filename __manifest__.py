@@ -1,7 +1,7 @@
 {
     "name": "IoT Control Center",
     "summary": "Company-isolated device control and immutable environmental monitoring",
-    "version": "19.0.2.0.2",
+    "version": "19.0.2.0.4",
     "category": "IoT",
     "author": "mamingxing",
     "maintainer": "mamingxing",
