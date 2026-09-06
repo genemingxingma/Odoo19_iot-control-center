@@ -17,3 +17,4 @@ middleware/**/target/
 *.p12
 *.dump
 *.backup
+deploy/artifacts/

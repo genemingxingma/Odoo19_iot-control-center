@@ -18,9 +18,13 @@ IoT 用户只能查看；IoT 操作员可以控制本公司设备；IoT 管理�
 
 旧版原始记录与均值混存结构不再兼容。正式切换前备份；启用明确的 V2 历史清理标记后，标准升级会清除本模块旧温湿度记录与告警，不清除 HR 考勤或其他业务记录。
 
+升级前必须处理重复的网关编号及缺失、矛盾的公司归属。遇到这些问题，升级会提前停止，不会为了继续升级而自动归档具名探头。
+
 ### 继电器
 
 “指令下发记录”区分已入队、已发送、设备已确认和过期。网页提交成功不等于设备已经动作。
+
+V2 控制器与 1.8.x 固件的倒计时协议不兼容，不能只升级服务器。需先使用隔离控制器和非关键测试设备完成验证，再安排控制器、中间件及固件的配套切换。
 
 明确“关闭”会取消延时并锁止自动开启；下一次明确“开启”或“开始延时”才解除锁止。重启与最大开启时长保护也采用安全关闭。紫外灯等设备勾选“安全关键设备”并设置有限的最大连续开启时长。软件不能代替门联锁、急停开关和现场验证。
 
@@ -40,6 +44,8 @@ Configure country, timezone, private routes, OTA certificate trust and retention
 
 Viewers, operators and managers have separate privileges. Register gateways before ingestion. Binary source IPs must map to known company gateways; JSON gateways require their own token. Probe identities are scoped to gateways.
 
+Resolve duplicate gateway identities and missing or inconsistent company ownership before upgrading. Migration stops rather than silently archiving named probes. V2 control requires compatible firmware; 1.8.x cannot be left operating under a backend-only V2 upgrade. Validate an isolated controller/device pair before a coordinated cutover.
+
 Raw observations are immutable and keep collection-time company/location snapshots. Use meaningful probe names, then select raw, hourly or daily chart views. Oversized raw requests require narrowing the range or using an aggregate.
 
 When both metrics are selected, temperature uses the left axis and humidity the right. Hour labels include the date, 24-hour time and UTC offset. Cumulative, stacked and pie displays are not offered for these measurements; use the pivot for extrema and sample counts.
@@ -57,6 +63,8 @@ V2 is a breaking release. Back up first and explicitly authorize removal of old 
 ตั้งค่าประเทศ เขตเวลา เครือข่ายภายใน ใบรับรอง OTA และระยะเวลาเก็บข้อมูลที่บริษัท ค่า 0 หมายถึงเก็บข้อมูลดิบโดยไม่ลบอัตโนมัติ ค่ามากกว่า 0 อนุญาตให้ลบข้อมูลที่เกินระยะเวลาที่กำหนด ยกเว้นเซ็นเซอร์ที่ตั้งให้เก็บประวัติทั้งหมด
 
 แยกสิทธิ์ผู้ดูข้อมูล ผู้ควบคุมอุปกรณ์ และผู้ดูแลระบบ ต้องลงทะเบียนเกตเวย์กับบริษัทก่อนรับข้อมูล ระบุ IP ต้นทางสำหรับเกตเวย์ไบนารี และโทเคนเฉพาะสำหรับเกตเวย์ JSON หมายเลขเซ็นเซอร์ซ้ำกันได้เมื่ออยู่คนละเกตเวย์
+
+ก่อนอัปเกรด ต้องแก้หมายเลขเกตเวย์ที่ซ้ำกัน รวมถึงบริษัทที่ยังไม่ได้ระบุหรือไม่ตรงกัน ระบบจะหยุดการอัปเกรดแทนการเก็บเซ็นเซอร์เข้าคลังโดยอัตโนมัติ ตัวควบคุม V2 ใช้โปรโตคอลจับเวลาที่ไม่เข้ากับเฟิร์มแวร์ 1.8.x จึงห้ามอัปเกรดเฉพาะเซิร์ฟเวอร์ ต้องทดสอบตัวควบคุมกับอุปกรณ์ในระบบแยกก่อน แล้วจึงวางแผนเปลี่ยนตัวควบคุม บริดจ์ และเฟิร์มแวร์พร้อมกัน
 
 ข้อมูลดิบที่บันทึกแล้วแก้ไขไม่ได้ และเก็บบริษัทกับตำแหน่ง ณ เวลาที่อ่านค่า ตั้งชื่อเซ็นเซอร์ให้สื่อถึงอุปกรณ์หรือสถานที่ กราฟเลือกดูข้อมูลดิบ ค่าเฉลี่ยรายชั่วโมง หรือรายวันได้ หากข้อมูลดิบเกิน 10000 รายการ ระบบจะแจ้งให้ลดช่วงเวลาหรือเลือกค่าเฉลี่ย
 

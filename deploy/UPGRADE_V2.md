@@ -1,18 +1,20 @@
 # V2 Cutover Gate
 
-This runbook is preparation, not authorization to deploy to the production database.
+This runbook is preparation. Deployment authorization remains conditional on every release gate passing.
+
+V1 firmware is not compatible with V2 control semantics. In particular, 1.8.x does not implement `delay_start`, command expiry or monotonic command sequences. Do not deploy the backend alone and leave 1.8.x devices operating under it, or assume that a successful MQTT publish proves compatibility.
 
 ## Required Sequence
 
-1. Record exact current Odoo/bridge/firmware versions, gateway identities, source addresses, company ownership, network endpoints and hardware profiles. Export configuration through authorized Odoo access; never put secrets in Git.
+1. Record exact current Odoo/bridge/firmware versions, gateway identities, source addresses, company ownership, network endpoints and hardware profiles. `tools/v2_release_preflight.py` is a read-only Odoo-shell inventory; it does not authorize a release. Resolve duplicate gateway identities, unowned active gateways and inconsistent active probe ownership through reviewed V1 ORM operations before upgrading. Never infer every company's ownership from a default company or changing public IP. Export configuration through authorized Odoo access; never put secrets in Git.
 2. Back up and verify restoration of the production database, filestore, module source, bridge executable/configuration and firmware inventory. Keep backups in the approved protected location.
-3. Validate the complete candidate on a fresh isolated database and a V1-to-V2 upgrade fixture. Disable cron, outgoing integrations and real device commands. Use alternate loopback ports even with Odoo `--no-http` because test mode may bind HTTP.
-4. Stop only the affected ingestion paths during the approved cutover window. Archive the V1 JSONL queue. Configure a new private V2 outbox directory; do not feed old messages with fabricated timestamps into V2.
+3. Validate the complete candidate on a fresh isolated database and a V1-to-V2 upgrade fixture. Disable cron, outgoing integrations and real device commands. Use alternate loopback ports even with Odoo `--no-http` because test mode may bind HTTP. Provision a noncritical physical unit for each board profile against an isolated V2 controller/broker, and validate GPIO polarity, boot/power loss, timer expiry, OFF, replay, watchdog and private/public recovery before any production cutover.
+4. Plan a coordinated backend/bridge/firmware maintenance window with device operators. Verify safe physical output states and isolate hazardous loads; software-reported OFF is not proof of electrical isolation. Do not leave incompatible or unreachable units under the V2 controller. Stop only the affected ingestion paths. Archive the V1 JSONL queue. Configure a new private V2 outbox directory; do not feed old messages with fabricated timestamps into V2.
 5. Through Odoo ORM set `iot_control_center.v2_discard_monitoring_history` to `true` only after confirming the backup. The standard pre-migration then deletes only module TH history/alerts and removes the obsolete timestamp identity index. Other business history is outside this authorization.
-6. Run the standard module upgrade. Register source addresses and company gateways. Review archived inconsistent legacy probes; create new identities where needed instead of forcing cross-company reassignment.
+6. Run the standard module upgrade. The migration checks gateway identities and ownership before deleting history; it refuses inconsistent active probes instead of silently archiving them. Register the reviewed stable source addresses or JSON gateway credentials before resuming ingestion. Preserve meaningful probe names and locations; use new identities when a genuine company transfer requires them.
 7. Deploy the matching bridge with protected directory permissions and authenticated APIs. Verify invalid events are preserved as rejected, transient errors remain queued, and receipt IDs survive retry/restart. Provision and verify OpenWrt SSH host keys.
-8. Provision OTA certificate trust and stage firmware 2.0.0 on a noncritical physical test unit for each supported board profile. Test boot, GPIO polarity, power loss, timer expiry, manual OFF, replay, watchdog and private/public recovery with actual hardware before fleet rollout.
-9. Schedule the fleet rollout separately. New firmware must not be assumed tested on every relay merely because a shared build succeeds. Verify device-reported version, configuration revision and actual electrical state.
+8. Provision the already validated OTA certificate trust and deploy the tested firmware/controller pair within the coordinated window. Firmware 2.0.0 must not be assumed tested on every relay merely because a shared build succeeds.
+9. Verify each device-reported version, configuration revision and actual electrical state before re-enabling its load or schedules. Keep inaccessible or unverified equipment isolated; report remaining units explicitly rather than claiming full fleet completion.
 
 ## Rollback
 
