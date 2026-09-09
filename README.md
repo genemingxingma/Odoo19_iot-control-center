@@ -3,6 +3,13 @@
 Company-isolated environmental monitoring, relay control, attendance and OpenWrt management.
 Production release: Odoo `19.0.2.0.4`, bridge protocol `2`, relay firmware `2.0.2`.
 
+Prepared UI update `19.0.2.0.5`: relay cards display the existing location detail
+below the name without a heading, and the list always displays that column beside
+the name. Empty card details are omitted and long text wraps. Native isolated
+validation passed 72 tests on 2026-09-09; this UI update has not been deployed to
+production. No relay control, firmware, gateway routing or data migration changes
+are included.
+
 Archived relay identities remain quarantined when retained or late reports arrive. Pending commands are cancelled instead of being dispatched to archived or unbound devices.
 
 **2.0.1 remains quarantined.** Firmware 2.0.2 fixes the retained-schedule stack failure and passed both board-profile canaries. All 11 online relays passed serial upgrade, restoration and bounded fleet observation; two long-offline devices remain archived pending an onsite upgrade. See [the 2.0.2 hardware validation](deploy/RELAY_2_0_2_VALIDATION_2026-09-06.md) and [production acceptance](deploy/PRODUCTION_V2_2026-09-06.md).

@@ -2,6 +2,10 @@
 
 ## 中文
 
+### 继电器位置详情（19.0.2.0.5）
+
+继电器卡片在设备名称下直接显示已填写的位置详情，不显示“位置详情”标题；未填写时不显示空行，长内容自动换行。列表将“位置详情”固定显示在设备名称右侧，便于直接识别设备，无需展开表单或手动添加列。内容沿用设备表单中已有的位置详情及其翻译，不修改开关、定时或固件设置。
+
 生产服务器现已安装 V2 模块 `19.0.2.0.4`，发布验收记录见 `deploy/PRODUCTION_V2_2026-09-06.md`。2.0.1 固件保持隔离；2.0.2 已修复定时配置处理问题，并通过两种板型的开关、保护和倒计时测试。11 台在线继电器已逐台升级、恢复原状态并通过短时联合验收；另有两台长期离线设备保持归档，待现场升级。固件测试记录见 `deploy/RELAY_2_0_2_VALIDATION_2026-09-06.md`。
 
 ### 网关公网与内网切换
@@ -70,6 +74,10 @@ OpenWrt 首次连接前由管理员核实并安装 SSH 主机密钥。心跳最�
 
 ## English
 
+### Relay Location Details (19.0.2.0.5)
+
+Relay cards show the existing location detail directly below the device name, without a "Location Detail" heading. Empty details are omitted and long text wraps. The list always shows the Location Detail column beside the device name. Values and translations come from the existing device form; relay state, schedules and firmware settings are unchanged.
+
 ### Archived Device Protection (19.0.2.0.2)
 
 Retained or late reports do not rediscover archived relays. Commands still queued when a device is archived are cancelled. Keep offline legacy devices archived until an administrator upgrades and verifies them before returning them to service.
@@ -113,6 +121,10 @@ OpenWrt requires pre-verified SSH host keys. Heartbeats use bounded concurrency/
 V2 is a breaking release. Back up first and explicitly authorize removal of old module temperature/humidity observations and alerts. HR attendance and unrelated business data are not part of this reset. Do not upgrade production or real devices on the strength of compilation alone.
 
 ## ภาษาไทย
+
+### รายละเอียดตำแหน่งรีเลย์ (19.0.2.0.5)
+
+การ์ดรีเลย์แสดงรายละเอียดตำแหน่งใต้ชื่ออุปกรณ์โดยไม่แสดงหัวข้อ หากไม่ได้กรอกจะไม่เว้นแถวว่าง และข้อความยาวจะขึ้นบรรทัดใหม่ มุมมองรายการแสดงคอลัมน์รายละเอียดตำแหน่งถัดจากชื่ออุปกรณ์เสมอ ข้อมูลและคำแปลใช้ค่าที่กรอกไว้ในแบบฟอร์มอุปกรณ์ โดยไม่เปลี่ยนสถานะเปิดปิด ตารางเวลา หรือการตั้งค่าเฟิร์มแวร์
 
 ### การป้องกันอุปกรณ์ที่เก็บถาวร (19.0.2.0.2)
 

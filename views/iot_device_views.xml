@@ -6,11 +6,11 @@
         <field name="arch" type="xml">
             <list create="0" class="iot_list" decoration-muted="not online">
                 <field name="name"/>
+                <field name="location_detail"/>
                 <field name="switch_id_display" string="Switch ID" optional="hide"/>
                 <field name="company_id" groups="base.group_multi_company" optional="hide"/>
                 <field name="department_id" optional="hide"/>
                 <field name="location_id"/>
-                <field name="location_detail" optional="hide"/>
                 <field name="relay_state" string="Confirmed State" widget="badge" decoration-success="relay_state == 'on'" decoration-info="relay_state == 'off'" decoration-warning="relay_state == 'unknown'"/>
                 <field name="delay_active" invisible="1"/>
                 <field name="delay_remaining_minutes" string="Delay Remaining" widget="delay_countdown"/>
@@ -48,6 +48,7 @@
                 <field name="relay_command_state"/>
                 <field name="desired_relay_state"/>
                 <field name="location_id"/>
+                <field name="location_detail"/>
                 <field name="last_seen"/>
                 <templates>
                     <t t-name="card">
@@ -57,6 +58,7 @@
                                 <span t-if="record.online.raw_value" class="iot_status_pill">Connected</span>
                                 <span t-else="" class="iot_status_pill iot_status_pill_off">No Recent Contact</span>
                             </div>
+                            <div t-if="record.location_detail.raw_value" class="iot_relay_location_detail"><field name="location_detail"/></div>
                             <div class="iot_device_meta"><field name="location_id"/></div>
                             <div class="iot_device_meta">
                                 <span>Switch ID: </span><field name="switch_id_display"/>
