@@ -18,7 +18,7 @@ class IoTTHReading(models.Model):
     sensor_code = fields.Char(string="Sensor Channel", readonly=True)
     node_id = fields.Char(string="Node ID", readonly=True)
     sensor_location_id = fields.Many2one("stock.location", string="Sensor Location", readonly=True)
-    sensor_location_detail = fields.Char(string="Location Detail", readonly=True)
+    sensor_location_detail = fields.Char(string="Location Detail", readonly=True, translate=False)
     sensor_group_id = fields.Many2one("iot.th.sensor.group", string="Sensor Group", readonly=True)
     reported_at = fields.Datetime(required=True, index=True)
     received_at = fields.Datetime(required=True, default=fields.Datetime.now, readonly=True)

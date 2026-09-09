@@ -3,9 +3,12 @@
 This runbook is preparation. Deployment authorization remains conditional on every release gate passing.
 
 For the completed authorized deployment, see [production acceptance](PRODUCTION_V2_2026-09-06.md).
-V1 upgrades must include the 19.0.2.0.4 end-migration for the legacy JSON location
-snapshot column and a real gateway-frame write/replay check after the complete
-upgrade, not only an empty-history or standalone conversion test.
+Upgrades must include the 19.0.2.0.7 pre-migration, which retires the legacy
+location snapshot translation metadata and Odoo 19's in-memory upgrade guard.
+The earlier 19.0.2.0.4 column-only conversion is insufficient for later upgrades.
+Require two consecutive native upgrades of a restored legacy database and a real
+gateway-frame write/replay check, not only empty-history or standalone conversion
+tests. See [the corrective release](PRODUCTION_RELAY_DETAIL_2026-09-09.md).
 
 V1 firmware is not compatible with V2 control semantics. In particular, 1.8.x does not implement `delay_start`, command expiry or monotonic command sequences. Do not deploy the backend alone and leave 1.8.x devices operating under it, or assume that a successful MQTT publish proves compatibility.
 

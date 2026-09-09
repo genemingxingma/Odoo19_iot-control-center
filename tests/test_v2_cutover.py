@@ -1,6 +1,7 @@
 """Exercise the pre-migration against isolated legacy-shaped temporary tables."""
 import importlib.util
 from pathlib import Path
+from types import SimpleNamespace
 
 from odoo.tests import tagged
 from odoo.tests.common import TransactionCase
@@ -60,6 +61,33 @@ class TestV2Cutover(TransactionCase):
 
 @tagged("post_install", "-at_install")
 class TestV2SnapshotColumnMigration(TransactionCase):
+    def test_legacy_translation_metadata_and_upgrade_cache_are_retired(self):
+        path = Path(__file__).parents[1] / "migrations/19.0.2.0.7/pre-migration.py"
+        spec = importlib.util.spec_from_file_location("iot_snapshot_metadata_cutover", path)
+        migration = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(migration)
+        self.cr.execute("CREATE TEMP TABLE iot_th_reading (id int, sensor_location_detail jsonb) ON COMMIT DROP")
+        self.cr.execute("CREATE TEMP TABLE ir_model_fields (model text, name text, translate text) ON COMMIT DROP")
+        self.cr.execute("INSERT INTO ir_model_fields VALUES ('iot.th.reading', 'sensor_location_detail', 'standard'), ('iot.th.sensor', 'location_detail', 'standard')")
+        self.cr.execute("""INSERT INTO iot_th_reading VALUES (1, '{"en_US":"Cold room","th_TH":"Room TH"}'), (2, '{"th_TH":"Room TH"}'), (3, NULL)""")
+        cache = {'iot.th.reading.sensor_location_detail': 'standard', 'iot.th.sensor.location_detail': 'standard'}
+        registry = SimpleNamespace(_database_translated_fields=cache)
+        migration._migrate_snapshot(self.cr, registry)
+        migration._migrate_snapshot(self.cr, registry)
+        self.cr.execute("SELECT sensor_location_detail FROM iot_th_reading ORDER BY id")
+        self.assertEqual(self.cr.fetchall(), [('Cold room',), ('Room TH',), (None,)])
+        self.cr.execute("SELECT model, translate FROM ir_model_fields ORDER BY model")
+        self.assertEqual(self.cr.fetchall(), [('iot.th.reading', None), ('iot.th.sensor', 'standard')])
+        self.assertEqual(cache, {'iot.th.sensor.location_detail': 'standard'})
+
+    def test_snapshot_registry_metadata_and_column_remain_untranslated(self):
+        field = self.env['iot.th.reading']._fields['sensor_location_detail']
+        self.assertFalse(field.translate)
+        metadata = self.env['ir.model.fields']._get('iot.th.reading', 'sensor_location_detail')
+        self.assertFalse(metadata.translate)
+        self.cr.execute("SELECT atttypid::regtype::text FROM pg_attribute WHERE attrelid='iot_th_reading'::regclass AND attname='sensor_location_detail' AND NOT attisdropped")
+        self.assertEqual(self.cr.fetchone()[0], 'character varying')
+
     def test_translated_legacy_column_becomes_writable_text_without_losing_labels(self):
         path = Path(__file__).parents[1] / "migrations/19.0.2.0.4/end-migration.py"
         spec = importlib.util.spec_from_file_location("iot_v2_snapshot_cutover", path)
