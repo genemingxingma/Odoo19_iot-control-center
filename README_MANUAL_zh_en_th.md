@@ -2,11 +2,11 @@
 
 ## 中文
 
-### 继电器位置说明（19.0.2.0.7）
+### 继电器位置说明（19.0.2.0.8）
 
-继电器卡片在设备名称下直接显示已填写的位置说明，不显示字段标题；未填写时不显示空行，长内容自动换行。列表将“位置说明”固定显示在设备名称右侧，便于直接识别设备，无需展开表单或手动添加列。内容沿用设备表单中已有的位置说明及其翻译，不修改开关、定时或固件设置。
+继电器卡片在设备名称下直接显示位置说明，不显示字段标题。位置说明固定预留两行，房间固定预留一行；未填写时保留空白占位，确保下方状态区和按钮位置一致。设备名称保持一行，超长位置说明最多显示两行；电脑上悬停可查看全文，手机上打开设备表单查看。列表仍将“位置说明”固定显示在名称右侧。内容沿用设备表单及其翻译，不修改开关、定时或固件设置。
 
-2026-09-09 已发布至生产系统，当前模块版本为 `19.0.2.0.7`，验收记录见 `deploy/PRODUCTION_RELAY_DETAIL_2026-09-09.md`。本次保留现有温湿度历史，并清理旧版位置快照的翻译标记，防止后续升级再次把文本列变成 JSON。卡片空白表示该设备尚未填写位置说明，不代表设备故障。
+2026-09-09 已发布至生产系统，当前模块版本为 `19.0.2.0.8`，布局验收见 `deploy/PRODUCTION_RELAY_LAYOUT_2026-09-09.md`。[桌面示例](docs/screenshots/relays-aligned-zh-desktop.png)和[手机示例](docs/screenshots/relays-aligned-zh-mobile.png)均使用合成数据。此前 `19.0.2.0.7` 的位置快照迁移修复继续保留，详见 `deploy/PRODUCTION_RELAY_DETAIL_2026-09-09.md`。本次不清理历史数据。空白占位表示尚未填写信息，不代表设备故障。
 
 首次 V2 生产切换安装的是 `19.0.2.0.4`，历史验收记录见 `deploy/PRODUCTION_V2_2026-09-06.md`。2.0.1 固件保持隔离；2.0.2 已修复定时配置处理问题，并通过两种板型的开关、保护和倒计时测试。11 台在线继电器已逐台升级、恢复原状态并通过短时联合验收；另有两台长期离线设备保持归档，待现场升级。固件测试记录见 `deploy/RELAY_2_0_2_VALIDATION_2026-09-06.md`。
 
@@ -76,11 +76,11 @@ OpenWrt 首次连接前由管理员核实并安装 SSH 主机密钥。心跳最�
 
 ## English
 
-### Relay Location Details (19.0.2.0.7)
+### Relay Location Details (19.0.2.0.8)
 
-Relay cards show the existing location detail directly below the device name, without a "Location Detail" heading. Empty details are omitted and long text wraps. The list always shows the Location Detail column beside the device name. Values and translations come from the existing device form; relay state, schedules and firmware settings are unchanged.
+Relay cards show the location detail below the name without a heading. The detail always reserves two lines and the room reserves one, even when empty, keeping the state panel and buttons aligned. Device names stay on one line and long details are limited to two lines. Hover for full text on desktop, or open the device form on mobile. The list keeps Location Detail beside the name. Values and translations use the existing device form; relay state, schedules and firmware settings are unchanged.
 
-Released to production on 2026-09-09 as `19.0.2.0.7`; see `deploy/PRODUCTION_RELAY_DETAIL_2026-09-09.md`. This release preserves existing environmental history and retires legacy snapshot translation metadata so subsequent upgrades cannot turn the text column back into JSON. A blank detail means it has not been filled in, not that the device has failed.
+Released to production on 2026-09-09 as `19.0.2.0.8`; see `deploy/PRODUCTION_RELAY_LAYOUT_2026-09-09.md` and the [synthetic desktop example](docs/screenshots/relays-aligned-en-desktop.png). The preceding `19.0.2.0.7` snapshot migration fix remains in place; see `deploy/PRODUCTION_RELAY_DETAIL_2026-09-09.md`. This layout release does not discard history. An empty slot means the detail has not been filled in, not that the device has failed.
 
 ### Archived Device Protection (19.0.2.0.2)
 
@@ -126,11 +126,11 @@ V2 is a breaking release. Back up first and explicitly authorize removal of old 
 
 ## ภาษาไทย
 
-### รายละเอียดตำแหน่งรีเลย์ (19.0.2.0.7)
+### รายละเอียดตำแหน่งรีเลย์ (19.0.2.0.8)
 
-เผยแพร่รุ่น `19.0.2.0.7` สู่ระบบใช้งานจริงเมื่อ 2026-09-09 ดูบันทึกตรวจรับที่ `deploy/PRODUCTION_RELAY_DETAIL_2026-09-09.md` รุ่นนี้เก็บประวัติอุณหภูมิและความชื้นเดิมไว้ และล้างสถานะการแปลของข้อมูลตำแหน่ง ณ เวลาที่บันทึก เพื่อป้องกันการอัปเกรดครั้งถัดไปเปลี่ยนคอลัมน์ข้อความกลับเป็น JSON ช่องรายละเอียดที่ว่างหมายถึงยังไม่ได้กรอกข้อมูล ไม่ใช่อุปกรณ์ขัดข้อง
+เผยแพร่รุ่น `19.0.2.0.8` สู่ระบบใช้งานจริงเมื่อ 2026-09-09 ดูบันทึกตรวจรับที่ `deploy/PRODUCTION_RELAY_LAYOUT_2026-09-09.md` พร้อม[ตัวอย่างหน้าจอคอมพิวเตอร์](docs/screenshots/relays-aligned-th-desktop.png)และ[โทรศัพท์](docs/screenshots/relays-aligned-th-mobile.png) ซึ่งใช้ข้อมูลจำลองทั้งหมด รุ่นนี้ไม่ลบประวัติและยังคงการแก้ไขข้อมูลตำแหน่งจากรุ่น `19.0.2.0.7` ช่องว่างหมายถึงยังไม่ได้กรอกข้อมูล ไม่ใช่อุปกรณ์ขัดข้อง
 
-การ์ดรีเลย์แสดงรายละเอียดตำแหน่งใต้ชื่ออุปกรณ์โดยไม่แสดงหัวข้อ หากไม่ได้กรอกจะไม่เว้นแถวว่าง และข้อความยาวจะขึ้นบรรทัดใหม่ มุมมองรายการแสดงคอลัมน์รายละเอียดตำแหน่งถัดจากชื่ออุปกรณ์เสมอ ข้อมูลและคำแปลใช้ค่าที่กรอกไว้ในแบบฟอร์มอุปกรณ์ โดยไม่เปลี่ยนสถานะเปิดปิด ตารางเวลา หรือการตั้งค่าเฟิร์มแวร์
+การ์ดรีเลย์แสดงรายละเอียดตำแหน่งใต้ชื่ออุปกรณ์โดยไม่แสดงหัวข้อ โดยจองพื้นที่รายละเอียดไว้สองบรรทัดและห้องหนึ่งบรรทัดเสมอ แม้ไม่ได้กรอกข้อมูล เพื่อให้ส่วนสถานะและปุ่มอยู่ตรงกัน ชื่ออุปกรณ์แสดงหนึ่งบรรทัด ส่วนรายละเอียดแสดงไม่เกินสองบรรทัด บนคอมพิวเตอร์เลื่อนเมาส์ค้างเพื่อดูข้อความทั้งหมด หรือเปิดแบบฟอร์มอุปกรณ์บนโทรศัพท์ มุมมองรายการยังแสดงรายละเอียดตำแหน่งถัดจากชื่อ ข้อมูลและคำแปลมาจากแบบฟอร์มเดิม โดยไม่เปลี่ยนการเปิดปิด ตารางเวลา หรือเฟิร์มแวร์
 
 ### การป้องกันอุปกรณ์ที่เก็บถาวร (19.0.2.0.2)
 

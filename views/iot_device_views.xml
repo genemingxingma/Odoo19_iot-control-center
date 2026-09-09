@@ -54,12 +54,12 @@
                     <t t-name="card">
                         <div class="oe_kanban_card oe_kanban_global_click iot_device_card iot_relay_card">
                             <div class="iot_device_identity">
-                                <h3><field name="name"/></h3>
+                                <h3 t-att-title="record.name.value"><field name="name"/></h3>
                                 <span t-if="record.online.raw_value" class="iot_status_pill">Connected</span>
                                 <span t-else="" class="iot_status_pill iot_status_pill_off">No Recent Contact</span>
                             </div>
-                            <div t-if="record.location_detail.raw_value" class="iot_relay_location_detail"><field name="location_detail"/></div>
-                            <div class="iot_device_meta"><field name="location_id"/></div>
+                            <div class="iot_relay_location_detail" t-att-title="record.location_detail.value || ''"><field name="location_detail"/></div>
+                            <div class="iot_device_meta iot_relay_location" t-att-title="record.location_id.value || ''"><field name="location_id"/></div>
                             <div class="iot_device_meta">
                                 <span>Switch ID: </span><field name="switch_id_display"/>
                             </div>

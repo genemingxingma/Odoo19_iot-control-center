@@ -1,16 +1,22 @@
 # IoT Control Center V2 (Odoo 19)
 
 Company-isolated environmental monitoring, relay control, attendance and OpenWrt management.
-Production release: Odoo `19.0.2.0.7`, bridge protocol `2`, relay firmware `2.0.2`.
+Production release: Odoo `19.0.2.0.8`, bridge protocol `2`, relay firmware `2.0.2`.
 
-Released UI update `19.0.2.0.7`: relay cards display the existing location detail
+Released UI update `19.0.2.0.8`: relay cards display the existing location detail
 below the name without a heading, and the list always displays that column beside
-the name. Empty card details are omitted and long text wraps. This also retires
+the name. Cards always reserve two lines for the detail and one for the room,
+including empty values. Names and long labels are truncated without moving the
+state panel; desktop tooltips and the device form retain the full text.
+75 native tests and nine multilingual/responsive browser scenarios passed;
+all 11 production cards were measured as aligned. See [layout acceptance](deploy/PRODUCTION_RELAY_LAYOUT_2026-09-09.md).
+
+The preceding `19.0.2.0.7` release retires
 legacy temperature/humidity snapshot translation metadata so later upgrades do
 not revert the text column to JSON. Native validation passed 74 tests and two
 consecutive upgrades of a restored production clone. Production browser and live
 ingestion checks passed on 2026-09-09; see [release acceptance](deploy/PRODUCTION_RELAY_DETAIL_2026-09-09.md).
-Existing history, relay controls, firmware and gateway routes are preserved.
+Existing history, relay controls, firmware and gateway routes are preserved in both releases.
 
 Archived relay identities remain quarantined when retained or late reports arrive. Pending commands are cancelled instead of being dispatched to archived or unbound devices.
 

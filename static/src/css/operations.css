@@ -69,7 +69,13 @@
 .iot_sensor_readings small { color: #607068; }
 .iot_device_card .iot_toggle_group { margin-top: 16px; flex-wrap: wrap; gap: 4px; }
 .iot_relay_card { display: flex; flex-direction: column; height: 100%; }
-.iot_relay_card .iot_relay_location_detail { font-size: 16px; font-weight: 600; line-height: 1.45; color: #294b41; white-space: pre-wrap; overflow-wrap: anywhere; }
+.iot_relay_card .iot_device_identity h3 { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.iot_relay_card .iot_device_identity h3 .o_field_widget { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Keep metadata slots even when empty; long labels must not move the state panel. */
+.iot_relay_card .iot_relay_location_detail { flex: 0 0 auto; height: 2.9em; min-width: 0; font-size: 16px; font-weight: 600; line-height: 1.45; color: #294b41; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; white-space: pre-wrap; overflow-wrap: anywhere; }
+.iot_relay_card .iot_relay_location_detail .o_field_widget { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
+.iot_relay_card .iot_relay_location { flex: 0 0 auto; height: 1.5em; line-height: 1.5; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.iot_relay_card .iot_relay_location .o_field_widget { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin: 0; }
 .iot_relay_state_panel { background: #f2f6f3; border-radius: 8px; padding: 12px; margin: 16px 0 8px; }
 .iot_state_row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 5px 0; font-size: 12px; }
 .iot_state_row .o_field_widget { width: auto; margin: 0; }

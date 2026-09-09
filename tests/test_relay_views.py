@@ -26,8 +26,21 @@ class TestRelayLocationDetailViews(TransactionCase):
         details = arch.xpath(".//t[@t-name='card']//div[@class='iot_relay_location_detail']")
         self.assertEqual(len(details), 1)
         detail = details[0]
-        self.assertEqual(detail.get("t-if"), "record.location_detail.raw_value")
+        self.assertIsNone(detail.get("t-if"))
+        self.assertEqual(detail.get("t-att-title"), "record.location_detail.value || ''")
         self.assertEqual(len(detail.xpath("./field[@name='location_detail']")), 1)
         self.assertFalse("".join(detail.itertext()).strip())
         self.assertFalse(detail.xpath(".//label | .//*[@t-raw]"))
         self.assertIn("iot_device_identity", detail.getprevious().get("class"))
+
+    def test_card_keeps_room_slot_and_full_label_tooltips(self):
+        arch = self._view_arch("view_iot_device_kanban", "kanban")
+        detail = arch.xpath(".//t[@t-name='card']//div[@class='iot_relay_location_detail']")[0]
+        location = detail.getnext()
+        self.assertIn("iot_relay_location", location.get("class").split())
+        self.assertIsNone(location.get("t-if"))
+        self.assertEqual(location.get("t-att-title"), "record.location_id.value || ''")
+        self.assertEqual(len(location.xpath("./field[@name='location_id']")), 1)
+        self.assertEqual(len(location.getnext().xpath("./field[@name='switch_id_display']")), 1)
+        heading = detail.getprevious().find("h3")
+        self.assertEqual(heading.get("t-att-title"), "record.name.value")
