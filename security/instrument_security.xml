@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="rule_instrument_alarm_company" model="ir.rule"><field name="name">Instrument alarm company</field><field name="model_id" ref="model_iot_instrument_alarm"/><field name="domain_force">[('company_id','in',company_ids)]</field></record>
+    <record id="rule_instrument_company" model="ir.rule"><field name="name">Instrument company</field><field name="model_id" ref="model_iot_instrument"/><field name="domain_force">[('company_id','in',company_ids)]</field></record>
+    <record id="rule_instrument_command_company" model="ir.rule"><field name="name">Instrument command company</field><field name="model_id" ref="model_iot_instrument_command"/><field name="domain_force">[('company_id','in',company_ids)]</field></record>
+    <record id="rule_instrument_reading_company" model="ir.rule"><field name="name">Instrument reading company</field><field name="model_id" ref="model_iot_instrument_reading"/><field name="domain_force">[('company_id','in',company_ids)]</field></record>
+    <record id="rule_instrument_run_company" model="ir.rule"><field name="name">Instrument run company</field><field name="model_id" ref="model_iot_instrument_run_log"/><field name="domain_force">[('company_id','in',company_ids)]</field></record>
+    <record id="rule_instrument_recipe_company" model="ir.rule"><field name="name">Instrument program company</field><field name="model_id" ref="model_iot_instrument_recipe"/><field name="domain_force">[('company_id','in',company_ids)]</field></record>
+    <record id="rule_instrument_step_company" model="ir.rule"><field name="name">Instrument step company</field><field name="model_id" ref="model_iot_instrument_recipe_step"/><field name="domain_force">[('company_id','in',company_ids)]</field></record>
+    <record id="rule_instrument_release_company" model="ir.rule"><field name="name">Instrument firmware company</field><field name="model_id" ref="model_iot_instrument_release"/><field name="domain_force">[('company_id','in',company_ids)]</field></record>
+</odoo>

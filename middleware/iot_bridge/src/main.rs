@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 mod outbox;
-use outbox::DurableQueue;
+use outbox::{DurableQueue, QueueLane};
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -297,11 +297,13 @@ async fn main() -> anyhow::Result<()> {
         token: cfg.middleware_token.clone(),
     });
     let forward_queue = Arc::new(DurableQueue::new(PathBuf::from(cfg.queue_path.clone())).await?);
-    let queue_loop_forwarder = forwarder.clone();
-    let queue_loop_queue = forward_queue.clone();
-    tokio::spawn(async move {
-        run_forward_queue_loop(queue_loop_forwarder, queue_loop_queue).await;
-    });
+    for lane in QueueLane::ALL {
+        let queue_loop_forwarder = forwarder.clone();
+        let queue_loop_queue = Arc::new(forward_queue.for_lane(lane));
+        tokio::spawn(async move {
+            run_forward_queue_loop(queue_loop_forwarder, queue_loop_queue, lane).await;
+        });
+    }
 
     let mqtt_topic_root = cfg.mqtt_topic_root.clone();
     let mqtt_forwarder = forwarder.clone();
@@ -1021,10 +1023,15 @@ async fn forward_or_queue(_forwarder: &Forwarder, queue: &DurableQueue, path: &s
     }
 }
 
-async fn run_forward_queue_loop(forwarder: Arc<Forwarder>, queue: Arc<DurableQueue>) {
+async fn run_forward_queue_loop(
+    forwarder: Arc<Forwarder>,
+    queue: Arc<DurableQueue>,
+    lane: QueueLane,
+) {
     loop {
         match queue.batch(200).await {
             Ok(items) => {
+                let mut retried = 0;
                 for item in items {
                     match forwarder.post_json(&item.path, &item.body).await {
                         Ok(()) => {
@@ -1037,8 +1044,17 @@ async fn run_forward_queue_loop(forwarder: Arc<Forwarder>, queue: Arc<DurableQue
                                 error!("dead-letter move failed: {err}");
                             }
                         }
-                        Err(_) => {}
+                        Err(_) => {
+                            retried += 1;
+                        }
                     }
+                }
+                if retried > 0 {
+                    // Do not log event bodies, headers, tokens or signed URLs.
+                    warn!(
+                        ?lane,
+                        retried, "ingest receipts pending; durable events retained for retry"
+                    );
                 }
             }
             Err(err) => error!("outbox read failed: {err}"),
@@ -2344,6 +2360,77 @@ fn sanitize_client_id(value: &str) -> String {
 #[cfg(test)]
 mod receipt_tests {
     use super::*;
+
+    #[tokio::test]
+    async fn slow_sensor_endpoint_does_not_block_relay_worker() -> anyhow::Result<()> {
+        let listener = TcpListener::bind("127.0.0.1:0").await?;
+        let address = listener.local_addr()?;
+        let relay_route = "/iot_control_center/internal/mqtt_ingest";
+        let sensor_route = "/iot_control_center/internal/th_ingest_binary";
+        let app = Router::new()
+            .route(
+                sensor_route,
+                post(|| async {
+                    tokio::time::sleep(Duration::from_secs(10)).await;
+                    StatusCode::SERVICE_UNAVAILABLE
+                }),
+            )
+            .route(
+                relay_route,
+                post(|Json(body): Json<Value>| async move {
+                    Json(serde_json::json!({"ok":true,"event_id":body["event_id"]}))
+                }),
+            );
+        let server = tokio::spawn(async move { axum::serve(listener, app).await });
+        let forwarder = Arc::new(Forwarder {
+            http: Client::builder()
+                .no_proxy()
+                .timeout(Duration::from_secs(2))
+                .build()?,
+            odoo_base_url: format!("http://{address}"),
+            token: String::new(),
+        });
+        let root = std::env::temp_dir().join(format!(
+            "iot-lane-http-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)?
+                .as_nanos()
+        ));
+        let queue = DurableQueue::new(root.clone()).await?;
+        let sensor = queue.enqueue(sensor_route, &serde_json::json!({})).await?;
+        let relay = queue.enqueue(relay_route, &serde_json::json!({})).await?;
+        let slow = tokio::spawn(run_forward_queue_loop(
+            forwarder.clone(),
+            Arc::new(queue.for_lane(QueueLane::Environment)),
+            QueueLane::Environment,
+        ));
+        let fast = tokio::spawn(run_forward_queue_loop(
+            forwarder,
+            Arc::new(queue.for_lane(QueueLane::Relay)),
+            QueueLane::Relay,
+        ));
+        let relay_path = root.join("pending").join(format!("{relay}.json"));
+        let outcome = tokio::time::timeout(Duration::from_secs(1), async {
+            while relay_path.exists() {
+                tokio::time::sleep(Duration::from_millis(10)).await;
+            }
+        })
+        .await;
+        slow.abort();
+        fast.abort();
+        server.abort();
+        let _ = slow.await;
+        let _ = fast.await;
+        let sensor_preserved = root.join("pending").join(format!("{sensor}.json")).exists();
+        tokio::fs::remove_dir_all(root).await?;
+        assert!(
+            outcome.is_ok(),
+            "Relay ACK delayed by unavailable sensor endpoint"
+        );
+        assert!(sensor_preserved, "An unacknowledged sensor event was lost");
+        Ok(())
+    }
 
     async fn response(status: StatusCode, reply: Value) -> anyhow::Result<()> {
         let listener = TcpListener::bind("127.0.0.1:0").await?;

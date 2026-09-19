@@ -1,7 +1,40 @@
 # IoT Control Center V2 (Odoo 19)
 
 Company-isolated environmental monitoring, relay control, attendance and OpenWrt management.
-Production release: Odoo `19.0.2.0.8`, bridge protocol `2`, relay firmware `2.0.2`.
+Production release: Odoo `19.0.2.2.0`, bridge protocol `2`, relay firmware `2.0.2`.
+
+Released on imytestth on 2026-09-19, `19.0.2.2.0` completes the buffer-heater and array-washer workspaces,
+acknowledged device-scoped HTTPS commands, hourly temperature analysis and run
+logs, washer program authoring, release revisions and authoritative catalog sync.
+The ESP8266/ESP32 firmware, signed OTA/SD packaging and TJC8048X550 screen
+project are under `firmware/instruments`. The platform and bridge are deployed;
+instrument firmware remains a **hardware-unaccepted candidate**, not a field release.
+**Source correction (2026-09-19):** the newly supplied `hj_heating.tar.gz`
+confirms a single DS18B20 on GPIO14, active-high heat on GPIO16 and SSD1306
+128x64 at 0x3C. The new profile is `heater-esp12s-ds18b20-v1`; all previous
+dual-channel/NTC heater profiles remain incompatible. The 4MB candidate builds,
+but physical Flash capacity, probe ROM, output circuit and first-install safety
+acceptance must still be verified. The heater interface reports
+`heater-control-v1`, permits platform settings/stop/OTA, and deliberately rejects
+remote start; SW2 remains the local heating-enable control.
+Relay receipt lanes, replay freshness and overview scrolling fixes are included
+in this combined release. Startup home/drain, local multi-program selection and
+explicit wash-cycle counts were unfinished at that release. They are now in the
+USB-tested `3.4.0-rc3` candidate, together with touchscreen Wi-Fi entry and
+[authoritative offline program synchronization](docs/WASHER_PROGRAM_SYNC_20260919.md).
+Three programs per page is pagination, not a three-program storage limit.
+The production platform supplies the complete released company catalog; it
+automatically prepends one safe homing step without cluttering the authored
+program. One ESP32 and its TJC screen have been flashed with actuator power
+isolated. The darker blue/white screen uses light-blue secondary buttons rather
+than white-on-white controls; commissioning gates remain.
+See [USB test evidence and remaining gates](docs/WASHER_USB_TEST_20260919.md).
+See [production acceptance and unresolved items](deploy/PRODUCTION_COMBINED_2026-09-19.md)
+and the [current multilingual user guide](docs/IOT_19_0_2_1_1_USER_GUIDE.md).
+See [corrected hardware and key definitions](docs/HEATER_ESP12S_HARDWARE_20260917.md).
+See [commissioning and limitations](docs/INSTRUMENTS_V3_COMMISSIONING.md).
+The [current candidate validation record](docs/INSTRUMENTS_V3_3_VALIDATION_20260917.md)
+separates compiler/native-test results from outstanding physical acceptance.
 
 Released UI update `19.0.2.0.8`: relay cards display the existing location detail
 below the name without a heading, and the list always displays that column beside
@@ -37,7 +70,7 @@ The authorized production cutover includes the native HTTP ingestion fixes and a
 
 ## Operations
 
-Start with **Overview** for company-scoped priorities and four workspaces. The overview never sends relay commands. Device contact, confirmed output state and attendance matching are shown separately. Probe cards show meaningful names, latest values and direct trend links. See [UI and attendance validation](deploy/UI_ATTENDANCE_VALIDATION_2026-09-06.md).
+Start with **Overview** for company-scoped priorities and six workspaces. The overview never sends relay commands. Device contact, confirmed output state and attendance matching are shown separately. Probe cards show meaningful names, latest values and direct trend links. See [UI and attendance validation](deploy/UI_ATTENDANCE_VALIDATION_2026-09-06.md).
 
 1. Assign viewers `IoT User`, device operators `IoT Operator`, and configuration administrators `IoT Manager`.
 2. Configure the company's country, internal WireGuard endpoint, port numbers, retention and trusted OTA certificate fingerprint.
@@ -82,7 +115,7 @@ python -m platformio run --project-dir firmware/esp8266_relay
 python tools/check_relay_stack.py
 ```
 
-Run Odoo tests with `--test-tags=/iot_control_center` in an isolated database, alternate loopback HTTP ports and `--max-cron-threads=0`. Test mode can bind HTTP despite `--no-http`; never share production ports.
+Run server-side Odoo tests only in an isolated database on **imytestth**, not imytestlan or the production business database. Use synthetic fixtures, separate addon/data directories, restricted egress, `--test-tags=/iot_control_center`, alternate loopback HTTP ports and `--max-cron-threads=0`. Test mode can bind HTTP despite `--no-http`; never share production ports.
 
 After changing fields or views, run `tools/export_i18n.py` through Odoo shell in the upgraded isolated database, then `python tools/check_i18n.py --write`. Native extraction is required for model references and `odoo-python` / `odoo-javascript` markers. Catalog presence alone is not proof of runtime translation.
 

@@ -191,6 +191,14 @@ class IoTMQTTMessage(models.Model):
                     device.write(vals)
                 self.with_context(**no_track_ctx).write(done_vals)
                 return
+            # A queue replay can arrive in arbitrary order. Guard the whole
+            # report, not only relay_state: ancillary reports also set last_seen.
+            device.flush_recordset()
+            self.env.cr.execute("SELECT id FROM iot_device WHERE id = %s FOR UPDATE", [device.id])
+            device.invalidate_recordset()
+            if device.last_seen and reported_at < device.last_seen:
+                self.with_context(**no_track_ctx).write(done_vals)
+                return
             if state in ("on", "off", "unknown"):
                 device._apply_state_report(state, reported_at=reported_at)
                 device._apply_command_ack(payload, reported_at=reported_at)
@@ -304,6 +312,10 @@ class IoTMQTTMessage(models.Model):
                     msg._process_one(preloaded_device=device_map.get(key))
                     self.env.flush_all()
             except Exception as exc:
+                if getattr(exc, "pgcode", None) in ("40001", "40P01"):
+                    # Retry the transaction instead of labelling a valid report
+                    # permanently erroneous after a concurrent device write.
+                    raise
                 msg.with_context(**no_track_ctx).write(
                     {
                         "state": "error",

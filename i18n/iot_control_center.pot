@@ -4,16 +4,26 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 19.0-20260817\n"
+"Project-Id-Version: Odoo Server 19.0+e-20260108\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-06 15:11+0000\n"
-"PO-Revision-Date: 2026-09-06 15:11+0000\n"
+"POT-Creation-Date: 2026-09-19 13:03+0000\n"
+"PO-Revision-Date: 2026-09-19 13:03+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: \n"
 "Plural-Forms: \n"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "192.168.10.15"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
+msgid "192.168.10.50, 192.168.10.51"
+msgstr ""
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_template__wifi24_ssid_count
@@ -156,6 +166,11 @@ msgstr ""
 
 #. module: iot_control_center
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_kanban
+msgid "<span>Schedule Execution: </span>"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_kanban
 msgid "<span>Switch ID: </span>"
 msgstr ""
 
@@ -187,6 +202,13 @@ msgstr ""
 msgid ""
 "A recent heartbeat confirms terminal contact. Review employee mappings and "
 "punch errors to confirm attendance was created correctly."
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,help:iot_control_center.field_iot_instrument_recipe__device_label
+msgid ""
+"A short Latin-character label for the GB2312 instrument screen. The program "
+"name in Odoo may use any language."
 msgstr ""
 
 #. module: iot_control_center
@@ -275,6 +297,11 @@ msgid ""
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__acknowledged_at
+msgid "Acknowledged At"
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__action_id
 msgid "Action"
 msgstr ""
@@ -293,6 +320,8 @@ msgstr ""
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_department__active
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device__active
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device_group__active
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__active
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__active
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_location__active
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__active
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_firmware__active
@@ -348,6 +377,11 @@ msgid ""
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.constraint,message:iot_control_center.constraint_iot_instrument_alarm_event_unique
+msgid "Alarm already received."
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__alert_count
 msgid "Alert Count"
 msgstr ""
@@ -371,6 +405,11 @@ msgid ""
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_command__state__applied
+msgid "Applied"
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_openwrt_job__job_type__apply_template
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_openwrt_ap_form
 msgid "Apply Template"
@@ -389,6 +428,20 @@ msgid "Archive the probe and register a new identity when moving companies."
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__kind__washer
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_release__kind__washer
+msgid "Array Washer"
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_control_board.py:0
+#: model:ir.actions.act_window,name:iot_control_center.action_array_washers
+#: model:ir.ui.menu,name:iot_control_center.menu_array_washers
+msgid "Array Washers"
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_attendance_device__message_attachment_count
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device__message_attachment_count
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__message_attachment_count
@@ -397,6 +450,7 @@ msgstr ""
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_command__attempts
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__attempts
 msgid "Attempts"
 msgstr ""
 
@@ -497,6 +551,34 @@ msgid "Auto Alternate In/Out"
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__control_inhibited
+msgid "Automatic ON Blocked"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__schedule_execution_state__blocked
+msgid "Automatic ON blocked"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_form
+msgid ""
+"Automatic ON is blocked on the device. A synchronized schedule does not "
+"release this lock. Check the equipment before explicitly enabling it."
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__catalog_sync_enabled
+msgid "Automatic Program Sync"
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Automatic program synchronization"
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__avg_humidity
 msgid "Avg Humidity"
 msgstr ""
@@ -527,6 +609,11 @@ msgstr ""
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__last_battery_voltage
 msgid "Battery Voltage (V)"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__binary
+msgid "Binary"
 msgstr ""
 
 #. module: iot_control_center
@@ -579,6 +666,31 @@ msgid "Board Name"
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__boot_id
+msgid "Boot"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__kind__heater
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_release__kind__heater
+msgid "Buffer Heater"
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_control_board.py:0
+#: model:ir.actions.act_window,name:iot_control_center.action_buffer_heaters
+#: model:ir.ui.menu,name:iot_control_center.menu_buffer_heaters
+msgid "Buffer Heaters"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_instrument_reading
+msgid "Buffer Temperature Observation"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_provision
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_bind_wizard_form
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_firmware_push_wizard_form
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_reset_uptime_wizard_form
@@ -588,6 +700,7 @@ msgstr ""
 
 #. module: iot_control_center
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_command__state__cancelled
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_command__state__cancelled
 msgid "Cancelled"
 msgstr ""
 
@@ -600,6 +713,12 @@ msgstr ""
 #. odoo-python
 #: code:addons/iot_control_center/models/iot_attendance_punch.py:0
 msgid "Cannot check out without an open attendance."
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__channel
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__channel
+msgid "Channel"
 msgstr ""
 
 #. module: iot_control_center
@@ -632,7 +751,13 @@ msgstr ""
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__checksum
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__checksum
 msgid "Checksum"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__chip_id
+msgid "Chip ID"
 msgstr ""
 
 #. module: iot_control_center
@@ -664,6 +789,16 @@ msgid "Client Summary"
 msgstr ""
 
 #. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_reading_search
+msgid "Clock Not Synchronized"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__schedule_execution_state__clock
+msgid "Clock not synchronized"
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_th_alert__state__closed
 msgid "Closed"
 msgstr ""
@@ -688,6 +823,7 @@ msgstr ""
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_command__command
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_command__command_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__command_ids
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__command
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_tree
 msgid "Command"
@@ -696,6 +832,7 @@ msgstr ""
 #. module: iot_control_center
 #: model:ir.actions.act_window,name:iot_control_center.action_iot_command
 #: model:ir.ui.menu,name:iot_control_center.menu_iot_command
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
 msgid "Command Delivery"
 msgstr ""
 
@@ -706,7 +843,24 @@ msgstr ""
 
 #. module: iot_control_center
 #: model:ir.model.constraint,message:iot_control_center.constraint_iot_command_command_unique
+#: model:ir.model.constraint,message:iot_control_center.constraint_iot_instrument_command_uid_unique
 msgid "Command identity must be unique."
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Command queued"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__state__uncommissioned
+msgid "Commissioning Required"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Commissioning and Firmware"
 msgstr ""
 
 #. module: iot_control_center
@@ -737,6 +891,14 @@ msgstr ""
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__company_id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__company_id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_upgrade_log__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__company_id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_location__company_id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__company_id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__company_id
@@ -842,6 +1004,7 @@ msgstr ""
 #. odoo-python
 #: code:addons/iot_control_center/models/iot_openwrt_ap.py:0
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_attendance_device__connection_state__online
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_kanban
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_kanban
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_sensor_kanban
 msgid "Connected"
@@ -886,6 +1049,13 @@ msgid "Control Cards"
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__fault_a__loop_stalled
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_alarm__fault__loop_stalled
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_reading__fault__loop_stalled
+msgid "Control Loop Stalled"
+msgstr ""
+
+#. module: iot_control_center
 #: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
 msgid ""
 "Controllers use the company WireGuard route first and fall back to public "
@@ -914,6 +1084,11 @@ msgid "Create Date"
 msgstr ""
 
 #. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_recipe_form
+msgid "Create New Revision"
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_attendance_device__create_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_attendance_punch__create_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_attendance_request__create_uid
@@ -928,6 +1103,15 @@ msgstr ""
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__create_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_upgrade_log__create_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_ingest_event__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_provision__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__create_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_location__create_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__create_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__create_uid
@@ -961,6 +1145,15 @@ msgstr ""
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__create_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_upgrade_log__create_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_ingest_event__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_provision__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__create_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_location__create_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__create_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__create_date
@@ -1116,8 +1309,23 @@ msgid "Device"
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__device_time_synced
+msgid "Device Clock Synchronized"
+msgstr ""
+
+#. module: iot_control_center
 #: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
 msgid "Device Connection Service"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Device Feedback"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__device_ip
+msgid "Device IP Address"
 msgstr ""
 
 #. module: iot_control_center
@@ -1133,6 +1341,13 @@ msgstr ""
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__device_serial
 msgid "Device Serial"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__fault_a__storage
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_alarm__fault__storage
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_reading__fault__storage
+msgid "Device Storage Error"
 msgstr ""
 
 #. module: iot_control_center
@@ -1178,6 +1393,18 @@ msgid "Device serial number used by ADMS/PUSH requests."
 msgstr ""
 
 #. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_form
+msgid ""
+"Device status is out of date. Displayed values are not a live confirmation."
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Device-reported fields cannot be changed manually."
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields,help:iot_control_center.field_iot_device__max_continuous_on_minutes
 msgid ""
 "Device-side safety cutoff. Set to 0 to disable. UV lamps should always have "
@@ -1219,6 +1446,15 @@ msgstr ""
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__display_name
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_upgrade_log__display_name
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_ingest_event__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_provision__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__display_name
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_location__display_name
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__display_name
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__display_name
@@ -1281,6 +1517,21 @@ msgstr ""
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__download_bytes_total
 msgid "Downloaded Bytes"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_recipe__state__draft
+msgid "Draft"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_recipe_step__kind__drain
+msgid "Drain"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__duration_s
+msgid "Duration S"
 msgstr ""
 
 #. module: iot_control_center
@@ -1389,6 +1640,10 @@ msgstr ""
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_ingest_event__event_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__event_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__event_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__event
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__event_id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__event_id
 msgid "Event"
 msgstr ""
@@ -1405,11 +1660,13 @@ msgstr ""
 
 #. module: iot_control_center
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_command__state__expired
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_command__state__expired
 msgid "Expired"
 msgstr ""
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_command__expires_at
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__expires_at
 msgid "Expires At"
 msgstr ""
 
@@ -1455,6 +1712,13 @@ msgid "Failed: %s"
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__fault
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__fault
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__state__fault
+msgid "Fault"
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__file
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_firmware__file
 msgid "File"
@@ -1462,14 +1726,34 @@ msgstr ""
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__filename
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__filename
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_firmware__filename
 msgid "Filename"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_recipe_step__kind__fill_a
+msgid "Fill Buffer A"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_recipe_step__kind__fill_b
+msgid "Fill Buffer B"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_recipe_form
+msgid ""
+"Filling duration controls pump-on time, not a measured volume. Calibrate "
+"filling and draining times on the actual device. Temperature is recorded "
+"only."
 msgstr ""
 
 #. module: iot_control_center
 #: model:ir.actions.act_window,name:iot_control_center.action_iot_firmware
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__firmware_id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_upgrade_log__firmware_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__firmware
 #: model:ir.ui.menu,name:iot_control_center.menu_iot_openwrt_firmware
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_tree
 msgid "Firmware"
@@ -1549,6 +1833,24 @@ msgstr ""
 #. odoo-python
 #: code:addons/iot_control_center/models/iot_firmware.py:0
 msgid "Firmware file must be a .bin file."
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.constraint,message:iot_control_center.constraint_iot_instrument_release_uid_unique
+msgid "Firmware identity must be unique."
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Firmware packages are immutable. Create a new release."
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid ""
+"Firmware updates require a connected, idle instrument with all outputs off."
 msgstr ""
 
 #. module: iot_control_center
@@ -1696,6 +1998,12 @@ msgid "HTTPS URL"
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__hardware
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__hardware
+msgid "Hardware"
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_attendance_device__has_message
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device__has_message
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__has_message
@@ -1725,6 +2033,56 @@ msgid "Heartbeat Interval (sec)"
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__fault_a
+msgid "Heater Alarm"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_instrument_alarm
+msgid "Heater Alarm Event"
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Heater Alarms"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__heater_output
+msgid "Heater Output"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid ""
+"Heater Output is the controller output, not independent proof of power or "
+"heat. Offline storage retains recent temperature samples and preserves "
+"alarms; overwritten samples are counted."
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__state__heating
+msgid "Heating"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__heating_enabled
+msgid "Heating Enabled"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__rise_window_s
+msgid "Heating Observation Time (s)"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Heating Protection"
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_template_ssid__hidden
 msgid "Hidden"
 msgstr ""
@@ -1744,9 +2102,19 @@ msgid ""
 msgstr ""
 
 #. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "History"
+msgstr ""
+
+#. module: iot_control_center
 #. odoo-python
 #: code:addons/iot_control_center/models/res_company.py:0
 msgid "History retention must be zero or a positive number of days."
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_recipe_step__kind__home
+msgid "Home Rotor"
 msgstr ""
 
 #. module: iot_control_center
@@ -1782,6 +2150,11 @@ msgstr ""
 #. module: iot_control_center
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_reading_search
 msgid "Hourly Average"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_reading_graph
+msgid "Hourly Temperature"
 msgstr ""
 
 #. module: iot_control_center
@@ -1828,6 +2201,15 @@ msgstr ""
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_upgrade_log__id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_ingest_event__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_provision__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_location__id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__id
@@ -1876,7 +2258,14 @@ msgid "Icon to indicate an exception activity."
 msgstr ""
 
 #. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Identity and device-reported fields cannot be changed manually."
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__relay_command_state__idle
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__state__idle
 msgid "Idle"
 msgstr ""
 
@@ -1930,6 +2319,43 @@ msgid "In Sync"
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__instrument_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__instrument_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_provision__instrument_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__instrument_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__instrument_id
+msgid "Instrument"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_instrument_command
+msgid "Instrument Command Delivery"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_instrument_provision
+msgid "Instrument Credential Registration"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_instrument_releases
+#: model:ir.ui.menu,name:iot_control_center.menu_instrument_firmware
+msgid "Instrument Firmware"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.constraint,message:iot_control_center.constraint_iot_instrument_uid_unique
+msgid "Instrument identity must be unique."
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__fault_a__no_rise
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_alarm__fault__no_rise
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_reading__fault__no_rise
+msgid "Insufficient Temperature Rise"
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__mqtt_route__primary
 msgid "Internal / Primary"
 msgstr ""
@@ -1962,6 +2388,12 @@ msgstr ""
 #. odoo-python
 #: code:addons/iot_control_center/models/iot_attendance_device.py:0
 msgid "Invalid attendance row. Check the terminal upload format and clock."
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Invalid program: %s"
 msgstr ""
 
 #. module: iot_control_center
@@ -2249,9 +2681,33 @@ msgid ""
 msgstr ""
 
 #. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid ""
+"Keep the existing thermal cutoff and mechanical safety interlocks. Do not "
+"commission hardware until wiring and output polarity have been verified."
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__key
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_template_ssid__key
 msgid "Key"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__kind
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__kind
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__kind
+msgid "Kind"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_instrument
+msgid "Laboratory Instrument"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_reading_search
+msgid "Last 24 Hours"
 msgstr ""
 
 #. module: iot_control_center
@@ -2322,6 +2778,7 @@ msgstr ""
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device__last_seen
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device_bind_wizard__candidate_last_seen
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__last_seen
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__last_seen
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_client__last_seen
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__last_seen
@@ -2331,6 +2788,11 @@ msgstr ""
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_attendance_user__last_seen_at
 msgid "Last Seen At"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__last_seq
+msgid "Last Seq"
 msgstr ""
 
 #. module: iot_control_center
@@ -2364,6 +2826,15 @@ msgstr ""
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__write_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_upgrade_log__write_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_ingest_event__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_provision__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__write_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_location__write_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__write_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__write_uid
@@ -2398,6 +2869,15 @@ msgstr ""
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__write_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_upgrade_log__write_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_ingest_event__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_provision__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__write_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_location__write_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__write_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__write_date
@@ -2420,6 +2900,29 @@ msgstr ""
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__last_upgrade_at
 msgid "Last Upgrade At"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_kanban
+msgid "Last contact:"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__temperature_a
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_alarm__channel__a
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_reading__channel__a
+msgid "Liquid Temperature"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__washer_temperature_valid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__temperature_valid
+msgid "Liquid Temperature Available"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_kanban
+msgid "Liquid Temperature<br/>"
 msgstr ""
 
 #. module: iot_control_center
@@ -2453,6 +2956,7 @@ msgstr ""
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device__location_detail
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device_bind_wizard__location_detail
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__location_detail
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__location_detail
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__location_detail
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__sensor_location_detail
@@ -2588,6 +3092,11 @@ msgid "Manage relay devices, schedules, and firmware updates."
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__manifest
+msgid "Manifest"
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_attendance_punch__source__manual
 msgid "Manual"
 msgstr ""
@@ -2646,8 +3155,15 @@ msgid "Maximum continuous ON time cannot be negative."
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__washer_temperature
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__temperature
+msgid "Measured Liquid Temperature"
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_attendance_punch__display_message
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_attendance_punch__message
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__message
 msgid "Message"
 msgstr ""
 
@@ -2747,6 +3263,11 @@ msgid "Min Temperature"
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__minimum_rise_c
+msgid "Minimum Temperature Rise (C)"
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__minute
 msgid "Minute"
 msgstr ""
@@ -2834,6 +3355,10 @@ msgstr ""
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device__name
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device_group__name
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__name
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_location__name
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__name
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_firmware__name
@@ -2843,6 +3368,11 @@ msgstr ""
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__name
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor_group__name
 msgid "Name"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Name this instrument"
 msgstr ""
 
 #. module: iot_control_center
@@ -2905,6 +3435,13 @@ msgid "Next Activity Type"
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__fault_a__none
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_alarm__fault__none
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_reading__fault__none
+msgid "No Active Alarm"
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_attendance_device__connection_state__unknown
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_attendance_device_search
 msgid "No Contact Yet"
@@ -2942,6 +3479,15 @@ msgid "No employee mapping found for this punch."
 msgstr ""
 
 #. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid ""
+"No level sensor is installed. Heating stops and an alarm latches if "
+"temperature rises by less than 1 C during 600 seconds of actual heating "
+"(default), or if the probe fails. Exactly 1 C does not trigger this alarm. "
+"Check liquid, probe placement and heater before restarting locally."
+msgstr ""
+
+#. module: iot_control_center
 #. odoo-python
 #: code:addons/iot_control_center/wizard/iot_firmware_push_wizard.py:0
 msgid "No matched devices for push."
@@ -2956,6 +3502,25 @@ msgstr ""
 #. module: iot_control_center
 #: model_terms:ir.actions.act_window,help:iot_control_center.action_iot_attendance_punch
 msgid "No punch records in this view"
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_control_board.py:0
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_kanban
+msgid "No recent contact"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid ""
+"No recent device contact. Displayed state may be stale; queued commands "
+"expire after two minutes."
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__schedule_execution_state__empty
+msgid "No schedule stored"
 msgstr ""
 
 #. module: iot_control_center
@@ -3019,6 +3584,11 @@ msgstr ""
 #. module: iot_control_center
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__firmware_upgrade_state__none
 msgid "None"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_kanban
+msgid "Not set"
 msgstr ""
 
 #. module: iot_control_center
@@ -3106,6 +3676,11 @@ msgid "Offline Failure Threshold"
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__dropped_observations
+msgid "Offline Samples Overwritten"
+msgstr ""
+
+#. module: iot_control_center
 #. odoo-python
 #: code:addons/iot_control_center/models/iot_control_board.py:0
 msgid "Offline access points"
@@ -3129,9 +3704,17 @@ msgid "On Since"
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields,help:iot_control_center.field_iot_instrument_recipe_step__cycles
+msgid ""
+"One cycle is forward plus reverse. Zero keeps timed washing; otherwise "
+"duration is cycles x 2 x reverse interval."
+msgstr ""
+
+#. module: iot_control_center
 #. odoo-python
 #: code:addons/iot_control_center/models/iot_control_board.py:0
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device__online
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__online
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__online
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__online
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__online
@@ -3143,6 +3726,12 @@ msgstr ""
 #: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_online_timeout_sec
 #: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
 msgid "Online Timeout (sec)"
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Only IoT managers can register instruments."
 msgstr ""
 
 #. module: iot_control_center
@@ -3315,6 +3904,15 @@ msgid "Orange"
 msgstr ""
 
 #. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_recipe_form
+msgid ""
+"Original motor baseline: inlet and filling overflow at full output; both "
+"pumps during drainage 150/255, during spin drying 50/255. New wash steps "
+"default to 1 rev/s and spin-dry steps to 10 rev/s. Spindle speed is pulse "
+"controlled, not a voltage percentage."
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_control_board__key__other
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_openwrt_client__band__other
 msgid "Other"
@@ -3326,9 +3924,21 @@ msgid "Outdated"
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__output
+msgid "Output"
+msgstr ""
+
+#. module: iot_control_center
 #. odoo-python
 #: code:addons/iot_control_center/models/iot_control_board.py:0
 msgid "Outputs, schedules and device confirmation"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__fault_a__over_temperature
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_alarm__fault__over_temperature
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_reading__fault__over_temperature
+msgid "Overtemperature"
 msgstr ""
 
 #. module: iot_control_center
@@ -3354,6 +3964,7 @@ msgstr ""
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_command__payload
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__payload
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__payload
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_attendance_request_form
 msgid "Payload"
@@ -3479,6 +4090,31 @@ msgid "Processing Status"
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.constraint,message:iot_control_center.constraint_iot_instrument_recipe_revision_unique
+msgid "Program revision already exists."
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid ""
+"Programs are compiled here, saved on the device and usable offline. Filling "
+"and draining are timed, without level sensing. Liquid temperature is read-"
+"only; an unavailable sensor is logged but does not stop the timed program."
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid ""
+"Programs are downloaded while idle. Starting and continuing a run require "
+"confirmation at the instrument."
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__runtime_reported_at
+msgid "Protection Status Updated"
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_attendance_device__protocol
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_attendance_device_search
 msgid "Protocol"
@@ -3487,6 +4123,15 @@ msgstr ""
 #. module: iot_control_center
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__mqtt_route__fallback
 msgid "Public / Fallback"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_recipe_form
+msgid ""
+"Publishing automatically adds a homing step at the beginning. Drain before "
+"changing buffer or spin drying. Operator waits require local Continue. One "
+"wash cycle is forward plus reverse; cycle count times twice the reverse "
+"interval determines wash duration."
 msgstr ""
 
 #. module: iot_control_center
@@ -3592,6 +4237,7 @@ msgstr ""
 
 #. module: iot_control_center
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_command__state__queued
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_command__state__queued
 msgid "Queued"
 msgstr ""
 
@@ -3623,6 +4269,11 @@ msgid "Readings & Analysis"
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__schedule_execution_state__ready
+msgid "Ready for schedules"
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_openwrt_job__job_type__reboot
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_openwrt_ap_form
 msgid "Reboot"
@@ -3635,6 +4286,9 @@ msgstr ""
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_ingest_event__received_at
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__received_at
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__received_at
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__received_at
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__received_at
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__received_at
 msgid "Received At"
@@ -3644,6 +4298,17 @@ msgstr ""
 #. odoo-python
 #: code:addons/iot_control_center/models/iot_control_board.py:0
 msgid "Recent contact"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__recipe_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__recipe_id
+msgid "Recipe"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__recipe_uid
+msgid "Recipe Uid"
 msgstr ""
 
 #. module: iot_control_center
@@ -3658,9 +4323,31 @@ msgid "Refresh overview"
 msgstr ""
 
 #. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_provision
+msgid "Register"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Register Device Token"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_provision
+msgid ""
+"Register the random token provisioned locally on this device. Only its hash "
+"is kept after registration."
+msgstr ""
+
+#. module: iot_control_center
 #. odoo-python
 #: code:addons/iot_control_center/models/iot_control_board.py:0
 msgid "Registered devices"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_command__state__rejected
+msgid "Rejected"
 msgstr ""
 
 #. module: iot_control_center
@@ -3708,6 +4395,28 @@ msgid ""
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__release_id
+msgid "Release"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_recipe_form
+msgid "Release Program"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_recipe__state__released
+msgid "Released"
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid ""
+"Released programs are immutable. Duplicate the program to make changes."
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_attendance_request__remote_ip
 msgid "Remote IP"
 msgstr ""
@@ -3734,6 +4443,11 @@ msgid "Request Count"
 msgstr ""
 
 #. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Request Firmware Update"
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_attendance_device__request_ids
 #: model:ir.ui.menu,name:iot_control_center.menu_iot_attendance_request
 msgid "Request Logs"
@@ -3745,6 +4459,13 @@ msgid "Request Payload"
 msgstr ""
 
 #. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid ""
+"Request a stop? Verify the device has stopped before opening or servicing "
+"it."
+msgstr ""
+
+#. module: iot_control_center
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_tree
 msgid "Requested"
 msgstr ""
@@ -3753,6 +4474,18 @@ msgstr ""
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_upgrade_log__requested_at
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_job__requested_at
 msgid "Requested At"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__target_a
+msgid "Requested Temperature"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid ""
+"Requested settings differ from the last device confirmation. Save changes, "
+"then send settings and wait for confirmation."
 msgstr ""
 
 #. module: iot_control_center
@@ -3810,13 +4543,50 @@ msgid "Retained"
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__reverse_s
+msgid "Reverse Every (s)"
+msgstr ""
+
+#. module: iot_control_center
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_attendance_device_tree
 msgid "Review Punches"
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__revision
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__revision
+msgid "Revision"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Room and equipment location"
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_ingest_event__route
 msgid "Route"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__run_id
+msgid "Run"
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Run Logs"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.constraint,message:iot_control_center.constraint_iot_instrument_run_log_event_unique
+msgid "Run event already received."
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__state__running
+msgid "Running"
 msgstr ""
 
 #. module: iot_control_center
@@ -3852,6 +4622,16 @@ msgid "SSID Entries"
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__safety_tripped
+msgid "Safety Cutoff Tripped"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__schedule_execution_state__tripped
+msgid "Safety lockout"
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device__safety_critical
 msgid "Safety-Critical Equipment"
 msgstr ""
@@ -3860,6 +4640,18 @@ msgstr ""
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__sample_count
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__reading_count
 msgid "Sample Count"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.constraint,message:iot_control_center.constraint_iot_instrument_reading_sample_unique
+msgid "Sample already received."
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__sampled_at
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__sampled_at
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__sampled_at
+msgid "Sampled At"
 msgstr ""
 
 #. module: iot_control_center
@@ -3880,6 +4672,11 @@ msgstr ""
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device__schedule_dirty
 msgid "Schedule Dirty"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__schedule_execution_state
+msgid "Schedule Execution"
 msgstr ""
 
 #. module: iot_control_center
@@ -3927,6 +4724,11 @@ msgid "Schedules"
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__device_label
+msgid "Screen Label"
+msgstr ""
+
+#. module: iot_control_center
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_bind_wizard_form
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_sensor_bind_wizard_form
 msgid "Search ID"
@@ -3936,6 +4738,20 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/iot_control_center/static/src/xml/operations_overview.xml:0
 msgid "See what needs attention, then open the right workspace."
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Select a released program belonging to this company."
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid ""
+"Select firmware matching the company, device type and reported hardware "
+"profile."
 msgstr ""
 
 #. module: iot_control_center
@@ -3954,6 +4770,16 @@ msgstr ""
 #. odoo-python
 #: code:addons/iot_control_center/models/iot_openwrt_ap.py:0
 msgid "Selected firmware does not match the AP model."
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Send Program"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Send Temperature Settings"
 msgstr ""
 
 #. module: iot_control_center
@@ -3985,6 +4811,11 @@ msgstr ""
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__sensor_count
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor_group__sensor_count
 msgid "Sensor Count"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_reading_search
+msgid "Sensor Errors"
 msgstr ""
 
 #. module: iot_control_center
@@ -4028,6 +4859,7 @@ msgstr ""
 
 #. module: iot_control_center
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_command__state__sent
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_command__state__sent
 msgid "Sent"
 msgstr ""
 
@@ -4038,6 +4870,7 @@ msgstr ""
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__sequence
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__sequence
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_template_ssid__sequence
 msgid "Sequence"
 msgstr ""
@@ -4071,6 +4904,37 @@ msgstr ""
 
 #. module: iot_control_center
 #. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid ""
+"Set a heating observation time of 30 to 3600 seconds and a minimum rise of "
+"0.125 to 5 C."
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Set temperatures from 10 to 50 C in 0.25 C increments."
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__settings_pending
+msgid "Settings Not Yet Applied"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__fault_a__configuration
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_alarm__fault__configuration
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_reading__fault__configuration
+msgid "Settings Required"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__settings_ready
+msgid "Settings Stored on Device"
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
 #: code:addons/iot_control_center/models/iot_openwrt_ap.py:0
 msgid "Signal"
 msgstr ""
@@ -4081,9 +4945,19 @@ msgid "Signal Dbm"
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_instrument_release
+msgid "Signed Instrument Firmware Package"
+msgstr ""
+
+#. module: iot_control_center
 #. odoo-python
 #: code:addons/iot_control_center/models/iot_control_board.py:0
 msgid "Silent probes"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__snapshot
+msgid "Snapshot"
 msgstr ""
 
 #. module: iot_control_center
@@ -4099,6 +4973,16 @@ msgid ""
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__rps
+msgid "Speed (rev/s)"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_recipe_step__kind__dry
+msgid "Spin Dry"
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_openwrt_job__job_type__locate_start
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_openwrt_ap_form
 msgid "Start Locate"
@@ -4108,6 +4992,9 @@ msgstr ""
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_attendance_punch__state
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_command__state
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_upgrade_log__state
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__state
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__state
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__state
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__state
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_job__state
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__state
@@ -4144,8 +5031,23 @@ msgid "Status"
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__status_fresh
+msgid "Status Fresh"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__status_json
+msgid "Status Json"
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device_bind_wizard__status_message
 msgid "Status Message"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__status_sampled_at
+msgid "Status Sampled At"
 msgstr ""
 
 #. module: iot_control_center
@@ -4158,9 +5060,50 @@ msgid ""
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__schedule_execution_state__stale
+msgid "Status out of date"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__step_ids
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__step
+msgid "Step"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Stop Device"
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_openwrt_job__job_type__locate_stop
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_openwrt_ap_form
 msgid "Stop Locate"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__applied_minimum_rise_c
+msgid "Stored Minimum Rise (C)"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__applied_rise_window_s
+msgid "Stored Observation Time (s)"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__reported_schedule_count
+msgid "Stored Schedule Entries"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__applied_target_a
+msgid "Stored Temperature"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_kanban
+msgid "Stored Temperature<br/>"
 msgstr ""
 
 #. module: iot_control_center
@@ -4295,6 +5238,7 @@ msgid "TH Raw Retention (days)"
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__target
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__target
 msgid "Target"
 msgstr ""
@@ -4302,6 +5246,14 @@ msgstr ""
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_upgrade_log__target_version
 msgid "Target Version"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid ""
+"Targets and protection settings are stored on the device for offline use. "
+"Downloading does not start heating. Change protection settings only while "
+"stopped."
 msgstr ""
 
 #. module: iot_control_center
@@ -4322,6 +5274,7 @@ msgstr ""
 #. module: iot_control_center
 #. odoo-javascript
 #: code:addons/iot_control_center/static/src/js/th_reading_graph_lock.js:0
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__temperature
 msgid "Temperature"
 msgstr ""
 
@@ -4333,10 +5286,26 @@ msgid "Temperature (C)"
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__valid_a
+msgid "Temperature Available"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Temperature Control"
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__temperature_high
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor_group__temperature_high
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_th_alert__alert_type__temp_high
 msgid "Temperature High"
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Temperature History"
 msgstr ""
 
 #. module: iot_control_center
@@ -4347,10 +5316,28 @@ msgid "Temperature Low"
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__fault_a__sensor
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_alarm__fault__sensor
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_reading__fault__sensor
+msgid "Temperature Sensor Fault"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Temperature Settings"
+msgstr ""
+
+#. module: iot_control_center
 #. odoo-python
 #: code:addons/iot_control_center/models/th_sensor.py:0
 #: code:addons/iot_control_center/models/th_sensor_group.py:0
 msgid "Temperature low limit must not exceed high limit."
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_control_board.py:0
+msgid "Temperature settings and hourly history"
 msgstr ""
 
 #. module: iot_control_center
@@ -4428,6 +5415,13 @@ msgid "The device belongs to another company."
 msgstr ""
 
 #. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_form
+msgid ""
+"The device safety cutoff has tripped. Inspect the equipment before any "
+"restart."
+msgstr ""
+
+#. module: iot_control_center
 #: model:ir.model.constraint,message:iot_control_center.constraint_iot_attendance_user_device_user_unique
 msgid "The device user ID must be unique per device."
 msgstr ""
@@ -4443,6 +5437,11 @@ msgstr ""
 #. odoo-python
 #: code:addons/iot_control_center/models/iot_attendance_punch.py:0
 msgid "The employee and device belong to different companies."
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "The instrument must be idle. Send this signed firmware update?"
 msgstr ""
 
 #. module: iot_control_center
@@ -4478,6 +5477,12 @@ msgstr ""
 
 #. module: iot_control_center
 #. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "The signed firmware package is invalid or targets another board."
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
 #: code:addons/iot_control_center/wizard/iot_firmware_push_wizard.py:0
 msgid ""
 "This firmware is quarantined or incompatible with ESP8266 1MB/DOUT relay "
@@ -4488,6 +5493,12 @@ msgstr ""
 #. odoo-python
 #: code:addons/iot_control_center/models/iot_firmware.py:0
 msgid "This firmware is quarantined or incompatible with relay hardware."
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "This instrument is archived."
 msgstr ""
 
 #. module: iot_control_center
@@ -4508,6 +5519,14 @@ msgstr ""
 #. odoo-python
 #: code:addons/iot_control_center/models/iot_attendance_punch.py:0
 msgid "This timestamp is already recorded in attendance."
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid ""
+"This washer synchronizes all current released company programs while idle. "
+"Publish a revision or archive a program to update its local list."
 msgstr ""
 
 #. module: iot_control_center
@@ -4561,6 +5580,16 @@ msgstr ""
 #. module: iot_control_center
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_openwrt_ap_form
 msgid "Timestamps"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_provision__token
+msgid "Token"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__token_hash
+msgid "Token Hash"
 msgstr ""
 
 #. module: iot_control_center
@@ -4661,9 +5690,22 @@ msgid "Type of the exception activity on record."
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__uid
+msgid "Uid"
+msgstr ""
+
+#. module: iot_control_center
 #. odoo-python
 #: code:addons/iot_control_center/models/iot_attendance_device.py:0
 msgid "Unable to read device logs: %s"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_kanban
+msgid "Unavailable"
 msgstr ""
 
 #. module: iot_control_center
@@ -4719,6 +5761,11 @@ msgstr ""
 #. odoo-javascript
 #: code:addons/iot_control_center/static/src/xml/operations_overview.xml:0
 msgid "Updated"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__state__updating
+msgid "Updating"
 msgstr ""
 
 #. module: iot_control_center
@@ -4787,6 +5834,20 @@ msgid "Use Device Direction"
 msgstr ""
 
 #. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Use Release Program to publish a validated version."
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid ""
+"Use a random device token of 32 to 128 characters without surrounding "
+"spaces."
+msgstr ""
+
+#. module: iot_control_center
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_attendance_device_form
 msgid ""
 "Use the company VPN for the internal HTTP address. HTTPS is shown only when "
@@ -4803,6 +5864,16 @@ msgstr ""
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_attendance_device__user_count
 msgid "User Count"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__valid
+msgid "Valid"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_reading_search
+msgid "Valid Measurements"
 msgstr ""
 
 #. module: iot_control_center
@@ -4839,6 +5910,17 @@ msgid "Version"
 msgstr ""
 
 #. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_control_board.py:0
+msgid "Versioned programs, local start and run traceability"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_kanban
+msgid "View History"
+msgstr ""
+
+#. module: iot_control_center
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_sensor_group_form
 msgid "View Sensors"
 msgstr ""
@@ -4870,8 +5952,83 @@ msgid "WPA3-SAE"
 msgstr ""
 
 #. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_recipe_step__kind__wait
+msgid "Wait for Operator"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__state__waiting
+msgid "Waiting for Operator"
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Waiting for device confirmation. Sending is not proof of execution."
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__schedule_execution_state__unknown
+msgid "Waiting for device report"
+msgstr ""
+
+#. module: iot_control_center
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_sensor_kanban
 msgid "Waiting for the first reading"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_recipe_step__kind__wash
+msgid "Wash"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__cycles
+msgid "Wash Cycles"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Washer Program"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_instrument_recipe_step
+msgid "Washer Program Step"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_instrument_recipe
+msgid "Washer Program Version"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_washer_programs
+#: model:ir.ui.menu,name:iot_control_center.menu_washer_programs
+msgid "Washer Programs"
+msgstr ""
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_instrument_run_log
+msgid "Washer Run Event"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_recipe_form
+msgid ""
+"Washers automatically synchronize this company's latest released program "
+"revisions while idle. Archive the latest revision to remove a program from "
+"devices. Failed or offline synchronization leaves the local list unchanged."
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid ""
+"Washers with automatic synchronization replace their local list with the "
+"company's latest released programs while idle. Additions, new revisions and "
+"archived programs synchronize together. Failed or offline synchronization "
+"keeps the existing local list. Three programs per screen page is not a "
+"storage limit."
 msgstr ""
 
 #. module: iot_control_center
@@ -4919,6 +6076,14 @@ msgstr ""
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__wednesday
 msgid "Wednesday"
+msgstr ""
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_recipe_form
+msgid ""
+"While waiting, tap NEXT to move through slots 1, 4, 5, 2, 3, 6, then 1. "
+"Moves alternate 180 and 60 degrees. All pumps stay off. Check physical "
+"balance before pressing Continue; the device cannot detect loaded slides."
 msgstr ""
 
 #. module: iot_control_center
@@ -4993,6 +6158,12 @@ msgid "http://127.0.0.1:8099"
 msgstr ""
 
 #. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "instrument_id"
+msgstr ""
+
+#. module: iot_control_center
 #: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
 msgid "iot.imytest.com"
 msgstr ""
@@ -5010,23 +6181,14 @@ msgstr ""
 
 #. module: iot_control_center
 #. odoo-python
+#: code:addons/iot_control_center/models/iot_control_board.py:0
+msgid "washer"
+msgstr ""
+
+#. module: iot_control_center
+#. odoo-python
 #: code:addons/iot_control_center/models/iot_firmware.py:0
 msgid "web.base.url is not configured."
-msgstr ""
-
-#. module: iot_control_center
-#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_sensor_kanban
-msgid "°C"
-msgstr ""
-
-#. module: iot_control_center
-#: code:addons/iot_control_center:0
-msgid "192.168.10.15"
-msgstr ""
-
-#. module: iot_control_center
-#: code:addons/iot_control_center:0
-msgid "192.168.10.50, 192.168.10.51"
 msgstr ""
 
 #. module: iot_control_center
@@ -5056,11 +6218,6 @@ msgstr ""
 
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
-msgid "Last contact:"
-msgstr ""
-
-#. module: iot_control_center
-#: code:addons/iot_control_center:0
 msgid "Last reading:"
 msgstr ""
 
@@ -5072,6 +6229,11 @@ msgstr ""
 #. module: iot_control_center
 #: code:addons/iot_control_center:0
 msgid "Requested State:"
+msgstr ""
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Schedule Execution:"
 msgstr ""
 
 #. module: iot_control_center

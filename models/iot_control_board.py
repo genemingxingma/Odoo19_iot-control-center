@@ -122,6 +122,22 @@ class IoTControlBoard(models.Model):
                 card["detail_label"] = _("Device inventory")
                 card["detail_action"] = item_action
             cards.append(card)
+        for kind, title, description, icon in (
+            ("heater", _("Buffer Heaters"), _("Temperature settings and hourly history"), "fa-thermometer-half"),
+            ("washer", _("Array Washers"), _("Versioned programs, local start and run traceability"), "fa-flask"),
+        ):
+            scope = [("kind", "=", kind)]
+            offline = ["|", ("last_seen", "=", False), ("last_seen", "<", fields.Datetime.to_string(now - timedelta(seconds=120)))]
+            total, silent = count("iot.instrument", scope), count("iot.instrument", scope + offline)
+            item_action = action(title, "iot.instrument", scope, "kanban,list,form")
+            item_action["context"] = {"default_kind": kind}
+            cards.append({"key": kind, "title": title, "description": description, "icon": icon,
+                "total": total, "total_label": _("Registered devices"), "offline": silent,
+                "attention_label": _("No recent contact"), "action": item_action,
+                "attention_action": action(_("No recent contact"), "iot.instrument", scope + offline),
+                "secondary_label": _("Recent contact"), "secondary_count": total - silent,
+                "secondary_action": action(_("Recent contact"), "iot.instrument", scope + ["!"] + offline),
+                "detail_label": _("Device inventory"), "detail_action": item_action})
         return {"generated_at": fields.Datetime.to_string(now), "companies": self.env.companies.mapped("name"),
                 "cards": cards, "priorities": priorities}
 

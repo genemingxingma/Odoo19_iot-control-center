@@ -1,4 +1,17 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_instrument_alarm_user,Instrument alarm reader,model_iot_instrument_alarm,iot_control_center.group_iot_user,1,0,0,0
+access_instrument_user,Instrument viewer,model_iot_instrument,iot_control_center.group_iot_user,1,0,0,0
+access_instrument_operator,Instrument operator,model_iot_instrument,iot_control_center.group_iot_operator,1,1,0,0
+access_instrument_manager,Instrument manager,model_iot_instrument,iot_control_center.group_iot_manager,1,1,1,0
+access_instrument_command,Instrument commands,model_iot_instrument_command,iot_control_center.group_iot_user,1,0,0,0
+access_instrument_reading,Instrument observations,model_iot_instrument_reading,iot_control_center.group_iot_user,1,0,0,0
+access_instrument_run,Instrument run logs,model_iot_instrument_run_log,iot_control_center.group_iot_user,1,0,0,0
+access_instrument_recipe,Instrument programs,model_iot_instrument_recipe,iot_control_center.group_iot_user,1,0,0,0
+access_instrument_recipe_manager,Instrument program manager,model_iot_instrument_recipe,iot_control_center.group_iot_manager,1,1,1,1
+access_instrument_step,Instrument steps,model_iot_instrument_recipe_step,iot_control_center.group_iot_user,1,0,0,0
+access_instrument_step_manager,Instrument step manager,model_iot_instrument_recipe_step,iot_control_center.group_iot_manager,1,1,1,1
+access_instrument_provision,Instrument provisioning,model_iot_instrument_provision,iot_control_center.group_iot_manager,1,1,1,1
+access_instrument_release,Instrument firmware,model_iot_instrument_release,iot_control_center.group_iot_manager,1,1,1,0
 access_iot_command_manager,IoT Command manager,model_iot_command,iot_control_center.group_iot_manager,1,0,0,0
 access_iot_receipt_system,IoT Event receipt admin,model_iot_ingest_event,base.group_system,1,0,0,0
 access_iot_department_user,access.iot.department.user,model_iot_department,iot_control_center.group_iot_user,1,0,0,0

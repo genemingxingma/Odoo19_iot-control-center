@@ -19,3 +19,4 @@ middleware/**/target/
 *.backup
 deploy/artifacts/
 .playwright-mcp/
+firmware/instruments/data/

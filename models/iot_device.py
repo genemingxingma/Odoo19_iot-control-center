@@ -70,6 +70,20 @@ class IoTDevice(models.Model):
     )
     last_seen = fields.Datetime(tracking=True)
     online = fields.Boolean(compute="_compute_online", store=False)
+    control_inhibited = fields.Boolean(string="Automatic ON Blocked", readonly=True)
+    safety_tripped = fields.Boolean(string="Safety Cutoff Tripped", readonly=True)
+    device_time_synced = fields.Boolean(string="Device Clock Synchronized", readonly=True)
+    reported_schedule_count = fields.Integer(string="Stored Schedule Entries", readonly=True)
+    runtime_reported_at = fields.Datetime(string="Protection Status Updated", readonly=True)
+    schedule_execution_state = fields.Selection([
+        ("unknown", "Waiting for device report"),
+        ("stale", "Status out of date"),
+        ("tripped", "Safety lockout"),
+        ("blocked", "Automatic ON blocked"),
+        ("clock", "Clock not synchronized"),
+        ("empty", "No schedule stored"),
+        ("ready", "Ready for schedules"),
+    ], string="Schedule Execution", compute="_compute_schedule_execution_state")
 
     firmware_version = fields.Char(tracking=True)
     firmware_hardware_profile = fields.Char(readonly=True)
@@ -178,6 +192,11 @@ class IoTDevice(models.Model):
             "last_command_id",
             "last_command_confirmed_at",
             "last_seen",
+            "control_inhibited",
+            "safety_tripped",
+            "device_time_synced",
+            "reported_schedule_count",
+            "runtime_reported_at",
             "firmware_version",
             "firmware_hardware_profile",
             "flash_real_size_bytes",
@@ -246,6 +265,28 @@ class IoTDevice(models.Model):
                 extra = max(int(diff.total_seconds() // 60), 0)
                 total += extra
             rec.total_on_hours = round(total / 60.0, 2)
+
+    @api.depends("runtime_reported_at", "control_inhibited", "safety_tripped",
+                 "device_time_synced", "reported_schedule_count")
+    def _compute_schedule_execution_state(self):
+        timeout = int(self.env["ir.config_parameter"].sudo().get_param("iot_control_center.online_timeout_sec", 300))
+        cutoff = fields.Datetime.now() - timedelta(seconds=timeout)
+        for rec in self:
+            if not rec.runtime_reported_at:
+                state = "unknown"
+            elif rec.runtime_reported_at < cutoff:
+                state = "stale"
+            elif rec.safety_tripped:
+                state = "tripped"
+            elif rec.control_inhibited:
+                state = "blocked"
+            elif not rec.device_time_synced:
+                state = "clock"
+            elif not rec.reported_schedule_count:
+                state = "empty"
+            else:
+                state = "ready"
+            rec.schedule_execution_state = state
 
     @api.depends("schedule_dirty", "schedule_version", "schedule_applied_version")
     def _compute_schedule_sync_state(self):
@@ -810,6 +851,8 @@ class IoTDevice(models.Model):
     def _apply_schedule_report(self, payload, reported_at=None):
         at = reported_at or fields.Datetime.now()
         for rec in self:
+            if rec.last_seen and at < rec.last_seen:
+                continue
             version = payload.get("schedule_version") if isinstance(payload, dict) else None
             try:
                 version = int(version) if version is not None else None
@@ -828,6 +871,8 @@ class IoTDevice(models.Model):
         active = payload.get("delay_active")
         remaining_sec = payload.get("delay_remaining_sec")
         for rec in self:
+            if rec.last_seen and at < rec.last_seen:
+                continue
             rec.last_seen = at
             if active is None:
                 continue
@@ -854,12 +899,16 @@ class IoTDevice(models.Model):
         if override is None:
             return
         for rec in self:
+            if rec.last_seen and at < rec.last_seen:
+                continue
             rec.manual_override = bool(override)
             rec.last_seen = at
 
     def _apply_identity_report(self, module_id, reported_at=None):
         at = reported_at or fields.Datetime.now()
         for rec in self:
+            if rec.last_seen and at < rec.last_seen:
+                continue
             if module_id and rec.module_id != module_id:
                 owner = self.sudo().search(
                     [
@@ -885,6 +934,8 @@ class IoTDevice(models.Model):
         at = reported_at or fields.Datetime.now()
         log_model = self.env["iot.firmware.upgrade.log"]
         for rec in self:
+            if rec.last_seen and at < rec.last_seen:
+                continue
             prev_version = rec.firmware_version
             rec.firmware_version = reported_version
             rec.last_seen = at
@@ -931,7 +982,15 @@ class IoTDevice(models.Model):
             return
         at = reported_at or fields.Datetime.now()
         for rec in self:
+            if rec.last_seen and at < rec.last_seen:
+                continue
             vals = {}
+            runtime_bools = {"control_inhibit": "control_inhibited", "safety_trip": "safety_tripped",
+                             "time_synced": "device_time_synced"}
+            count = payload.get("schedule_count")
+            if all(isinstance(payload.get(key), bool) for key in runtime_bools) and type(count) is int and 0 <= count <= 128:
+                vals.update({field: payload[key] for key, field in runtime_bools.items()})
+                vals.update(reported_schedule_count=count, runtime_reported_at=at)
             if payload.get("hardware_profile"):
                 vals["firmware_hardware_profile"] = str(payload["hardware_profile"])
             for payload_key, field_name in (
@@ -962,6 +1021,8 @@ class IoTDevice(models.Model):
         at = reported_at or fields.Datetime.now()
         log_model = self.env["iot.firmware.upgrade.log"]
         for rec in self:
+            if rec.last_seen and at < rec.last_seen:
+                continue
             rec.last_seen = at
             if ota_state not in ("failed", "no_update"):
                 continue

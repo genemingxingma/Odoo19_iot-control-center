@@ -10,6 +10,7 @@ from pathlib import Path
 from xml.etree import ElementTree as ET
 
 import polib
+from instrument_i18n import TRANSLATIONS as INSTRUMENT_TRANSLATIONS
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -20,6 +21,7 @@ PLACEHOLDER_RE = re.compile(
     r"%(?:\([^)]+\))?[#0 +\-]?(?:\d+|\*)?(?:\.\d+|\.\*)?[diouxXeEfFgGcrs%]|\{[^{}]+\}"
 )
 SOURCE_TERM_RENAMES = {
+    "Two-channel targets and hourly temperature history": "Temperature settings and hourly history",
     "Ap": "AP",
     "Ip Address": "IP Address",
     "Mac Address": "MAC Address",
@@ -34,6 +36,24 @@ SOURCE_TERM_RENAMES = {
 # Terms absent from older catalogs plus wording overrides found during review.
 # Each value is (Simplified Chinese, Thai).
 TRANSLATIONS = {
+    "Automatic ON Blocked": ("已禁止自动开启", "ระงับการเปิดอัตโนมัติ"),
+    "Safety Cutoff Tripped": ("已触发安全停机", "ตัดการทำงานเพื่อความปลอดภัยแล้ว"),
+    "Device Clock Synchronized": ("设备时钟已同步", "นาฬิกาอุปกรณ์ซิงค์แล้ว"),
+    "Stored Schedule Entries": ("设备内定时条目数", "จำนวนรายการตั้งเวลาในอุปกรณ์"),
+    "Protection Status Updated": ("保护状态更新时间", "เวลาอัปเดตสถานะการป้องกัน"),
+    "Schedule Execution": ("定时执行条件", "เงื่อนไขการทำงานตามเวลา"),
+    "Schedule Execution:": ("定时执行条件：", "เงื่อนไขการทำงานตามเวลา:"),
+    "<span>Schedule Execution: </span>": ("<span>定时执行条件：</span>", "<span>เงื่อนไขการทำงานตามเวลา:</span>"),
+    "Waiting for device report": ("等待设备上报", "รอข้อมูลจากอุปกรณ์"),
+    "Status out of date": ("状态已过期", "สถานะไม่เป็นปัจจุบัน"),
+    "Safety lockout": ("安全保护已锁定", "ล็อกเพื่อความปลอดภัย"),
+    "Automatic ON blocked": ("已禁止自动开启", "ระงับการเปิดอัตโนมัติ"),
+    "Clock not synchronized": ("设备时钟未同步", "นาฬิกาอุปกรณ์ยังไม่ซิงค์"),
+    "No schedule stored": ("设备未保存定时", "ไม่มีรายการตั้งเวลาในอุปกรณ์"),
+    "Ready for schedules": ("允许按定时执行", "พร้อมทำงานตามเวลาที่ตั้งไว้"),
+    "Automatic ON is blocked on the device. A synchronized schedule does not release this lock. Check the equipment before explicitly enabling it.": ("设备已禁止自动开启。定时同步成功不会解除此限制，请检查设备后再明确启用。", "อุปกรณ์ระงับการเปิดอัตโนมัติ การซิงค์ตารางเวลาไม่ปลดล็อกนี้ โปรดตรวจสอบอุปกรณ์ก่อนสั่งเปิดใช้งาน"),
+    "The device safety cutoff has tripped. Inspect the equipment before any restart.": ("设备已触发安全停机，请检查设备后再决定是否重新启动。", "อุปกรณ์ตัดการทำงานเพื่อความปลอดภัยแล้ว โปรดตรวจสอบอุปกรณ์ก่อนเริ่มทำงานอีกครั้ง"),
+    "Device status is out of date. Displayed values are not a live confirmation.": ("设备状态已过期，当前显示值不能作为实时状态确认。", "สถานะอุปกรณ์ไม่เป็นปัจจุบัน ค่าที่แสดงไม่ใช่การยืนยันสถานะขณะนี้"),
     "Requested State:": ("请求状态：", "สถานะที่ร้องขอ:"),
     "<span>Requested State: </span>": ("<span>请求状态：</span>", "<span>สถานะที่ร้องขอ: </span>"),
     "Mappings": ("员工对应关系", "การจับคู่พนักงาน"),
@@ -852,15 +872,68 @@ def _normalize_source_terms(po: polib.POFile) -> None:
             occurrences.discard(generic_occurrence)
         new_entry.occurrences = sorted(occurrences)
         new_entry.flags = sorted(set(old_entry.flags) | set(new_entry.flags))
+        new_entry.comment = "\n".join(dict.fromkeys((new_entry.comment + "\n" + old_entry.comment).splitlines()))
         po.remove(old_entry)
 
 
-def synchronize() -> None:
-    pot = polib.pofile(str(I18N / "iot_control_center.pot"), encoding="utf-8")
+def _field_labels() -> dict[str, str]:
+    labels = {}
+    for path in (*ROOT.glob("models/*.py"), *ROOT.glob("wizard/*.py")):
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+            if not isinstance(node, ast.ClassDef):
+                continue
+            assignments = {target.id: item.value for item in node.body if isinstance(item, ast.Assign)
+                           for target in item.targets if isinstance(target, ast.Name)}
+            model = assignments.get("_name", assignments.get("_inherit"))
+            if not isinstance(model, ast.Constant) or not isinstance(model.value, str):
+                continue
+            for name, value in assignments.items():
+                if not (isinstance(value, ast.Call) and isinstance(value.func, ast.Attribute)
+                        and isinstance(value.func.value, ast.Name) and value.func.value.id == "fields"):
+                    continue
+                label = next((kw.value.value for kw in value.keywords if kw.arg == "string"
+                              and isinstance(kw.value, ast.Constant) and isinstance(kw.value.value, str)), None)
+                if label:
+                    labels["model:ir.model.fields,field_description:iot_control_center.field_"
+                           + model.value.replace(".", "_") + "__" + name] = label
+    return labels
+
+
+def _normalize_field_labels(po: polib.POFile, labels: dict[str, str]) -> None:
+    # Native exports can contain labels overwritten by an older PO import.
+    # A field-description reference must point to its current Python label once.
+    for entry in list(po):
+        if entry.obsolete:
+            continue
+        for occurrence in list(entry.occurrences):
+            expected = labels.get(occurrence[0])
+            if expected and expected != entry.msgid:
+                entry.occurrences.remove(occurrence)
+                current = _entry(po, expected)
+                current.occurrences = sorted(set(current.occurrences + [occurrence])
+                                             - {("code:addons/iot_control_center", "0")})
+        if entry.msgid and not entry.occurrences:
+            po.remove(entry)
+
+
+def synchronize(native_pot: Path | None = None) -> None:
+    TRANSLATIONS.update(INSTRUMENT_TRANSLATIONS)
+    pot = polib.pofile(str(native_pot or I18N / "iot_control_center.pot"), encoding="utf-8")
     catalogs = {name: polib.pofile(str(I18N / name), encoding="utf-8") for name in CATALOGS}
     _normalize_source_terms(pot)
     for catalog in catalogs.values():
         _normalize_source_terms(catalog)
+    labels = _field_labels()
+    for catalog in (pot, *catalogs.values()):
+        _normalize_field_labels(catalog, labels)
+        for entry in catalog:
+            markers = []
+            for occurrence, _line in entry.occurrences:
+                if occurrence.startswith("code:") and occurrence.endswith(".py"):
+                    markers.append("odoo-python")
+                if occurrence.startswith("code:") and occurrence.endswith(".js"):
+                    markers.append("odoo-javascript")
+            entry.comment = "\n".join(dict.fromkeys(entry.comment.splitlines() + markers))
     official_entries = {entry.msgid: entry for entry in pot if not entry.obsolete and entry.msgid}
     required = source_terms() | set(official_entries)
 
@@ -906,6 +979,18 @@ def validate() -> None:
     pot = polib.pofile(str(I18N / "iot_control_center.pot"), encoding="utf-8")
     catalogs = {name: polib.pofile(str(I18N / name), encoding="utf-8") for name in CATALOGS}
     errors: list[str] = []
+    labels = _field_labels()
+    for name, catalog in (("POT", pot), *catalogs.items()):
+        for entry in catalog:
+            if not entry.obsolete:
+                for occurrence, _line in entry.occurrences:
+                    expected = labels.get(occurrence)
+                    if expected and expected != entry.msgid:
+                        errors.append(f"{name}: stale field label {entry.msgid!r}; expected {expected!r}")
+                    if occurrence.startswith("code:"):
+                        marker = "odoo-python" if occurrence.endswith(".py") else "odoo-javascript" if occurrence.endswith(".js") else None
+                        if marker and marker not in entry.comment:
+                            errors.append(f"{name}: missing {marker} runtime marker for {entry.msgid!r}")
 
     pot_entries = {entry.msgid: entry for entry in pot if not entry.obsolete and entry.msgid}
     pot_ids = set(pot_entries)
@@ -956,9 +1041,12 @@ def validate() -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--write", action="store_true", help="Synchronize catalogs before validation")
+    parser.add_argument("--native-pot", type=Path, help="Use the POT exported by native isolated Odoo")
     args = parser.parse_args()
+    if args.native_pot and (not args.write or not args.native_pot.is_file()):
+        parser.error("--native-pot requires --write and an existing native POT")
     if args.write:
-        synchronize()
+        synchronize(args.native_pot)
     validate()
 
 

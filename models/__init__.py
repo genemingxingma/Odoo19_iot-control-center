@@ -29,3 +29,4 @@ from . import iot_openwrt_job
 from . import iot_openwrt_client
 from . import iot_openwrt_ap
 from . import iot_hr_employee
+from . import iot_instrument

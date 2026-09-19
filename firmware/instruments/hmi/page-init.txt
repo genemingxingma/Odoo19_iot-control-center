@@ -1,0 +1,11 @@
+baud=115200
+bkcmd=0
+sendxy=1
+thsp=0
+ussp=0
+cls 63390
+xstr 24,24,752,40,0,6371,63390,0,1,1,"iMYTEST / ARRAY WASHER"
+xstr 24,170,752,48,0,6371,63390,1,1,1,"Waiting for controller"
+xstr 24,228,752,48,0,6371,63390,1,1,1,"Do not operate until the device is connected."
+prints "UI|HELLO|3",0
+printh 0A

@@ -7,6 +7,7 @@
             <list create="0" class="iot_list" decoration-muted="not online">
                 <field name="name"/>
                 <field name="location_detail"/>
+                <field name="schedule_execution_state" widget="badge"/>
                 <field name="switch_id_display" string="Switch ID" optional="hide"/>
                 <field name="company_id" groups="base.group_multi_company" optional="hide"/>
                 <field name="department_id" optional="hide"/>
@@ -47,6 +48,7 @@
                 <field name="total_on_hours"/>
                 <field name="relay_command_state"/>
                 <field name="desired_relay_state"/>
+                <field name="schedule_execution_state"/>
                 <field name="location_id"/>
                 <field name="location_detail"/>
                 <field name="last_seen"/>
@@ -65,6 +67,7 @@
                             </div>
                             <div class="iot_relay_state_panel">
                                 <div class="iot_state_row"><span>Confirmed State: </span><field name="relay_state" widget="badge" decoration-success="relay_state == 'on'"/></div>
+                                <div class="iot_state_row"><span>Schedule Execution: </span><field name="schedule_execution_state" widget="badge" decoration-warning="schedule_execution_state in ['blocked', 'clock', 'stale']" decoration-danger="schedule_execution_state == 'tripped'"/></div>
                                 <div class="iot_state_row" t-if="record.relay_command_state.raw_value != 'idle'"><span>Command: </span><field name="relay_command_state" widget="badge" decoration-warning="relay_command_state == 'pending'" decoration-danger="relay_command_state == 'timeout'"/></div>
                                 <div class="iot_state_row" t-if="record.relay_command_state.raw_value == 'pending'"><span>Requested State: </span><field name="desired_relay_state" widget="badge"/></div>
                             </div>
@@ -107,6 +110,16 @@
                     <field name="relay_state" widget="statusbar" statusbar_visible="unknown,off,on" readonly="1"/>
                 </header>
                 <sheet>
+                    <field name="schedule_execution_state" invisible="1"/>
+                    <div class="alert alert-warning" role="status" invisible="schedule_execution_state != 'blocked'">
+                        Automatic ON is blocked on the device. A synchronized schedule does not release this lock. Check the equipment before explicitly enabling it.
+                    </div>
+                    <div class="alert alert-danger" role="status" invisible="schedule_execution_state != 'tripped'">
+                        The device safety cutoff has tripped. Inspect the equipment before any restart.
+                    </div>
+                    <div class="alert alert-warning" role="status" invisible="schedule_execution_state != 'stale'">
+                        Device status is out of date. Displayed values are not a live confirmation.
+                    </div>
                     <group>
                         <group>
                             <field name="name"/>
@@ -122,6 +135,12 @@
                         <group>
                             <field name="online" readonly="1"/>
                             <field name="last_seen" readonly="1"/>
+                            <field name="schedule_execution_state" readonly="1"/>
+                            <field name="runtime_reported_at" readonly="1"/>
+                            <field name="control_inhibited" readonly="1"/>
+                            <field name="safety_tripped" readonly="1"/>
+                            <field name="device_time_synced" readonly="1"/>
+                            <field name="reported_schedule_count" readonly="1"/>
                             <field name="desired_relay_state" readonly="1"/>
                             <field name="relay_command_state" readonly="1" widget="badge"/>
                             <field name="last_command_confirmed_at" readonly="1"/>

@@ -12,6 +12,28 @@ use tokio::sync::Mutex;
 
 static SEQUENCE: AtomicU64 = AtomicU64::new(0);
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum QueueLane {
+    Relay,
+    Environment,
+    Network,
+    Other,
+}
+
+impl QueueLane {
+    pub const ALL: [Self; 4] = [Self::Relay, Self::Environment, Self::Network, Self::Other];
+
+    fn for_path(path: &str) -> Self {
+        match path {
+            "/iot_control_center/internal/mqtt_ingest" => Self::Relay,
+            "/iot_control_center/internal/th_ingest_binary"
+            | "/iot_control_center/internal/th_ingest_json" => Self::Environment,
+            "/iot_control_center/internal/openwrt_heartbeat" => Self::Network,
+            _ => Self::Other,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QueuedPost {
     pub id: String,
@@ -23,6 +45,7 @@ pub struct QueuedPost {
 pub struct DurableQueue {
     root: PathBuf,
     scan: std::sync::Arc<Mutex<Option<fs::ReadDir>>>,
+    lane: Option<QueueLane>,
 }
 
 impl DurableQueue {
@@ -45,7 +68,18 @@ impl DurableQueue {
         Ok(Self {
             root,
             scan: Default::default(),
+            lane: None,
         })
+    }
+
+    pub fn for_lane(&self, lane: QueueLane) -> Self {
+        // Separate cursors and workers keep an unavailable gateway from
+        // delaying relay receipts. Existing durable files need no migration.
+        Self {
+            root: self.root.clone(),
+            scan: Default::default(),
+            lane: Some(lane),
+        }
     }
 
     pub fn prepare(path: &str, body: &Value) -> Result<QueuedPost> {
@@ -158,15 +192,25 @@ impl DurableQueue {
                         && item.body.get("event_id").and_then(Value::as_str) == Some(&item.id)
                         && item.body.get("protocol_version").and_then(Value::as_u64) == Some(2) =>
                 {
-                    result.push(item)
+                    if self
+                        .lane
+                        .map_or(true, |lane| lane == QueueLane::for_path(&item.path))
+                    {
+                        result.push(item)
+                    }
                 }
                 _ => {
                     // Preserve corrupt payloads for diagnosis instead of dropping them.
-                    fs::rename(
+                    let moved = fs::rename(
                         entry.path(),
                         self.root.join("rejected").join(entry.file_name()),
                     )
-                    .await?;
+                    .await;
+                    match moved {
+                        Ok(()) => {}
+                        Err(err) if err.kind() == std::io::ErrorKind::NotFound => continue,
+                        Err(err) => return Err(err.into()),
+                    }
                     self.sync_directory("rejected").await?;
                     self.sync_directory("pending").await?;
                 }
@@ -194,6 +238,52 @@ impl DurableQueue {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn independent_lanes_keep_failed_sensor_events_without_blocking_relays() -> Result<()> {
+        let (path, queue) = test_queue("lanes").await?;
+        for _ in 0..230 {
+            queue
+                .enqueue(
+                    "/iot_control_center/internal/th_ingest_binary",
+                    &serde_json::json!({}),
+                )
+                .await?;
+        }
+        let relay = queue
+            .enqueue(
+                "/iot_control_center/internal/mqtt_ingest",
+                &serde_json::json!({}),
+            )
+            .await?;
+        let network = queue
+            .enqueue(
+                "/iot_control_center/internal/openwrt_heartbeat",
+                &serde_json::json!({}),
+            )
+            .await?;
+        let unknown = queue.enqueue("/future", &serde_json::json!({})).await?;
+        let sensor_lane = queue.for_lane(QueueLane::Environment);
+        assert_eq!(sensor_lane.batch(200).await?.len(), 200);
+        // Deliberately leave all sensor messages unacknowledged.
+        let relay_lane = queue.for_lane(QueueLane::Relay);
+        let batch = relay_lane.batch(200).await?;
+        assert_eq!(batch.len(), 1);
+        assert_eq!(batch[0].id, relay);
+        relay_lane.ack(&relay).await?;
+        assert_eq!(
+            queue.for_lane(QueueLane::Network).batch(200).await?[0].id,
+            network
+        );
+        assert_eq!(
+            queue.for_lane(QueueLane::Other).batch(200).await?[0].id,
+            unknown
+        );
+        assert_eq!(sensor_lane.batch(200).await?.len(), 30);
+        assert_eq!(queue.batch(300).await?.len(), 232);
+        fs::remove_dir_all(path).await?;
+        Ok(())
+    }
 
     async fn test_queue(label: &str) -> Result<(PathBuf, DurableQueue)> {
         let path = std::env::temp_dir().join(format!(

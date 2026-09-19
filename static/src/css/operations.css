@@ -5,10 +5,13 @@
     --iot-border: #dbe5e0;
     background: radial-gradient(ellipse at 95% 0%, #e1eee7 0%, transparent 40%), #f4f6f3;
     color: var(--iot-ink);
-    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     height: 100%;
 }
-.iot_workspace_inner { width: 100%; min-width: 0; max-width: 1420px; padding: 36px 40px 24px; margin: 0 auto; }
+/* Odoo owns the fixed-height action shell; its child owns vertical scrolling. */
+.iot_workspace_inner { flex: 1 1 auto; min-height: 0; overflow-y: auto; width: 100%; min-width: 0; max-width: 1420px; padding: 36px 40px 24px; margin: 0 auto; }
 .iot_overview_header { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 30px; }
 .iot_eyebrow { color: var(--iot-accent); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 10px; }
 .iot_overview_header h1 { font-size: clamp(28px, 3vw, 42px); font-weight: 650; letter-spacing: -.035em; margin: 0 0 10px; }

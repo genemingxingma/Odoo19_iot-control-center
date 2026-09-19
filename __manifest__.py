@@ -1,7 +1,7 @@
 {
     "name": "IoT Control Center",
     "summary": "Company-isolated device control and immutable environmental monitoring",
-    "version": "19.0.2.0.8",
+    "version": "19.0.2.2.0",
     "category": "IoT",
     "author": "mamingxing",
     "maintainer": "mamingxing",
@@ -12,6 +12,7 @@
     "data": [
         "security/iot_security.xml",
         "security/ir.model.access.csv",
+        "security/instrument_security.xml",
         "data/ir_cron.xml",
         "views/iot_device_views.xml",
         "views/iot_command_views.xml",
@@ -28,6 +29,7 @@
         "views/iot_attendance_request_views.xml",
         "views/iot_attendance_device_views.xml",
         "views/iot_control_board_views.xml",
+        "views/iot_instrument_views.xml",
         "views/th_gateway_views.xml",
         "views/th_sensor_group_views.xml",
         "views/th_sensor_views.xml",

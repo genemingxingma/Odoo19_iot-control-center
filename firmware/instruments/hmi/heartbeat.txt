@@ -1,0 +1,2 @@
+prints "UI|HELLO|3",0
+printh 0A

@@ -49,6 +49,8 @@ msgstr "ต้องดำเนินการ"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_department__active
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device__active
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device_group__active
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__active
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__active
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_location__active
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__active
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_firmware__active
@@ -125,6 +127,7 @@ msgid "Blue"
 msgstr "สีน้ำเงิน"
 
 #. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_provision
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_bind_wizard_form
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_firmware_push_wizard_form
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_reset_uptime_wizard_form
@@ -139,6 +142,7 @@ msgstr "โหมดการ์ด"
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__checksum
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__checksum
 msgid "Checksum"
 msgstr "เช็คซัม"
 
@@ -160,6 +164,7 @@ msgstr "สี"
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_command__command
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_command__command_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__command_ids
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__command
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_tree
 msgid "Command"
@@ -178,6 +183,14 @@ msgstr "คำสั่ง"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__company_id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__company_id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_upgrade_log__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__company_id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_location__company_id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__company_id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__company_id
@@ -222,6 +235,15 @@ msgstr "การ์ดควบคุม"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__create_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_upgrade_log__create_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_ingest_event__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_provision__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__create_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_location__create_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__create_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__create_uid
@@ -255,6 +277,15 @@ msgstr "สร้างโดย"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__create_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_upgrade_log__create_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_ingest_event__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_provision__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__create_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_location__create_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__create_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__create_date
@@ -353,6 +384,15 @@ msgstr "อุปกรณ์"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__display_name
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_upgrade_log__display_name
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_ingest_event__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_provision__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__display_name
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_location__display_name
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__display_name
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__display_name
@@ -414,6 +454,7 @@ msgstr "ไฟล์"
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__filename
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__filename
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_firmware__filename
 msgid "Filename"
 msgstr "ชื่อไฟล์"
@@ -422,6 +463,7 @@ msgstr "ชื่อไฟล์"
 #: model:ir.actions.act_window,name:iot_control_center.action_iot_firmware
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__firmware_id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_upgrade_log__firmware_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__firmware
 #: model:ir.ui.menu,name:iot_control_center.menu_iot_openwrt_firmware
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_tree
 msgid "Firmware"
@@ -539,6 +581,15 @@ msgstr "ความชื้นต่ำสุด"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_upgrade_log__id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_ingest_event__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_provision__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_location__id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__id
@@ -656,46 +707,6 @@ msgid "IoT User"
 msgstr "ผู้ใช้ IoT"
 
 #. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_mqtt_host
-msgid "Iot Mqtt Host"
-msgstr "โฮสต์ MQTT ของ IoT"
-
-#. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_mqtt_keepalive
-msgid "Iot Mqtt Keepalive"
-msgstr "ค่า Keepalive MQTT ของ IoT"
-
-#. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_mqtt_password
-msgid "Iot Mqtt Password"
-msgstr "รหัสผ่าน MQTT ของ IoT"
-
-#. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_mqtt_port
-msgid "Iot Mqtt Port"
-msgstr "พอร์ต MQTT ของ IoT"
-
-#. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_mqtt_topic_root
-msgid "Iot Mqtt Topic Root"
-msgstr "Topic Root MQTT ของ IoT"
-
-#. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_mqtt_username
-msgid "Iot Mqtt Username"
-msgstr "ชื่อผู้ใช้ MQTT ของ IoT"
-
-#. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_online_timeout_sec
-msgid "Iot Online Timeout Sec"
-msgstr "หมดเวลาออนไลน์ของ IoT (วินาที)"
-
-#. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_th_online_timeout_sec
-msgid "Iot Th Online Timeout Sec"
-msgstr "หมดเวลาออนไลน์ TH ของ IoT (วินาที)"
-
-#. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_th_tcp_host
 msgid "Iot Th Tcp Host"
 msgstr "โฮสต์ TCP TH ของ IoT"
@@ -741,6 +752,7 @@ msgstr "เวลารายงานล่าสุด"
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device__last_seen
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device_bind_wizard__candidate_last_seen
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__last_seen
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__last_seen
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_client__last_seen
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__last_seen
@@ -767,6 +779,15 @@ msgstr "อุณหภูมิล่าสุด"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__write_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_upgrade_log__write_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_ingest_event__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_provision__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__write_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_location__write_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__write_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__write_uid
@@ -801,6 +822,15 @@ msgstr "อัปเดตล่าสุดโดย"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_push_wizard__write_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_upgrade_log__write_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_ingest_event__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_provision__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__write_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_location__write_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__write_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__write_date
@@ -835,6 +865,7 @@ msgstr "ตำแหน่ง"
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device__location_detail
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device_bind_wizard__location_detail
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__location_detail
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__location_detail
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__location_detail
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__sensor_location_detail
@@ -979,6 +1010,10 @@ msgstr "วันจันทร์"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device__name
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device_group__name
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware__name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__name
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_location__name
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__name
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_firmware__name
@@ -1073,6 +1108,7 @@ msgstr "เปิดอยู่ตั้งแต่"
 #. odoo-python
 #: code:addons/iot_control_center/models/iot_control_board.py:0
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device__online
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__online
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__online
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__online
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__online
@@ -1145,6 +1181,7 @@ msgstr "แยกข้อมูลสำเร็จ"
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_command__payload
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__payload
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__payload
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_attendance_request_form
 msgid "Payload"
@@ -1203,11 +1240,6 @@ msgid "Reading"
 msgstr "ข้อมูลการตรวจวัด"
 
 #. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__reading_count
-msgid "Reading Count"
-msgstr "จำนวนค่าที่ตรวจวัด"
-
-#. module: iot_control_center
 #. odoo-python
 #: code:addons/iot_control_center/models/iot_control_board.py:0
 msgid "Readings & Analysis"
@@ -1215,6 +1247,9 @@ msgstr "ข้อมูลการตรวจวัดและการวิ
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_ingest_event__received_at
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__received_at
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__received_at
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__received_at
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__received_at
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__received_at
 msgid "Received At"
@@ -1312,12 +1347,6 @@ msgid "Sensor Count"
 msgstr "จำนวนเซ็นเซอร์"
 
 #. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__sensor_code
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor__probe_code
-msgid "Sensor ID"
-msgstr "รหัสเซ็นเซอร์"
-
-#. module: iot_control_center
 #. odoo-python
 #: code:addons/iot_control_center/models/iot_control_board.py:0
 #: model:ir.actions.act_window,name:iot_control_center.action_iot_th_sensor
@@ -1329,6 +1358,7 @@ msgstr "เซ็นเซอร์"
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_control_board__sequence
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__sequence
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_template_ssid__sequence
 msgid "Sequence"
 msgstr "ลำดับ"
@@ -1357,6 +1387,9 @@ msgstr "พอร์ตต้นทาง"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_attendance_punch__state
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_command__state
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_upgrade_log__state
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__state
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__state
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__state
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_mqtt_message__state
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_job__state
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_alert__state
@@ -1464,6 +1497,7 @@ msgstr "เทเลเมทรี"
 #. module: iot_control_center
 #. odoo-javascript
 #: code:addons/iot_control_center/static/src/js/th_reading_graph_lock.js:0
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__temperature
 msgid "Temperature"
 msgstr "อุณหภูมิ"
 
@@ -1540,11 +1574,6 @@ msgstr "เกณฑ์"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__thursday
 msgid "Thursday"
 msgstr "วันพฤหัสบดี"
-
-#. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_schedule__timezone
-msgid "Timezone"
-msgstr "เขตเวลา"
 
 #. module: iot_control_center
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_raw_packet_search
@@ -1857,14 +1886,6 @@ msgstr "เวลาระบุตำแหน่งล่าสุด"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__locate_until
 msgid "Locate Until"
 msgstr "ระบุตำแหน่งจนถึง"
-
-#. module: iot_control_center
-msgid "OpenWrt SSH Key"
-msgstr "คีย์ SSH ของ OpenWrt"
-
-#. module: iot_control_center
-msgid "OpenWrt SSH key generated or reused successfully."
-msgstr "สร้างหรือใช้คีย์ SSH ของ OpenWrt สำเร็จแล้ว"
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_res_config_settings__iot_openwrt_online_timeout_sec
@@ -2199,6 +2220,7 @@ msgstr "ยืนยันการรีเซ็ต"
 #. odoo-python
 #: code:addons/iot_control_center/models/iot_openwrt_ap.py:0
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_attendance_device__connection_state__online
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_kanban
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_kanban
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_sensor_kanban
 msgid "Connected"
@@ -2806,6 +2828,7 @@ msgid ""
 msgstr "ขาด Python dependency `pyzk` โปรดติดตั้งใน runtime ของ Odoo ก่อน"
 
 #. module: iot_control_center
+#. odoo-python
 #: code:addons/iot_control_center/models/iot_attendance_device.py:0
 msgid "Missing device user ID in payload %s"
 msgstr "ไม่พบ ID ผู้ใช้อุปกรณ์ใน payload %s"
@@ -3211,6 +3234,7 @@ msgid "Turn On Group"
 msgstr "เปิดกลุ่ม"
 
 #. module: iot_control_center
+#. odoo-python
 #: code:addons/iot_control_center/models/iot_attendance_device.py:0
 msgid "Unable to parse punch timestamp."
 msgstr "ไม่สามารถแยกวิเคราะห์เวลาบันทึกได้"
@@ -3240,6 +3264,7 @@ msgid "Unknown error"
 msgstr "ข้อผิดพลาดไม่ทราบสาเหตุ"
 
 #. module: iot_control_center
+#. odoo-python
 #: code:addons/iot_control_center/models/iot_attendance_device.py:0
 msgid "Unsupported punch timestamp: %s"
 msgstr "รูปแบบเวลาบันทึกไม่รองรับ: %s"
@@ -3350,14 +3375,6 @@ msgid "relay-001"
 msgstr "relay-001"
 
 #. module: iot_control_center
-msgid ""
-"No upgrade command sent successfully.\n"
-"%s"
-msgstr ""
-"ไม่สามารถส่งคำสั่งอัปเกรดได้\n"
-"%s"
-
-#. module: iot_control_center
 #. odoo-javascript
 #: code:addons/iot_control_center/static/src/js/delay_countdown_field.js:0
 msgid "Delay Countdown"
@@ -3374,6 +3391,7 @@ msgid "Turn off command sent."
 msgstr "ส่งคำสั่งปิดแล้ว"
 
 #. module: iot_control_center
+#. odoo-python
 #: code:addons/iot_control_center/models/iot_device.py:0
 msgid "Delay command sent."
 msgstr "ส่งคำสั่งหน่วงเวลาแล้ว"
@@ -3411,12 +3429,12 @@ msgid "Max Open Attendance Hours"
 msgstr "ระยะเวลาสูงสุดของรายการลงเวลาที่ยังไม่ปิด (ชั่วโมง)"
 
 #. module: iot_control_center
-#: code:addons/iot_control_center:0
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
 msgid "192.168.10.15"
 msgstr "192.168.10.15"
 
 #. module: iot_control_center
-#: code:addons/iot_control_center:0
+#: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
 msgid "192.168.10.50, 192.168.10.51"
 msgstr "192.168.10.50, 192.168.10.51"
 
@@ -3533,6 +3551,7 @@ msgid "Company Timezone"
 msgstr "เขตเวลาของบริษัท"
 
 #. module: iot_control_center
+#. odoo-python
 #: code:addons/iot_control_center/models/iot_device.py:0
 msgid ""
 "Company internal network settings were sent to the selected controller(s)."
@@ -3817,6 +3836,7 @@ msgstr "โฮสต์"
 
 #. module: iot_control_center
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__relay_command_state__idle
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__state__idle
 msgid "Idle"
 msgstr "ว่าง"
 
@@ -4151,6 +4171,7 @@ msgstr "เวลาเปิดต่อเนื่องสูงสุดต
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_attendance_punch__display_message
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_attendance_punch__message
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__message
 msgid "Message"
 msgstr "ข้อความ"
 
@@ -4564,6 +4585,7 @@ msgid "System Hostname"
 msgstr "ชื่อโฮสต์ระบบ"
 
 #. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__target
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__target
 msgid "Target"
 msgstr "เป้าหมาย"
@@ -4633,11 +4655,13 @@ msgid "Trend - %s"
 msgstr "กราฟแนวโน้ม - %s"
 
 #. module: iot_control_center
+#. odoo-python
 #: code:addons/iot_control_center/models/iot_device.py:0
 msgid "Turn off command sent; waiting for device confirmation."
 msgstr "ส่งคำสั่งปิดแล้ว กำลังรออุปกรณ์ยืนยัน"
 
 #. module: iot_control_center
+#. odoo-python
 #: code:addons/iot_control_center/models/iot_device.py:0
 msgid "Turn on command sent; waiting for device confirmation."
 msgstr "ส่งคำสั่งเปิดแล้ว กำลังรออุปกรณ์ยืนยัน"
@@ -5061,11 +5085,13 @@ msgstr "เมื่อย้ายบริษัท ให้เก็บเ�
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_command__attempts
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__attempts
 msgid "Attempts"
 msgstr "จำนวนครั้งที่ลอง"
 
 #. module: iot_control_center
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_command__state__cancelled
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_command__state__cancelled
 msgid "Cancelled"
 msgstr "ยกเลิกแล้ว"
 
@@ -5099,17 +5125,23 @@ msgstr "กรุณาระบุ IP ของเกตเวย์ในร�
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_ingest_event__event_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__event_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__event_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__event
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__event_id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__event_id
 msgid "Event"
 msgstr "เหตุการณ์"
 
 #. module: iot_control_center
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_command__state__expired
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_command__state__expired
 msgid "Expired"
 msgstr "หมดอายุแล้ว"
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_command__expires_at
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__expires_at
 msgid "Expires At"
 msgstr "หมดอายุเมื่อ"
 
@@ -5171,6 +5203,7 @@ msgstr "เซ็นเซอร์และเกตเวย์ต้องอ
 
 #. module: iot_control_center
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_command__state__queued
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_command__state__queued
 msgid "Queued"
 msgstr "เข้าคิวแล้ว"
 
@@ -5197,6 +5230,7 @@ msgstr "อุปกรณ์ที่ต้องควบคุมความ
 
 #. module: iot_control_center
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_command__state__sent
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_command__state__sent
 msgid "Sent"
 msgstr "ส่งแล้ว"
 
@@ -5274,6 +5308,7 @@ msgstr ""
 #. module: iot_control_center
 #: model:ir.actions.act_window,name:iot_control_center.action_iot_command
 #: model:ir.ui.menu,name:iot_control_center.menu_iot_command
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
 msgid "Command Delivery"
 msgstr "ประวัติการส่งคำสั่ง"
 
@@ -5527,7 +5562,7 @@ msgid "Issue"
 msgstr "สาเหตุของปัญหา"
 
 #. module: iot_control_center
-#: code:addons/iot_control_center:0
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_kanban
 msgid "Last contact:"
 msgstr "ติดต่อล่าสุด:"
 
@@ -5855,6 +5890,7 @@ msgstr "บันทึกเหตุการณ์เดียวกันข
 
 #. module: iot_control_center
 #: model:ir.model.constraint,message:iot_control_center.constraint_iot_command_command_unique
+#: model:ir.model.constraint,message:iot_control_center.constraint_iot_instrument_command_uid_unique
 msgid "Command identity must be unique."
 msgstr "รหัสคำสั่งต้องไม่ซ้ำกัน"
 
@@ -5910,3 +5946,1283 @@ msgstr "<span>สถานะที่ร้องขอ: </span>"
 #: code:addons/iot_control_center:0
 msgid "Requested State:"
 msgstr "สถานะที่ร้องขอ:"
+
+#. module: iot_control_center
+#: model:ir.model.fields,help:iot_control_center.field_iot_instrument_recipe__device_label
+msgid ""
+"A short Latin-character label for the GB2312 instrument screen. The program "
+"name in Odoo may use any language."
+msgstr ""
+"ใช้ชื่อสั้นที่เป็นอักษรละตินบนหน้าจอเครื่องมือ ชื่อโปรแกรมใน Odoo "
+"ใช้ภาษาใดก็ได้"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__acknowledged_at
+msgid "Acknowledged At"
+msgstr "เวลาที่อุปกรณ์ยืนยัน"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__kind__washer
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_release__kind__washer
+msgid "Array Washer"
+msgstr "เครื่องล้างสไลด์"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_control_board.py:0
+#: model:ir.actions.act_window,name:iot_control_center.action_array_washers
+#: model:ir.ui.menu,name:iot_control_center.menu_array_washers
+msgid "Array Washers"
+msgstr "เครื่องล้างสไลด์"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_recipe_form
+msgid ""
+"Begin and end with homing. Drain before changing buffer or spin drying. "
+"Duration is a maximum wait for homing/operator steps. Cycle counts are "
+"explicit steps, not additional hidden repetitions."
+msgstr ""
+"เริ่มและจบด้วยการกลับตำแหน่งอ้างอิง ระบายน้ำยาก่อนเปลี่ยนน้ำยาหรือปั่นแห้ง "
+"ระยะเวลาของขั้นตอนกลับตำแหน่งและรอผู้ปฏิบัติงานคือเวลารอสูงสุด "
+"แต่ละรอบแสดงเป็นขั้นตอนชัดเจน ไม่มีรอบเพิ่มอัตโนมัติ"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__binary
+msgid "Binary"
+msgstr "ไฟล์เฟิร์มแวร์"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__boot_id
+msgid "Boot"
+msgstr "รหัสการบูต"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_alarm__channel__a
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_reading__channel__a
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Buffer A"
+msgstr "น้ำยา A"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_alarm__channel__b
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_reading__channel__b
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Buffer B"
+msgstr "น้ำยา B"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__kind__heater
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_release__kind__heater
+msgid "Buffer Heater"
+msgstr "เครื่องอุ่นน้ำยาล้าง"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_control_board.py:0
+#: model:ir.actions.act_window,name:iot_control_center.action_buffer_heaters
+#: model:ir.ui.menu,name:iot_control_center.menu_buffer_heaters
+msgid "Buffer Heaters"
+msgstr "เครื่องอุ่นน้ำยาล้าง"
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_instrument_reading
+msgid "Buffer Temperature Observation"
+msgstr "บันทึกอุณหภูมิน้ำยาล้าง"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid ""
+"Changing the target does not enable heating. Enable heating locally after "
+"checking liquid levels."
+msgstr ""
+"การเปลี่ยนอุณหภูมิเป้าหมายไม่เริ่มทำความร้อน "
+"โปรดตรวจระดับน้ำยาแล้วเปิดทำความร้อนที่เครื่อง"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__channel
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__channel
+msgid "Channel"
+msgstr "ช่อง"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_reading_search
+msgid "Clock Not Synchronized"
+msgstr "เวลาอุปกรณ์ยังไม่ซิงค์"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Command queued"
+msgstr "คำสั่งเข้าคิวแล้ว"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Commissioning and Firmware"
+msgstr "การตรวจรับอุปกรณ์และเฟิร์มแวร์"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Device-reported fields cannot be changed manually."
+msgstr "ไม่สามารถแก้ไขข้อมูลที่อุปกรณ์รายงานด้วยตนเอง"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_recipe__state__draft
+msgid "Draft"
+msgstr "ฉบับร่าง"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_recipe_step__kind__drain
+msgid "Drain"
+msgstr "ระบายน้ำยา"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__duration_s
+msgid "Duration S"
+msgstr "ระยะเวลา (วินาที)"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_recipe_step__kind__fill_a
+msgid "Fill Buffer A"
+msgstr "เติมน้ำยา A"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_recipe_step__kind__fill_b
+msgid "Fill Buffer B"
+msgstr "เติมน้ำยา B"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Firmware packages are immutable. Create a new release."
+msgstr "แก้ไขแพ็กเกจเฟิร์มแวร์ที่บันทึกแล้วไม่ได้ โปรดสร้างรุ่นใหม่"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid ""
+"Firmware updates require a connected, idle instrument with all outputs off."
+msgstr ""
+"ก่อนอัปเดตเฟิร์มแวร์ อุปกรณ์ต้องออนไลน์ อยู่ในสถานะว่าง "
+"และปิดเอาต์พุตทั้งหมด"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__hardware
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__hardware
+msgid "Hardware"
+msgstr "รุ่นฮาร์ดแวร์"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "History"
+msgstr "ประวัติ"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_recipe_step__kind__home
+msgid "Home Rotor"
+msgstr "กลับตำแหน่งอ้างอิงโรเตอร์"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_reading_graph
+msgid "Hourly Temperature"
+msgstr "แนวโน้มอุณหภูมิรายชั่วโมง"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Identity and device-reported fields cannot be changed manually."
+msgstr "ไม่สามารถแก้ไขรหัสอุปกรณ์และข้อมูลที่อุปกรณ์รายงานด้วยตนเอง"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__instrument_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__instrument_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_provision__instrument_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__instrument_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__instrument_id
+msgid "Instrument"
+msgstr "เครื่องมือ"
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_instrument_command
+msgid "Instrument Command Delivery"
+msgstr "ประวัติการส่งคำสั่งไปยังเครื่องมือ"
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_instrument_provision
+msgid "Instrument Credential Registration"
+msgstr "ลงทะเบียนข้อมูลยืนยันตัวตนอุปกรณ์"
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_instrument_releases
+#: model:ir.ui.menu,name:iot_control_center.menu_instrument_firmware
+msgid "Instrument Firmware"
+msgstr "เฟิร์มแวร์เครื่องมือ"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Invalid program: %s"
+msgstr "โปรแกรมไม่ถูกต้อง: %s"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid ""
+"Keep the existing thermal cutoff and mechanical safety interlocks. Do not "
+"commission hardware until wiring and output polarity have been verified."
+msgstr ""
+"คงอุปกรณ์ตัดความร้อนและอินเตอร์ล็อกนิรภัยเดิมไว้ "
+"ต้องตรวจสายและขั้วเอาต์พุตก่อนเปิดใช้งาน"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__kind
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__kind
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__kind
+msgid "Kind"
+msgstr "ประเภทอุปกรณ์"
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_instrument
+msgid "Laboratory Instrument"
+msgstr "เครื่องมือห้องปฏิบัติการ"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_reading_search
+msgid "Last 24 Hours"
+msgstr "24 ชั่วโมงที่ผ่านมา"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__last_seq
+msgid "Last Seq"
+msgstr "ลำดับข้อมูลล่าสุด"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__liquid
+msgid "Liquid"
+msgstr "ระดับน้ำยาปกติ"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__manifest
+msgid "Manifest"
+msgstr "ข้อมูลแพ็กเกจพร้อมลายเซ็น"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Name this instrument"
+msgstr "ตั้งชื่อเครื่องมือให้ระบุได้ง่าย"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_control_board.py:0
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_kanban
+msgid "No recent contact"
+msgstr "ไม่ได้รับการติดต่อล่าสุด"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid ""
+"No recent device contact. Displayed state may be stale; queued commands "
+"expire after two minutes."
+msgstr ""
+"ไม่ได้รับการติดต่อล่าสุด สถานะอาจไม่เป็นปัจจุบัน คำสั่งในคิวหมดอายุในสองนาที"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Only IoT managers can register instruments."
+msgstr "เฉพาะผู้ดูแล IoT เท่านั้นที่ลงทะเบียนเครื่องมือได้"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__output
+msgid "Output"
+msgstr "เอาต์พุตเปิดอยู่"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid ""
+"Programs are downloaded while idle. Starting and continuing a run require "
+"confirmation at the instrument."
+msgstr ""
+"ดาวน์โหลดโปรแกรมได้เมื่อเครื่องว่าง "
+"การเริ่มหรือทำงานต่อจำเป็นต้องยืนยันที่เครื่อง"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__recipe_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__recipe_id
+msgid "Recipe"
+msgstr "โปรแกรมล้าง"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__recipe_uid
+msgid "Recipe Uid"
+msgstr "รหัสโปรแกรม"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_provision
+msgid "Register"
+msgstr "ลงทะเบียน"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Register Device Token"
+msgstr "ลงทะเบียนโทเคนอุปกรณ์"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_provision
+msgid ""
+"Register the random token provisioned locally on this device. Only its hash "
+"is kept after registration."
+msgstr "กรอกโทเคนสุ่มที่ตั้งไว้ในอุปกรณ์นี้ หลังลงทะเบียนระบบเก็บเฉพาะค่าแฮช"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__release_id
+msgid "Release"
+msgstr "แพ็กเกจเฟิร์มแวร์"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_recipe_form
+msgid "Release Program"
+msgstr "เผยแพร่โปรแกรม"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_recipe__state__released
+msgid "Released"
+msgstr "เผยแพร่แล้ว"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid ""
+"Released programs are immutable. Duplicate the program to make changes."
+msgstr "แก้ไขโปรแกรมที่เผยแพร่แล้วไม่ได้ โปรดทำสำเนาเพื่อสร้างรุ่นใหม่"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Request Firmware Update"
+msgstr "ส่งคำขออัปเดตเฟิร์มแวร์"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid ""
+"Request a stop? Verify the device has stopped before opening or servicing "
+"it."
+msgstr ""
+"ต้องการส่งคำสั่งหยุดหรือไม่? "
+"ต้องตรวจสอบว่าอุปกรณ์หยุดจริงก่อนเปิดฝาหรือซ่อมบำรุง"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__reverse_s
+msgid "Reverse Every (s)"
+msgstr "ช่วงสลับทิศทาง (วินาที)"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__revision
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__revision
+msgid "Revision"
+msgstr "รุ่นโปรแกรม"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Room and equipment location"
+msgstr "ห้องและตำแหน่งอุปกรณ์"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__run_id
+msgid "Run"
+msgstr "รหัสการทำงาน"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Run Logs"
+msgstr "บันทึกการทำงาน"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__sampled_at
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__sampled_at
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__sampled_at
+msgid "Sampled At"
+msgstr "เวลาเก็บค่า"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__device_label
+msgid "Screen Label"
+msgstr "ชื่อที่แสดงบนหน้าจอ"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Select a released program belonging to this company."
+msgstr "โปรดเลือกโปรแกรมที่เผยแพร่แล้วของบริษัทนี้"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid ""
+"Select firmware matching the company, device type and reported hardware "
+"profile."
+msgstr ""
+"โปรดเลือกเฟิร์มแวร์ที่ตรงกับบริษัท ประเภทอุปกรณ์ และรุ่นฮาร์ดแวร์ที่รายงาน"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Send Program"
+msgstr "ส่งโปรแกรม"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Send Temperatures"
+msgstr "ส่งอุณหภูมิเป้าหมาย"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_reading_search
+msgid "Sensor Errors"
+msgstr "ข้อผิดพลาดเซ็นเซอร์"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Set temperatures from 10 to 50 C in 0.25 C increments."
+msgstr "กำหนดอุณหภูมิ 10 ถึง 50 C โดยเพิ่มหรือลดครั้งละ 0.25 C"
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_instrument_release
+msgid "Signed Instrument Firmware Package"
+msgstr "แพ็กเกจเฟิร์มแวร์เครื่องมือที่ลงนามแล้ว"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__snapshot
+msgid "Snapshot"
+msgstr "สำเนาโปรแกรมที่เผยแพร่"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__rps
+msgid "Speed (rev/s)"
+msgstr "ความเร็ว (รอบ/วินาที)"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_recipe_step__kind__dry
+msgid "Spin Dry"
+msgstr "ปั่นแห้ง"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__status_json
+msgid "Status Json"
+msgstr "รายละเอียดสถานะอุปกรณ์"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__status_sampled_at
+msgid "Status Sampled At"
+msgstr "เวลาเก็บสถานะอุปกรณ์"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__step_ids
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__step
+msgid "Step"
+msgstr "ขั้นตอน"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Stop Device"
+msgstr "หยุดอุปกรณ์"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__target_b
+msgid "Target B"
+msgstr "อุณหภูมิเป้าหมายน้ำยา B"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__temperature_b
+msgid "Temperature B"
+msgstr "อุณหภูมิน้ำยา B"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Temperature Control"
+msgstr "ควบคุมอุณหภูมิ"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Temperature History"
+msgstr "ประวัติอุณหภูมิ"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__temperature_max
+msgid "Temperature Max"
+msgstr "อุณหภูมิน้ำยาสูงสุดที่อนุญาต"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__temperature_min
+msgid "Temperature Min"
+msgstr "อุณหภูมิน้ำยาต่ำสุดที่อนุญาต"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "The instrument must be idle. Send this signed firmware update?"
+msgstr "อุปกรณ์ต้องอยู่ในสถานะว่าง ต้องการส่งเฟิร์มแวร์ที่ลงนามนี้หรือไม่?"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "The signed firmware package is invalid or targets another board."
+msgstr "แพ็กเกจเฟิร์มแวร์ไม่ถูกต้องหรือใช้กับฮาร์ดแวร์รุ่นอื่น"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "This instrument is archived."
+msgstr "เครื่องมือนี้ถูกเก็บถาวรแล้ว"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_provision__token
+msgid "Token"
+msgstr "โทเคนอุปกรณ์"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__token_hash
+msgid "Token Hash"
+msgstr "ค่าแฮชโทเคนอุปกรณ์"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__uid
+msgid "Uid"
+msgstr "รหัสเฉพาะ"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_kanban
+msgid "Unavailable"
+msgstr "ไม่มีค่าที่ใช้ได้"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Use Release Program to publish a validated version."
+msgstr "โปรดใช้ปุ่มเผยแพร่โปรแกรมเพื่อตรวจสอบและเผยแพร่รุ่นนี้"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid ""
+"Use a random device token of 32 to 128 characters without surrounding "
+"spaces."
+msgstr "ใช้โทเคนสุ่ม 32 ถึง 128 อักขระ โดยไม่มีช่องว่างด้านหน้าและท้าย"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__valid
+msgid "Valid"
+msgstr "ค่าที่อ่านใช้ได้"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__valid_b
+msgid "Valid B"
+msgstr "ค่าน้ำยา B ใช้ได้"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_reading_search
+msgid "Valid Measurements"
+msgstr "ค่าที่อ่านได้ถูกต้อง"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_control_board.py:0
+msgid "Versioned programs, local start and run traceability"
+msgstr "จัดการรุ่นโปรแกรม เริ่มที่เครื่อง และตรวจสอบประวัติการทำงาน"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_kanban
+msgid "View History"
+msgstr "ดูประวัติ"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_recipe_step__kind__wait
+msgid "Wait for Operator"
+msgstr "รอผู้ปฏิบัติงานยืนยัน"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Waiting for device confirmation. Sending is not proof of execution."
+msgstr "กำลังรออุปกรณ์ยืนยัน การส่งคำสั่งไม่ได้ยืนยันว่าอุปกรณ์ดำเนินการแล้ว"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_recipe_step__kind__wash
+msgid "Wash"
+msgstr "ล้าง"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Washer Program"
+msgstr "โปรแกรมล้าง"
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_instrument_recipe_step
+msgid "Washer Program Step"
+msgstr "ขั้นตอนโปรแกรมล้าง"
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_instrument_recipe
+msgid "Washer Program Version"
+msgstr "รุ่นโปรแกรมล้าง"
+
+#. module: iot_control_center
+#: model:ir.actions.act_window,name:iot_control_center.action_washer_programs
+#: model:ir.ui.menu,name:iot_control_center.menu_washer_programs
+msgid "Washer Programs"
+msgstr "โปรแกรมล้าง"
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_instrument_run_log
+msgid "Washer Run Event"
+msgstr "เหตุการณ์การทำงานเครื่องล้าง"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_command__state__applied
+msgid "Applied"
+msgstr "อุปกรณ์ดำเนินการแล้ว"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_kanban
+msgid "Buffer A<br/>"
+msgstr "น้ำยา A<br/>"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_kanban
+msgid "Buffer B<br/>"
+msgstr "น้ำยา B<br/>"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__state__uncommissioned
+msgid "Commissioning Required"
+msgstr "ต้องตรวจรับอุปกรณ์ก่อนใช้งาน"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__fault
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__fault
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__state__fault
+msgid "Fault"
+msgstr "หยุดเนื่องจากข้อผิดพลาด"
+
+#. module: iot_control_center
+#: model:ir.model.constraint,message:iot_control_center.constraint_iot_instrument_release_uid_unique
+msgid "Firmware identity must be unique."
+msgstr "รหัสเฟิร์มแวร์ต้องไม่ซ้ำกัน"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__state__heating
+msgid "Heating"
+msgstr "เปิดทำความร้อนแล้ว"
+
+#. module: iot_control_center
+#: model:ir.model.constraint,message:iot_control_center.constraint_iot_instrument_uid_unique
+msgid "Instrument identity must be unique."
+msgstr "รหัสเครื่องมือต้องไม่ซ้ำกัน"
+
+#. module: iot_control_center
+#: model:ir.model.constraint,message:iot_control_center.constraint_iot_instrument_recipe_revision_unique
+msgid "Program revision already exists."
+msgstr "มีรุ่นโปรแกรมนี้แล้ว"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_command__state__rejected
+msgid "Rejected"
+msgstr "อุปกรณ์ปฏิเสธแล้ว"
+
+#. module: iot_control_center
+#: model:ir.model.constraint,message:iot_control_center.constraint_iot_instrument_run_log_event_unique
+msgid "Run event already received."
+msgstr "ได้รับเหตุการณ์นี้แล้ว ไม่ต้องบันทึกซ้ำ"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__state__running
+msgid "Running"
+msgstr "กำลังทำงาน"
+
+#. module: iot_control_center
+#: model:ir.model.constraint,message:iot_control_center.constraint_iot_instrument_reading_sample_unique
+msgid "Sample already received."
+msgstr "ได้รับค่าตัวอย่างนี้แล้ว ไม่ต้องบันทึกซ้ำ"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__status_fresh
+msgid "Status Fresh"
+msgstr "สถานะมาจากข้อมูลล่าสุด"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__state__updating
+msgid "Updating"
+msgstr "กำลังอัปเดต"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__state__waiting
+msgid "Waiting for Operator"
+msgstr "รอผู้ปฏิบัติงานยืนยัน"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_control_board.py:0
+msgid "washer"
+msgstr "เครื่องล้างสไลด์"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__fault_b
+msgid "Buffer B Alarm"
+msgstr "สัญญาณเตือนการทำความร้อนน้ำยา B"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_recipe_form
+msgid ""
+"Filling duration controls pump-on time, not a measured volume. Calibrate "
+"filling and draining times on the actual device. Temperature is recorded "
+"only."
+msgstr ""
+"ระยะเวลาเติมคือเวลาเปิดปั๊ม ไม่ใช่ปริมาตรที่วัดได้ "
+"โปรดสอบเทียบเวลาเติมและระบายบนเครื่องจริง อุณหภูมิใช้บันทึกเท่านั้น"
+
+#. module: iot_control_center
+#: model:ir.model,name:iot_control_center.model_iot_instrument_alarm
+msgid "Heater Alarm Event"
+msgstr "บันทึกสัญญาณเตือนเครื่องอุ่น"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Heater Alarms"
+msgstr "สัญญาณเตือนเครื่องอุ่น"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__rise_window_s
+msgid "Heating Observation Time (s)"
+msgstr "เวลาสะสมที่เปิดทำความร้อน (วินาที)"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__washer_temperature_valid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__temperature_valid
+msgid "Liquid Temperature Available"
+msgstr "อ่านอุณหภูมิน้ำยาได้"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__washer_temperature
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__temperature
+msgid "Measured Liquid Temperature"
+msgstr "อุณหภูมิน้ำยาที่วัดได้"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__minimum_rise_c
+msgid "Minimum Temperature Rise (C)"
+msgstr "เกณฑ์อุณหภูมิที่เพิ่มขึ้น (C)"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid ""
+"No level sensor is installed. Heating stops and an alarm latches if "
+"temperature rises by no more than 1 C during 600 seconds of actual heating "
+"(default), or if the probe fails. Check liquid, probe placement and heater "
+"before restarting locally."
+msgstr ""
+"ไม่มีเซ็นเซอร์ระดับน้ำยา ตามค่าเริ่มต้น หากเปิดทำความร้อนสะสม 600 "
+"วินาทีแล้วอุณหภูมิเพิ่มไม่เกิน 1 C หรือเซ็นเซอร์ขัดข้อง "
+"เครื่องจะหยุดและค้างสัญญาณเตือน ตรวจน้ำยา ตำแหน่งเซ็นเซอร์ "
+"และตัวทำความร้อนก่อนเริ่มใหม่ที่เครื่อง"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid ""
+"Programs are compiled here, saved on the device and usable offline. Filling "
+"and draining are timed, without level sensing. Liquid temperature is read-"
+"only; an unavailable sensor is logged but does not stop the timed program."
+msgstr ""
+"จัดทำโปรแกรมบนแพลตฟอร์มแล้วบันทึกลงอุปกรณ์เพื่อทำงานออฟไลน์ "
+"เติมและระบายน้ำยาตามเวลาโดยไม่วัดระดับ อุณหภูมิใช้แสดงผลเท่านั้น "
+"เซ็นเซอร์ขัดข้องจะบันทึกคำเตือนแต่ไม่หยุดโปรแกรมตามเวลา"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid ""
+"Set a heating observation time of 30 to 3600 seconds and a minimum rise of "
+"0.125 to 5 C."
+msgstr ""
+"กำหนดเวลาสะสมทำความร้อน 30 ถึง 3600 วินาที และเกณฑ์อุณหภูมิที่เพิ่มขึ้น "
+"0.125 ถึง 5 C"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__settings_ready
+msgid "Settings Stored on Device"
+msgstr "อุปกรณ์บันทึกการตั้งค่าแล้ว"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__applied_target_b
+msgid "Stored Target B"
+msgstr "อุณหภูมิเป้าหมาย B ที่บันทึกในอุปกรณ์"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid ""
+"Targets and protection settings are stored on the device for offline use. "
+"Downloading does not start heating. Change protection settings only while "
+"stopped."
+msgstr ""
+"อุณหภูมิเป้าหมายและค่าป้องกันบันทึกในอุปกรณ์เพื่อใช้ออฟไลน์ "
+"การส่งค่าไม่เริ่มทำความร้อน เปลี่ยนค่าป้องกันเมื่อหยุดแล้วเท่านั้น"
+
+#. module: iot_control_center
+#: model:ir.model.constraint,message:iot_control_center.constraint_iot_instrument_alarm_event_unique
+msgid "Alarm already received."
+msgstr "ได้รับสัญญาณเตือนนี้แล้ว ไม่ต้องบันทึกซ้ำ"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__fault_a__loop_stalled
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_alarm__fault__loop_stalled
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_reading__fault__loop_stalled
+msgid "Control Loop Stalled"
+msgstr "โปรแกรมควบคุมไม่ตอบสนอง"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__fault_a__storage
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_alarm__fault__storage
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_reading__fault__storage
+msgid "Device Storage Error"
+msgstr "พื้นที่จัดเก็บอุปกรณ์ผิดปกติ"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__fault_a__no_rise
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_alarm__fault__no_rise
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_reading__fault__no_rise
+msgid "Insufficient Temperature Rise"
+msgstr "อุณหภูมิเพิ่มไม่พอ ตรวจน้ำยา เซ็นเซอร์ และตัวทำความร้อน"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__fault_a__none
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_alarm__fault__none
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_reading__fault__none
+msgid "No Active Alarm"
+msgstr "ไม่มีสัญญาณเตือนปัจจุบัน"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__fault_a__over_temperature
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_alarm__fault__over_temperature
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_reading__fault__over_temperature
+msgid "Overtemperature"
+msgstr "อุณหภูมิสูงเกินไป"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__fault_a__configuration
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_alarm__fault__configuration
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_reading__fault__configuration
+msgid "Settings Required"
+msgstr "ต้องตั้งค่าที่ถูกต้อง"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__fault_a__sensor
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_alarm__fault__sensor
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_reading__fault__sensor
+msgid "Temperature Sensor Fault"
+msgstr "เซ็นเซอร์อุณหภูมิผิดปกติ"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "instrument_id"
+msgstr "เครื่องมือ"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_recipe_form
+msgid ""
+"Begin and end with homing. Drain before changing buffer or spin drying. "
+"Homing duration is a timeout. Operator waits have no timer and require local"
+" Continue. Cycle counts are explicit steps, not hidden repetitions."
+msgstr ""
+"เริ่มและจบด้วยการกลับตำแหน่งอ้างอิง ระบายน้ำยาก่อนเปลี่ยนน้ำยาหรือปั่นแห้ง "
+"ระยะเวลากลับตำแหน่งคือเวลารอสูงสุด การรอผู้ปฏิบัติงานไม่จับเวลา "
+"ต้องกดดำเนินการต่อที่เครื่อง แต่ละรอบแสดงเป็นขั้นตอนชัดเจน "
+"ไม่มีรอบเพิ่มอัตโนมัติ"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_recipe_form
+msgid ""
+"During filling, only the overflow pump runs at 60% PWM. Drain steps run both"
+" drain pumps together. Spin drying runs both pumps at 50% PWM. Loading "
+"positions are available only while waiting for the operator."
+msgstr ""
+"ระหว่างเติมน้ำยา เปิดเฉพาะปั๊มน้ำล้นที่ PWM 60% "
+"ขั้นตอนระบายเปิดปั๊มระบายทั้งสองพร้อมกัน ขณะปั่นแห้งทั้งสองปั๊มทำงานที่ PWM "
+"50% เปลี่ยนตำแหน่งใส่สไลด์ได้เฉพาะขณะรอผู้ปฏิบัติงาน"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_recipe_form
+msgid ""
+"Original motor baseline: inlet and filling overflow at full output; both "
+"pumps during drainage 150/255, during spin drying 50/255. New wash/spin "
+"steps default to 1/10 rev/s. Spindle speed is pulse controlled, not a "
+"voltage percentage."
+msgstr ""
+"ใช้ค่ามอเตอร์ตามโปรแกรมเดิม: ระหว่างเติมน้ำยา "
+"ปั๊มเติมและปั๊มน้ำล้นทำงานเต็มกำลัง ระหว่างระบายทั้งสองปั๊มใช้ 150/255 "
+"และขณะปั่นแห้งใช้ 50/255 ขั้นตอนล้างและปั่นแห้งที่สร้างใหม่ใช้ค่าเริ่มต้น 1 "
+"และ 10 รอบ/วินาทีตามลำดับ แกนหมุนควบคุมความเร็วด้วยพัลส์ "
+"ไม่ใช่เปอร์เซ็นต์แรงดันไฟฟ้า"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_recipe_form
+msgid ""
+"While waiting, tap NEXT to move through slots 1, 4, 5, 2, 3, 6, then 1. "
+"Moves alternate 180 and 60 degrees. All pumps stay off. Check physical "
+"balance before pressing Continue; the device cannot detect loaded slides."
+msgstr ""
+"ระหว่างรอ แตะ NEXT เพื่อเลื่อนไปช่อง 1, 4, 5, 2, 3, 6 แล้วกลับช่อง 1 "
+"โดยหมุนสลับ 180 และ 60 องศา ปั๊มทั้งหมดปิดอยู่ "
+"ต้องตรวจสมดุลจริงก่อนกดดำเนินการต่อ "
+"เครื่องไม่สามารถตรวจว่ามีสไลด์อยู่หรือไม่"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__control_inhibited
+msgid "Automatic ON Blocked"
+msgstr "ระงับการเปิดอัตโนมัติ"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__schedule_execution_state__blocked
+msgid "Automatic ON blocked"
+msgstr "ระงับการเปิดอัตโนมัติ"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_form
+msgid ""
+"Automatic ON is blocked on the device. A synchronized schedule does not "
+"release this lock. Check the equipment before explicitly enabling it."
+msgstr ""
+"อุปกรณ์ระงับการเปิดอัตโนมัติ การซิงค์ตารางเวลาไม่ปลดล็อกนี้ "
+"โปรดตรวจสอบอุปกรณ์ก่อนสั่งเปิดใช้งาน"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__chip_id
+msgid "Chip ID"
+msgstr "รหัสชิป"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__schedule_execution_state__clock
+msgid "Clock not synchronized"
+msgstr "นาฬิกาอุปกรณ์ยังไม่ซิงค์"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__device_time_synced
+msgid "Device Clock Synchronized"
+msgstr "นาฬิกาอุปกรณ์ซิงค์แล้ว"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Device Feedback"
+msgstr "ข้อมูลตอบกลับจากอุปกรณ์"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__device_ip
+msgid "Device IP Address"
+msgstr "ที่อยู่ IP ของอุปกรณ์"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_form
+msgid ""
+"Device status is out of date. Displayed values are not a live confirmation."
+msgstr "สถานะอุปกรณ์ไม่เป็นปัจจุบัน ค่าที่แสดงไม่ใช่การยืนยันสถานะขณะนี้"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__fault_a
+msgid "Heater Alarm"
+msgstr "สัญญาณเตือนเครื่องอุ่น"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__heater_output
+msgid "Heater Output"
+msgstr "เอาต์พุตควบคุมการทำความร้อน"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid ""
+"Heater Output is the controller output, not independent proof of power or "
+"heat. Offline storage retains recent temperature samples and preserves "
+"alarms; overwritten samples are counted."
+msgstr ""
+"เอาต์พุตทำความร้อนเป็นเพียงสถานะควบคุม "
+"ไม่ได้ยืนยันแยกต่างหากว่ามีไฟหรือความร้อนจริง "
+"หน่วยความจำออฟไลน์เก็บตัวอย่างอุณหภูมิล่าสุดและสัญญาณเตือน "
+"พร้อมนับตัวอย่างที่ถูกเขียนทับ"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__heating_enabled
+msgid "Heating Enabled"
+msgstr "อนุญาตให้ควบคุมอุณหภูมิแล้ว"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Heating Protection"
+msgstr "การป้องกันการทำความร้อน"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__temperature_a
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_alarm__channel__a
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_reading__channel__a
+msgid "Liquid Temperature"
+msgstr "อุณหภูมิของเหลว"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid ""
+"No level sensor is installed. Heating stops and an alarm latches if "
+"temperature rises by less than 1 C during 600 seconds of actual heating "
+"(default), or if the probe fails. Exactly 1 C does not trigger this alarm. "
+"Check liquid, probe placement and heater before restarting locally."
+msgstr ""
+"ไม่มีเซ็นเซอร์ระดับของเหลว "
+"ค่าเริ่มต้นจะหยุดทำความร้อนและล็อกสัญญาณเตือนเมื่ออุณหภูมิเพิ่มน้อยกว่า 1 C "
+"ภายในเวลาที่จ่ายความร้อนสะสม 600 วินาที หรือเมื่อหัววัดขัดข้อง หากเพิ่มพอดี "
+"1 C จะไม่แจ้งเตือนนี้ ตรวจสอบของเหลว ตำแหน่งหัววัด "
+"และเครื่องอุ่นก่อนเริ่มใหม่ที่อุปกรณ์"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__schedule_execution_state__empty
+msgid "No schedule stored"
+msgstr "ไม่มีรายการตั้งเวลาในอุปกรณ์"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_kanban
+msgid "Not set"
+msgstr "ยังไม่ได้ตั้งค่า"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__dropped_observations
+msgid "Offline Samples Overwritten"
+msgstr "จำนวนตัวอย่างออฟไลน์ที่ถูกเขียนทับ"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__runtime_reported_at
+msgid "Protection Status Updated"
+msgstr "เวลาอัปเดตสถานะการป้องกัน"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__schedule_execution_state__ready
+msgid "Ready for schedules"
+msgstr "พร้อมทำงานตามเวลาที่ตั้งไว้"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__target_a
+msgid "Requested Temperature"
+msgstr "อุณหภูมิเป้าหมายที่ต้องการส่ง"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid ""
+"Requested settings differ from the last device confirmation. Save changes, "
+"then send settings and wait for confirmation."
+msgstr ""
+"ค่าที่ต้องการไม่ตรงกับค่าที่อุปกรณ์ยืนยันล่าสุด โปรดบันทึก ส่งการตั้งค่า "
+"และรอการยืนยันจากอุปกรณ์"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__safety_tripped
+msgid "Safety Cutoff Tripped"
+msgstr "ตัดการทำงานเพื่อความปลอดภัยแล้ว"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__schedule_execution_state__tripped
+msgid "Safety lockout"
+msgstr "ล็อกเพื่อความปลอดภัย"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__schedule_execution_state
+msgid "Schedule Execution"
+msgstr "เงื่อนไขการทำงานตามเวลา"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Schedule Execution:"
+msgstr "เงื่อนไขการทำงานตามเวลา:"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Send Temperature Settings"
+msgstr "ส่งการตั้งค่าอุณหภูมิ"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__settings_pending
+msgid "Settings Not Yet Applied"
+msgstr "การตั้งค่ายังไม่ตรงกับอุปกรณ์"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__schedule_execution_state__stale
+msgid "Status out of date"
+msgstr "สถานะไม่เป็นปัจจุบัน"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__applied_minimum_rise_c
+msgid "Stored Minimum Rise (C)"
+msgstr "เกณฑ์อุณหภูมิเพิ่มขึ้นที่บันทึกในอุปกรณ์ (C)"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__applied_rise_window_s
+msgid "Stored Observation Time (s)"
+msgstr "เวลาเฝ้าดูที่บันทึกในอุปกรณ์ (วินาที)"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_device__reported_schedule_count
+msgid "Stored Schedule Entries"
+msgstr "จำนวนรายการตั้งเวลาในอุปกรณ์"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__applied_target_a
+msgid "Stored Temperature"
+msgstr "อุณหภูมิที่บันทึกในอุปกรณ์"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__valid_a
+msgid "Temperature Available"
+msgstr "มีค่าอุณหภูมิที่ใช้ได้"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Temperature Settings"
+msgstr "การตั้งค่าอุณหภูมิ"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_form
+msgid ""
+"The device safety cutoff has tripped. Inspect the equipment before any "
+"restart."
+msgstr ""
+"อุปกรณ์ตัดการทำงานเพื่อความปลอดภัยแล้ว "
+"โปรดตรวจสอบอุปกรณ์ก่อนเริ่มทำงานอีกครั้ง"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_device__schedule_execution_state__unknown
+msgid "Waiting for device report"
+msgstr "รอข้อมูลจากอุปกรณ์"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_kanban
+msgid "<span>Schedule Execution: </span>"
+msgstr "<span>เงื่อนไขการทำงานตามเวลา:</span>"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_kanban
+msgid "Liquid Temperature<br/>"
+msgstr "อุณหภูมิของเหลว<br/>"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_kanban
+msgid "Stored Temperature<br/>"
+msgstr "อุณหภูมิที่บันทึกในอุปกรณ์<br/>"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_control_board.py:0
+msgid "Temperature settings and hourly history"
+msgstr "การตั้งค่าอุณหภูมิและประวัติรายชั่วโมง"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__catalog_sync_enabled
+msgid "Automatic Program Sync"
+msgstr "ซิงค์รายการโปรแกรมอัตโนมัติ"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Automatic program synchronization"
+msgstr "ซิงค์รายการโปรแกรมอัตโนมัติ"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid ""
+"Begin and end with homing. Drain before changing buffer or spin drying. "
+"Homing duration is a timeout. Operator waits require local Continue. One "
+"wash cycle is forward plus reverse; cycle count times twice the reverse "
+"interval determines wash duration."
+msgstr ""
+"เริ่มและจบด้วยการกลับตำแหน่งอ้างอิง ระบายน้ำยาก่อนเปลี่ยนน้ำยาหรือปั่นแห้ง "
+"ระยะเวลากลับตำแหน่งคือเวลารอสูงสุด การรอต้องกดดำเนินการต่อที่เครื่อง "
+"หนึ่งรอบล้างคือหมุนไปข้างหน้าและย้อนกลับอย่างละหนึ่งครั้ง "
+"ระยะเวลาล้างเท่ากับจำนวนรอบคูณสองเท่าของช่วงเวลาสลับทิศทาง"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_recipe_form
+msgid "Create New Revision"
+msgstr "สร้างรุ่นใหม่"
+
+#. module: iot_control_center
+#: model:ir.model.fields,help:iot_control_center.field_iot_instrument_recipe_step__cycles
+msgid ""
+"One cycle is forward plus reverse. Zero keeps timed washing; otherwise "
+"duration is cycles x 2 x reverse interval."
+msgstr ""
+"หนึ่งรอบคือหมุนไปข้างหน้าและย้อนกลับอย่างละหนึ่งครั้ง ค่า 0 "
+"ใช้การล้างตามเวลา "
+"มิฉะนั้นระยะเวลาเท่ากับจำนวนรอบคูณสองเท่าของช่วงเวลาสลับทิศทาง"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid ""
+"This washer synchronizes all current released company programs while idle. "
+"Publish a revision or archive a program to update its local list."
+msgstr ""
+"เครื่องล้างนี้ซิงค์โปรแกรมที่เผยแพร่แล้วทั้งหมดของบริษัทเมื่อเครื่องว่าง "
+"เผยแพร่รุ่นใหม่หรือเก็บโปรแกรมเข้าคลังเพื่ออัปเดตรายการในเครื่อง"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__cycles
+msgid "Wash Cycles"
+msgstr "จำนวนรอบการล้าง"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_recipe_form
+msgid ""
+"Washers automatically synchronize this company's latest released program "
+"revisions while idle. Archive the latest revision to remove a program from "
+"devices. Failed or offline synchronization leaves the local list unchanged."
+msgstr ""
+"เครื่องล้างซิงค์โปรแกรมรุ่นล่าสุดที่เผยแพร่แล้วของบริษัทเมื่อเครื่องว่าง "
+"เก็บรุ่นล่าสุดเข้าคลังเพื่อนำโปรแกรมออกจากอุปกรณ์ "
+"หากซิงค์ไม่สำเร็จหรือออฟไลน์ รายการในเครื่องจะไม่เปลี่ยนแปลง"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid ""
+"Washers with automatic synchronization replace their local list with the "
+"company's latest released programs while idle. Additions, new revisions and "
+"archived programs synchronize together. Failed or offline synchronization "
+"keeps the existing local list. Three programs per screen page is not a "
+"storage limit."
+msgstr ""
+"เครื่องล้างที่รองรับการซิงค์อัตโนมัติจะอัปเดตรายการในเครื่องทั้งหมดตามโปรแกรมล่าสุดที่เผยแพร่แล้วของบริษัทเมื่อเครื่องว่าง"
+" ทั้งโปรแกรมใหม่ รุ่นใหม่ และรายการที่เก็บเข้าคลังจะซิงค์พร้อมกัน "
+"หากซิงค์ไม่สำเร็จหรือออฟไลน์จะคงรายการเดิมไว้ หน้าจอแสดงสามโปรแกรมต่อหน้า "
+"ไม่ใช่จำนวนสูงสุดที่จัดเก็บได้"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_recipe_form
+msgid ""
+"Publishing automatically adds a homing step at the beginning. Drain before "
+"changing buffer or spin drying. Operator waits require local Continue. One "
+"wash cycle is forward plus reverse; cycle count times twice the reverse "
+"interval determines wash duration."
+msgstr ""
+"เมื่อเผยแพร่ ระบบจะเพิ่มขั้นตอนกลับตำแหน่งโรเตอร์ที่ต้นโปรแกรมโดยอัตโนมัติ "
+"ต้องระบายน้ำยาก่อนเปลี่ยนน้ำยาหรือปั่นแห้ง "
+"และการรอผู้ปฏิบัติงานต้องกดดำเนินการต่อที่เครื่อง "
+"หนึ่งรอบล้างคือหมุนไปข้างหน้าและย้อนกลับอย่างละหนึ่งครั้ง "
+"ระยะเวลาล้างเท่ากับจำนวนรอบคูณสองเท่าของช่วงเวลาสลับทิศทาง"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_recipe_form
+msgid ""
+"Original motor baseline: inlet and filling overflow at full output; both "
+"pumps during drainage 150/255, during spin drying 50/255. New wash steps "
+"default to 1 rev/s and spin-dry steps to 10 rev/s. Spindle speed is pulse "
+"controlled, not a voltage percentage."
+msgstr ""
+"ใช้ค่ามอเตอร์ตามโปรแกรมเดิม: ระหว่างเติมน้ำยา "
+"ปั๊มเติมและปั๊มน้ำล้นทำงานเต็มกำลัง ระหว่างระบายทั้งสองปั๊มใช้ 150/255 "
+"และขณะปั่นแห้งใช้ 50/255 ขั้นตอนล้างและปั่นแห้งที่สร้างใหม่ใช้ค่าเริ่มต้น 1 "
+"และ 10 รอบ/วินาทีตามลำดับ แกนหมุนควบคุมความเร็วด้วยพัลส์ "
+"ไม่ใช่เปอร์เซ็นต์แรงดันไฟฟ้า"
