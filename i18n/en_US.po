@@ -6036,6 +6036,9 @@ msgid "Channel"
 msgstr "Channel"
 
 #. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_alarm__time_quality__unsynchronized
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_reading__time_quality__unsynchronized
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_run_log__time_quality__unsynchronized
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_reading_search
 msgid "Clock Not Synchronized"
 msgstr "Clock Not Synchronized"
@@ -6931,11 +6934,6 @@ msgid "Heater Alarm"
 msgstr "Heater Alarm"
 
 #. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__heater_output
-msgid "Heater Output"
-msgstr "Heater Output"
-
-#. module: iot_control_center
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
 msgid ""
 "Heater Output is the controller output, not independent proof of power or "
@@ -7219,3 +7217,95 @@ msgstr ""
 "pumps during drainage 150/255, during spin drying 50/255. New wash steps "
 "default to 1 rev/s and spin-dry steps to 10 rev/s. Spindle speed is pulse "
 "controlled, not a voltage percentage."
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__heater_output
+msgid "Output at Last Sample"
+msgstr "Output at Last Sample"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid ""
+"A company can publish at most %s washer programs. Archive one before adding "
+"another."
+msgstr ""
+"A company can publish at most %s washer programs. Archive one before adding "
+"another."
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__communication_pause
+msgid "Communication Pause"
+msgstr "Communication Pause"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__communication_pause
+msgid "Communication Safety Pause"
+msgstr "Communication Safety Pause"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__demand
+msgid "Demand"
+msgstr "Demand"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__device_boot_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__device_boot_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__device_boot_id
+msgid "Device Boot"
+msgstr "Device Boot"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_alarm__time_quality__synchronized
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_reading__time_quality__synchronized
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_run_log__time_quality__synchronized
+msgid "Device Clock"
+msgstr "Device Clock"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__device_seq
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__device_seq
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__device_seq
+msgid "Device Seq"
+msgstr "Device Seq"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__device_uptime_ms
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__device_uptime_ms
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__device_uptime_ms
+msgid "Device Uptime Ms"
+msgstr "Device Uptime Ms"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_alarm__time_quality__same_boot_estimate
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_reading__time_quality__same_boot_estimate
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_run_log__time_quality__same_boot_estimate
+msgid "Estimated from Same Boot"
+msgstr "Estimated from Same Boot"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__heater_demand
+msgid "Heat Demand"
+msgstr "Heat Demand"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__status_uptime_ms
+msgid "Status Uptime Ms"
+msgstr "Status Uptime Ms"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__time_quality
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__time_quality
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__time_quality
+msgid "Time Quality"
+msgstr "Time Quality"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__last_heartbeat_digest
+msgid "Last Heartbeat Digest"
+msgstr "Last Heartbeat Digest"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__last_heartbeat_event_id
+msgid "Last Heartbeat Event"
+msgstr "Last Heartbeat Event"

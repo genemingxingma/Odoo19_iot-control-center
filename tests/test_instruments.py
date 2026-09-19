@@ -36,20 +36,28 @@ class TestInstruments(TransactionCase):
 
     def test_heartbeat_is_not_a_temperature_sample(self):
         event = self.event(); event["observation"] = False
+        receipts = self.env["iot.ingest.event"].search_count([("route", "=", "instrument")])
         self.device._exchange(event)
         self.assertEqual(self.env["iot.instrument.reading"].search_count([("instrument_id", "=", self.device.id)]), 0)
+        self.assertEqual(self.env["iot.ingest.event"].search_count([("route", "=", "instrument")]), receipts)
 
     def test_invalid_and_untimed_samples_cannot_distort_graphs(self):
         self.device._exchange(self.event())
         self.device._exchange(self.event(valid=False, seq=2))
         untimed = self.event(seq=3); untimed["sampled_at"] = 0
+        untimed["uptime_ms"] = 300
         untimed["status"]["a"]["temperature"] = 10
         self.device._exchange(untimed)
+        unanchored = self.event(seq=1, boot="unanchored"); unanchored["sampled_at"] = 0
+        unanchored["status"]["a"]["temperature"] = 20
+        self.device._exchange(unanchored)
         model = self.env["iot.instrument.reading"]
         domain = [("instrument_id", "=", self.device.id), ("channel", "=", "a")]
-        self.assertEqual(model.search_count(domain), 3)
-        self.assertEqual(model._read_group(domain, [], ["temperature:avg"])[0][0], 37)
-        self.assertEqual(model.read_group(domain, ["temperature:avg"], [])[0]["temperature"], 37)
+        self.assertEqual(model.search_count(domain), 4)
+        self.assertEqual(model.search([("instrument_id", "=", self.device.id), ("device_seq", "=", 3)]).time_quality, "same_boot_estimate")
+        self.assertEqual(model.search([("instrument_id", "=", self.device.id), ("device_boot_id", "=", "unanchored")]).time_quality, "unsynchronized")
+        self.assertEqual(model._read_group(domain, [], ["temperature:avg"])[0][0], 23.5)
+        self.assertEqual(model.read_group(domain, ["temperature:avg"], [])[0]["temperature"], 23.5)
 
     def test_old_boot_cannot_overwrite_latest_state(self):
         self.device._exchange(self.event())

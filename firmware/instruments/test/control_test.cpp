@@ -127,6 +127,12 @@ int main() {
     }
     assert(slotDelta(2667,0,0)==533 && slotDelta(0,5,0)==-533); ++checks;
     assert(slotDelta(0,6,0)==0 && slotDelta(0,0,-1)==0 && slotDelta(0,0,3200)==0); ++checks;
+    assert(cyclicDelta(3100,133)==233 && cyclicDelta(133,0)==-133 && cyclicDelta(100,1700)==1600); ++checks;
+    Recipe finalDry=typicalProgram(); Washer finishing; assert(finishing.load(finalDry) && finishing.start(0,true,true));
+    finishing.index=finalDry.count-1; finishing.entered=0; finishing.tick(1000,true,false,true,true,false);
+    assert(finishing.running && finishing.finishing && !finishing.completed && finishing.outputs.drain==WasherMotorProfile::SpinDrainPwm); ++checks;
+    finishing.tick(1001,true,false,true,true,false); assert(finishing.running && finishing.outputs.drain==WasherMotorProfile::SpinDrainPwm); ++checks;
+    finishing.tick(1002,true,false,true,true,true); assert(!finishing.running && finishing.completed && !finishing.outputs.drain); ++checks;
     BalancedLoading loading;
     assert(!loading.start(0,0,0,160,false,true,true) && !loading.start(0,0,0,160,true,false,true) && !loading.start(0,0,0,160,true,true,false)); ++checks;
     for (int32_t bad : {-1,3200}) { assert(!loading.start(0,0,bad,160,true,true,true)); ++checks; }

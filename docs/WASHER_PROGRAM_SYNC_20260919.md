@@ -47,9 +47,9 @@ buffer changes and spin drying are rejected if liquid has not been drained.
 The final paired USB flash, rc3 darker-blue/light-blue UI and device integration
 evidence are recorded in [USB test results](WASHER_USB_TEST_20260919.md).
 Physical commissioning remains pending. The catalog API and program editor are
-deployed with platform `19.0.2.2.0`.
+deployed with platform `19.0.2.3.0`.
 
-Candidate firmware: `3.4.0-rc3`. The shared C++ snapshot parser is tested with
+Candidate firmware: `3.4.0-rc5`. The shared C++ snapshot parser is tested with
 eight programs, replacement/addition/deletion, selection identity, empty lists,
 duplicate IDs, wrong device identity, invalid revisions and incomplete snapshots.
 The host suite also covers startup sequencing and keyboard/pagination touch maps.

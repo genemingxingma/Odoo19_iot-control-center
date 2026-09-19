@@ -36,6 +36,8 @@ int main() {
     assert(startup.tick(41099,true,true,true)==None && startup.phase==Startup::Draining);
     assert(startup.tick(41100,true,true,true)==None && startup.phase==Startup::Ready && startup.drain()==0);
     assert(!startup.start(50000,true));
+    startup.stop(); assert(startup.phase==Startup::Stopped);
+    assert(startup.start(50001,true));
     startup=Startup(); assert(startup.start(0xfffffff0u,true));
     assert(startup.tick(0x100,true,true,true)==None && startup.phase==Startup::Draining);
     startup.stop(); assert(startup.phase==Startup::Stopped && startup.drain()==0);

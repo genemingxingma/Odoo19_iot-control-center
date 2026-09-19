@@ -31,7 +31,7 @@ def main():
     client = connect('192.168.10.15',config)
     password = secrets.token_hex(32)
     unit = args.database+'-ui'
-    output_dir = ROOT/'deploy/artifacts/combined-ui-imytestth-20260919'
+    output_dir = ROOT/'deploy/artifacts/combined-ui-imytestth-20260919-r230'
     output_dir.mkdir(parents=True,exist_ok=True)
     try:
         _,out,_ = client.exec_command('hostname')

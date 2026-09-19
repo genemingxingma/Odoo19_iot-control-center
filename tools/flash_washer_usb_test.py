@@ -29,7 +29,7 @@ def main():
     assert len(backup)==4194304 and hashlib.sha256(backup).hexdigest()==BACKUP_SHA
     app=(build/'firmware.bin').read_bytes()
     assert hashlib.sha256(app).hexdigest()==a.app_sha256.lower()
-    assert b'IMYTESTFW1:washer:washer-esp32-4m-v1:30400:END' in app
+    assert b'IMYTESTFW1:washer:washer-esp32-4m-v1:30403:END' in app
     assert len(app)<=0x1b0000 and app[:4]==bytes.fromhex('e9050220')
     raw=(build/'partitions.bin').read_bytes(); partitions=[]
     for i in range(0,len(raw),32):

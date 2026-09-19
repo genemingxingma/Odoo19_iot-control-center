@@ -11,6 +11,7 @@ constexpr uint16_t Background = rgb565(243, 248, 255), Header = rgb565(15, 67, 1
     Ink = rgb565(35, 69, 104), Muted = rgb565(81, 107, 133), Blue = rgb565(20, 104, 192),
     Button = rgb565(216, 233, 250), Disabled = rgb565(225, 234, 243), White = 65535,
     Red = rgb565(192, 40, 64);
+constexpr uint8_t Font = 1;  // Verdana Bold 24 px, ASCII-only screen resource.
 struct View {
     String state, program, step, temperature, remaining, notice, detail;
     bool running = false, waiting = false, ready = false, door = false, openRotor = false;
@@ -45,7 +46,7 @@ public:
     void command(const String& value) { pending += value; pending += "\xff\xff\xff"; }
     void text(int x, int y, int w, int h, const String& value, uint16_t color = Ink, uint16_t bg = Background, int align = 0) {
         String safe = value; safe.replace("\"", "'"); safe.replace("\\", "/"); safe.replace("\n", " "); safe.replace("\r", " ");
-        command("xstr " + String(x)+","+String(y)+","+String(w)+","+String(h)+",0,"+String(color)+","+String(bg)+","+String(align)+",1,1,\""+safe+"\"");
+        command("xstr " + String(x)+","+String(y)+","+String(w)+","+String(h)+","+String(Font)+","+String(color)+","+String(bg)+","+String(align)+",1,1,\""+safe+"\"");
     }
     void fill(int x, int y, int w, int h, uint16_t color) {
         command("fill "+String(x)+","+String(y)+","+String(w)+","+String(h)+","+String(color));
@@ -62,11 +63,14 @@ public:
             loadingMoveEnabled = moveEnabled; loadingContinueEnabled = continueEnabled; loadingSlot = v.slot;
         }
         bool redraw = renderedPage != page || dirty;
-        if (redraw) { presenting = true; renderedPage = page; }
+        // Invalidate any touch-down whenever content is redrawn. This prevents
+        // a release from an old program card confirming newly synced content.
+        if (redraw) { pressed = -1; presenting = true; renderedPage = page; }
         pending = ""; sent = 0;
         if (dirty) { command("cls "+String(Background)); dirty = false; }
         if (page >= 5) {
             fill(0, 0, 800, 62, Header);
+            fill(0, 62, 800, 4, Blue);
             text(24, 10, 752, 42, page == 5 ? "PROGRAMS" : page == 6 ? "WI-FI / 2.4 GHz" : page == 7 ? (v.passwordField ? "ENTER WI-FI PASSWORD" : "ENTER NETWORK NAME") : "INITIALIZE INSTRUMENT", White, Header);
             if (page == 5) {
                 text(24, 76, 752, 32, "Select a program.", Muted);
@@ -102,8 +106,10 @@ public:
             return;
         }
         fill(0, 0, 800, 62, Header);
-        text(24, 10, 484, 42, "iMYTEST / ARRAY WASHER", White, Header);
-        text(518, 10, 256, 42, v.state, White, Header, 2);
+        fill(0, 62, 800, 4, Blue);
+        text(24, 10, 472, 42, "iMYTEST / ARRAY WASHER", White, Header);
+        fill(512, 10, 264, 42, Blue);
+        text(524, 10, 240, 42, v.state, White, Blue, 2);
         text(24, 78, 748, 32, page == 0 ? "RUN OVERVIEW" : page == 1 ? "REVIEW BEFORE START" : page == 2 ? "DEVICE CARE" : page == 4 ? "PAUSED / LOAD SLIDES" : "CONFIRM SD UPDATE", Muted);
         if (page == 4) {
             text(24, 116, 752, 32, "Load opposite slots in pairs. Pumps remain OFF.", Muted);
@@ -117,10 +123,11 @@ public:
             }
             text(24, 304, 752, 76, v.notice, v.loadingReady ? Ink : Red);
         } else if (page <= 1) {
-            text(24, 124, 748, 36, v.program);
-            text(24, 174, 450, 36, v.step);
-            text(514, 174, 260, 36, v.remaining, Ink, Background, 2);
-            text(24, 222, 450, 36, "Buffer: " + v.temperature);
+            fill(16, 116, 768, 146, White);
+            text(24, 124, 748, 36, v.program, Ink, White);
+            text(24, 174, 450, 36, v.step, Ink, White);
+            text(514, 174, 250, 36, v.remaining, Ink, White, 2);
+            text(24, 222, 450, 36, "Buffer: " + v.temperature, Ink, White);
             fill(24, 278, 752, 10, Header); fill(24, 278, v.progress * 752 / 100, 10, Blue);
             text(24, 308, 752, 38, page == 1 ? "Check program and liquid. Keep hands clear; confirm start." : v.notice, v.ready ? Ink : Red);
             if (page == 0) text(24, 354, 752, 32, "DEVICE CARE / WI-FI", Muted);

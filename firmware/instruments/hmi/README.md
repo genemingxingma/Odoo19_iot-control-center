@@ -8,9 +8,13 @@ The redesigned project is separate. Do not install it with the legacy washer
 firmware: the controller and screen use a new, versioned interface.
 
 `washer-v3.HMI` was created and compiled by the official editor with zero errors
-and zero warnings. Font 0 is the supplied songti_24 GB2312 font. `page-init.txt`
-is the page post-initialization event. Timer tm1 sends `heartbeat.txt` every
-400 ms; tm0 is unused. Touch coordinates use the documented 0x67 frame.
+and zero warnings. Font 0 retains the supplied songti_24 GB2312 font as a
+rollback resource. Font 1 is the generated `washer_sans_24_bold` resource:
+24-pixel antialiased Verdana Bold with an ASCII-only character set. The washer
+interface is English-only and the ESP32 renderer intentionally uses font 1.
+`page-init.txt` is the page post-initialization event. Timer tm1 sends
+`heartbeat.txt` every 400 ms; tm0 is unused. Touch coordinates use the
+documented 0x67 frame.
 
 The ESP32 draws the 800x480 interface with bounded, nonblocking serial writes.
 `include/tjc_ui.hpp` owns layout and touch hitboxes. The host test emits the

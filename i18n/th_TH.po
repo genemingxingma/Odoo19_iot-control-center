@@ -6045,6 +6045,9 @@ msgid "Channel"
 msgstr "ช่อง"
 
 #. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_alarm__time_quality__unsynchronized
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_reading__time_quality__unsynchronized
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_run_log__time_quality__unsynchronized
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_reading_search
 msgid "Clock Not Synchronized"
 msgstr "เวลาอุปกรณ์ยังไม่ซิงค์"
@@ -6934,11 +6937,6 @@ msgid "Heater Alarm"
 msgstr "สัญญาณเตือนเครื่องอุ่น"
 
 #. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__heater_output
-msgid "Heater Output"
-msgstr "เอาต์พุตควบคุมการทำความร้อน"
-
-#. module: iot_control_center
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
 msgid ""
 "Heater Output is the controller output, not independent proof of power or "
@@ -7226,3 +7224,95 @@ msgstr ""
 "และขณะปั่นแห้งใช้ 50/255 ขั้นตอนล้างและปั่นแห้งที่สร้างใหม่ใช้ค่าเริ่มต้น 1 "
 "และ 10 รอบ/วินาทีตามลำดับ แกนหมุนควบคุมความเร็วด้วยพัลส์ "
 "ไม่ใช่เปอร์เซ็นต์แรงดันไฟฟ้า"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__heater_output
+msgid "Output at Last Sample"
+msgstr "เอาต์พุตควบคุม ณ เวลาที่เก็บค่าล่าสุด"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid ""
+"A company can publish at most %s washer programs. Archive one before adding "
+"another."
+msgstr ""
+"แต่ละบริษัทเผยแพร่โปรแกรมเครื่องล้างได้สูงสุด %s โปรแกรม "
+"โปรดเก็บโปรแกรมหนึ่งเข้าคลังก่อนเพิ่มโปรแกรมใหม่"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__communication_pause
+msgid "Communication Pause"
+msgstr "หยุดชั่วคราวระหว่างสื่อสาร"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__communication_pause
+msgid "Communication Safety Pause"
+msgstr "หยุดชั่วคราวเพื่อความปลอดภัยระหว่างสื่อสาร"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__demand
+msgid "Demand"
+msgstr "คำขอควบคุม"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__device_boot_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__device_boot_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__device_boot_id
+msgid "Device Boot"
+msgstr "รหัสการบูตอุปกรณ์"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_alarm__time_quality__synchronized
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_reading__time_quality__synchronized
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_run_log__time_quality__synchronized
+msgid "Device Clock"
+msgstr "นาฬิกาอุปกรณ์"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__device_seq
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__device_seq
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__device_seq
+msgid "Device Seq"
+msgstr "ลำดับเหตุการณ์อุปกรณ์"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__device_uptime_ms
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__device_uptime_ms
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__device_uptime_ms
+msgid "Device Uptime Ms"
+msgstr "เวลาทำงานของอุปกรณ์ (มิลลิวินาที)"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_alarm__time_quality__same_boot_estimate
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_reading__time_quality__same_boot_estimate
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_run_log__time_quality__same_boot_estimate
+msgid "Estimated from Same Boot"
+msgstr "ประมาณจากจุดอ้างอิงในการบูตครั้งเดียวกัน"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__heater_demand
+msgid "Heat Demand"
+msgstr "คำขอทำความร้อน"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__status_uptime_ms
+msgid "Status Uptime Ms"
+msgstr "เวลาทำงานเมื่อเก็บสถานะ (มิลลิวินาที)"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__time_quality
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__time_quality
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__time_quality
+msgid "Time Quality"
+msgstr "คุณภาพเวลา"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__last_heartbeat_digest
+msgid "Last Heartbeat Digest"
+msgstr "ค่าแฮช heartbeat ล่าสุด"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__last_heartbeat_event_id
+msgid "Last Heartbeat Event"
+msgstr "รหัสเหตุการณ์ heartbeat ล่าสุด"

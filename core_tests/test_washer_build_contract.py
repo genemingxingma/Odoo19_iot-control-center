@@ -19,8 +19,9 @@ class WasherBuildContract(unittest.TestCase):
 
     def test_library_page_does_not_block_automatic_sync(self):
         source=(ROOT/'src/washer.cpp').read_text()
-        self.assertIn('idleForSettings() && display.page<6',source)
-        self.assertIn('!idleForSettings() || display.page>=6',source)
+        self.assertIn('idleForSettings() && display.page!=1 && display.page<6',source)
+        self.assertIn('!idleForSettings() || display.page==1 || display.page>=6',source)
+        self.assertIn('if (display.page==1) pendingCatalog=*text;',source)
         self.assertIn('candidate.find(programLibrary.items[librarySelection].id)',source)
 
     def test_operator_ui_omits_hardware_prose(self):
@@ -32,6 +33,8 @@ class WasherBuildContract(unittest.TestCase):
         self.assertIn('Check program and liquid. Keep hands clear; confirm start.',ui)
         self.assertIn('Header = rgb565(15, 67, 122)',ui)
         self.assertIn('Button = rgb565(216, 233, 250)',ui)
+        self.assertIn('constexpr uint8_t Font = 1',ui)
+        self.assertIn('fill(0, 62, 800, 4, Blue)',ui)
 
     def test_heater_control_interface_is_local_start_only(self):
         source=(ROOT/'src/heater.cpp').read_text()

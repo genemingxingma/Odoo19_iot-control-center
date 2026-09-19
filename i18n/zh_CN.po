@@ -5971,6 +5971,9 @@ msgid "Channel"
 msgstr "通道"
 
 #. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_alarm__time_quality__unsynchronized
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_reading__time_quality__unsynchronized
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_run_log__time_quality__unsynchronized
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_reading_search
 msgid "Clock Not Synchronized"
 msgstr "设备时间未同步"
@@ -6826,11 +6829,6 @@ msgid "Heater Alarm"
 msgstr "加热器报警"
 
 #. module: iot_control_center
-#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__heater_output
-msgid "Heater Output"
-msgstr "加热控制输出"
-
-#. module: iot_control_center
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
 msgid ""
 "Heater Output is the controller output, not independent proof of power or "
@@ -7086,3 +7084,93 @@ msgid ""
 msgstr ""
 "沿用原程序电机参数：注液时进液泵和溢水泵全输出；两泵排液时均为 150/255，甩干时均为 50/255。新增洗脱、甩干步骤默认分别为 1、10 "
 "转/秒。主轴通过脉冲调速，不按电压百分比控制。"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__heater_output
+msgid "Output at Last Sample"
+msgstr "最近采样时的控制输出"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid ""
+"A company can publish at most %s washer programs. Archive one before adding "
+"another."
+msgstr "每家公司最多可发布 %s 个洗脱程序；新增前请先归档一个程序。"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__communication_pause
+msgid "Communication Pause"
+msgstr "通信暂停"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__communication_pause
+msgid "Communication Safety Pause"
+msgstr "通信安全暂停"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__demand
+msgid "Demand"
+msgstr "控制需求"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__device_boot_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__device_boot_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__device_boot_id
+msgid "Device Boot"
+msgstr "设备启动标识"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_alarm__time_quality__synchronized
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_reading__time_quality__synchronized
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_run_log__time_quality__synchronized
+msgid "Device Clock"
+msgstr "设备时钟"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__device_seq
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__device_seq
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__device_seq
+msgid "Device Seq"
+msgstr "设备事件序号"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__device_uptime_ms
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__device_uptime_ms
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__device_uptime_ms
+msgid "Device Uptime Ms"
+msgstr "设备运行毫秒数"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_alarm__time_quality__same_boot_estimate
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_reading__time_quality__same_boot_estimate
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_run_log__time_quality__same_boot_estimate
+msgid "Estimated from Same Boot"
+msgstr "按同次启动时间锚点估算"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__heater_demand
+msgid "Heat Demand"
+msgstr "加热需求"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__status_uptime_ms
+msgid "Status Uptime Ms"
+msgstr "状态采样运行毫秒数"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__time_quality
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__time_quality
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__time_quality
+msgid "Time Quality"
+msgstr "时间质量"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__last_heartbeat_digest
+msgid "Last Heartbeat Digest"
+msgstr "最近心跳内容摘要"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__last_heartbeat_event_id
+msgid "Last Heartbeat Event"
+msgstr "最近心跳事件标识"

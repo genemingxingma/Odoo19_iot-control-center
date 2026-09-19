@@ -124,6 +124,16 @@ inline int32_t slotDelta(int32_t position, uint8_t slot, int32_t offset, int32_t
     if (delta < -revolution / 2) delta += revolution;
     return delta;
 }
+inline int32_t cyclicDelta(int32_t position, int32_t target, int32_t revolution = WasherMotorProfile::StepsPerRevolution) {
+    if (revolution <= 0) return 0;
+    position %= revolution; target %= revolution;
+    if (position < 0) position += revolution;
+    if (target < 0) target += revolution;
+    int32_t delta = target - position;
+    if (delta > revolution / 2) delta -= revolution;
+    if (delta < -revolution / 2) delta += revolution;
+    return delta;
+}
 class BalancedLoading {
 public:
     static constexpr uint8_t Unknown = 255;
@@ -170,7 +180,7 @@ public:
     Recipe program;
     Outputs outputs;
     Fault fault = None;
-    bool running = false, waiting = false, completed = false;
+    bool running = false, waiting = false, finishing = false, finishingDrain = false, completed = false;
     uint8_t index = 0;
     uint32_t entered = 0, started = 0, lastTick = 0, activeMs = 0;
     bool load(const Recipe& value) {
@@ -179,13 +189,20 @@ public:
     }
     bool start(uint32_t now, bool commissioned, bool doorClosed) {
         if (running || !validRecipe(program) || !commissioned || !doorClosed || fault != None) return false;
-        running = true; completed = waiting = false; index = 0; lastTick = started = entered = now; activeMs = 0; outputs = {};
+        running = true; completed = waiting = finishing = finishingDrain = false; index = 0; lastTick = started = entered = now; activeMs = 0; outputs = {};
         return true;
     }
-    void stop(Fault cause = None) { outputs = {}; running = waiting = false; fault = cause; completed = false; }
+    void stop(Fault cause = None) { outputs = {}; running = waiting = finishing = finishingDrain = false; fault = cause; completed = false; }
     bool advance(uint32_t now) {
         outputs = {}; waiting = false;
-        if (++index >= program.count) { running = false; completed = true; return true; }
+        if (index + 1 >= program.count) {
+            finishing = true;
+            finishingDrain = program.steps[index].kind == StepKind::Dry;
+            if (finishingDrain) outputs.drainTogether(WasherMotorProfile::SpinDrainPwm);
+            lastTick = entered = now;
+            return true;
+        }
+        ++index;
         lastTick = entered = now; return true;
     }
     bool resume(uint32_t now, bool motionStopped = true) {
@@ -195,6 +212,13 @@ public:
     void tick(uint32_t now, bool doorClosed, bool homeComplete, bool fillReady = true, bool fillReturned = true, bool motionStopped = true) {
         outputs = {};
         if (!running) return;
+        if (finishing) {
+            if (finishingDrain) outputs.drainTogether(WasherMotorProfile::SpinDrainPwm);
+            if (motionStopped) {
+                outputs = {}; running = finishing = finishingDrain = false; completed = true;
+            }
+            return;
+        }
         const Step& step = program.steps[index];
         uint32_t delta = elapsed(now, lastTick); lastTick = now;
         if (!doorClosed && (step.kind != StepKind::Wait || !motionStopped)) { stop(DoorOpen); return; }

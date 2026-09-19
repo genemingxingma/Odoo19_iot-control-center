@@ -133,11 +133,40 @@ inline String exchange(const Network& net, const String& body) {
 
 class Journal {
 public:
+    static constexpr unsigned ObservationLimit = 128;
+    static constexpr unsigned MaximumEntries = 192;
     String boot = randomId(), ackId, ackResult;
     uint32_t sequence = 0, lastCommand = 0;
     uint32_t queueNumber = 0;
     uint32_t droppedObservations = 0;
     bool healthy = true;
+private:
+    void inventory(unsigned& count, String& oldestObservation) {
+        count = 0; oldestObservation = "";
+        auto seen = [&](String name) {
+            if (!name.endsWith(".json")) return;
+            ++count;
+            name = name.substring(name.lastIndexOf('/') + 1);
+            if (name.endsWith(".obs.json") && (!oldestObservation.length() || name < oldestObservation)) oldestObservation = name;
+            uint32_t number = strtoul(name.c_str(), nullptr, 10);
+            if (number > queueNumber) queueNumber = number;
+        };
+#ifdef ESP8266
+        Dir dir = LittleFS.openDir("/events"); while (dir.next()) seen(dir.fileName());
+#else
+        File dir = LittleFS.open("/events"); File entry = dir.openNextFile();
+        while (entry) { seen(entry.path()); entry.close(); entry = dir.openNextFile(); }
+#endif
+    }
+    bool dropObservation(const String& oldestObservation) {
+        uint32_t next = droppedObservations >= INT32_MAX ? INT32_MAX : droppedObservations + 1;
+        if (!atomicFile("/observation-loss.json", "{\"count\":" + String(next) + "}")) { healthy = false; return false; }
+        droppedObservations = next;
+        if (!oldestObservation.length()) return true;
+        if (!LittleFS.remove("/events/" + oldestObservation)) { healthy = false; return false; }
+        return true;
+    }
+public:
     void begin() {
         LittleFS.mkdir("/events");
         DynamicJsonDocument d(512);
@@ -169,35 +198,35 @@ public:
         d["sampled_at"] = time(nullptr) >= 1700000000 ? static_cast<uint32_t>(time(nullptr)) : 0;
         if (ackId.length()) { d["ack"]["id"] = ackId; d["ack"]["result"] = ackResult; }
     }
-    bool save(JsonDocument& doc, bool rollingObservation = false) {
-        unsigned count = 0;
-        String oldestObservation;
-        auto seen = [&](String name) {
-            if (!name.endsWith(".json")) return;
-            ++count;
-            name = name.substring(name.lastIndexOf('/') + 1);
-            if (name.endsWith(".obs.json") && (!oldestObservation.length() || name < oldestObservation)) oldestObservation = name;
-            uint32_t number = strtoul(name.c_str(), nullptr, 10);
-            if (number > queueNumber) queueNumber = number;
-        };
-#ifdef ESP8266
-        Dir dir = LittleFS.openDir("/events"); while (dir.next()) seen(dir.fileName());
-#else
-        File dir = LittleFS.open("/events"); File entry = dir.openNextFile();
-        while (entry) { seen(entry.path()); entry.close(); entry = dir.openNextFile(); }
-#endif
+    unsigned pending() {
+        unsigned count; String oldest; inventory(count, oldest); return count;
+    }
+    unsigned criticalFree() {
+        unsigned count; String oldest; inventory(count, oldest);
+        return count < MaximumEntries ? MaximumEntries - count : 0;
+    }
+    bool reserveCritical(unsigned needed) {
+        if (!needed || needed >= MaximumEntries) return false;
+        unsigned count; String oldest;
+        inventory(count, oldest);
+        while (count + needed > MaximumEntries - 1) {
+            if (!oldest.length() || !dropObservation(oldest)) return false;
+            inventory(count, oldest);
+        }
+        return true;
+    }
+    bool save(JsonDocument& doc, bool rollingObservation = false, bool terminal = false) {
+        unsigned count; String oldestObservation; inventory(count, oldestObservation);
         if (rollingObservation && (doc["observation"] != true || doc["alarm"] == true)) { healthy = false; return false; }
-        if (rollingObservation && count >= 112) {
+        if (rollingObservation && count >= ObservationLimit) {
             // Ordinary samples are a bounded offline ring; alarms and command
             // receipts are never evicted. Persist a conservative loss counter.
-            uint32_t next = droppedObservations >= INT32_MAX ? INT32_MAX : droppedObservations + 1;
-            if (!atomicFile("/observation-loss.json", "{\"count\":" + String(next) + "}")) { healthy = false; return false; }
-            droppedObservations = next;
+            if (!dropObservation(oldestObservation)) return false;
             if (!oldestObservation.length()) return true;
-            if (!LittleFS.remove("/events/" + oldestObservation)) { healthy = false; return false; }
             --count;
         }
-        if (count >= 128 || queueNumber == UINT32_MAX) { healthy = false; return false; }
+        unsigned limit = terminal ? MaximumEntries : MaximumEntries - 1;
+        if (count >= limit || queueNumber == UINT32_MAX) { healthy = false; return false; }
         if (rollingObservation) doc["status"]["dropped_observations"] = droppedObservations;
         String text; serializeJson(doc, text);
         char path[40]; snprintf(path, sizeof(path), rollingObservation ? "/events/%010lu.obs.json" : "/events/%010lu.json", static_cast<unsigned long>(++queueNumber));

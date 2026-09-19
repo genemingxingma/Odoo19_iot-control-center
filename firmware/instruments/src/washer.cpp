@@ -20,6 +20,8 @@ WifiDraft wifiDraft;
 uint8_t librarySelection = 0;
 uint8_t libraryPage = 0;
 String catalogDigest;
+String pendingCatalog, reviewedProgramId, reviewedCatalogDigest;
+uint32_t reviewedRevision = 0;
 uint32_t catalogCheckedAt = 0;
 bool catalogInFlight = false;
 uint32_t startupAwaitAt = 0;
@@ -29,6 +31,7 @@ OneWire oneWire(32); DallasTemperature sensors(&oneWire); DeviceAddress probeAdd
 FastAccelStepperEngine motion; FastAccelStepper* motor = nullptr;
 QueueHandle_t requests = nullptr, responses = nullptr;
 bool commissioned = false, storage = false, networkReady = false, sdReady = false;
+bool cleanupRequired = true;
 bool inFlight = false, conversion = false, homeComplete = false, screenReady = false;
 bool probeAttached = false;
 enum class RotorMode { Unconfigured, Open, Interlocked };
@@ -102,6 +105,18 @@ bool loadLibrary() {
     return storeLibrary(candidate); // Preserve the original single-program file.
 }
 bool idleForSettings() { return !washer.running && !startup.active() && (!motor || !motor->isRunning()); }
+bool setCleanupRequired(bool required) {
+    if (!storage) return false;
+    if (required) {
+        if (!runtime::atomicFile("/cleanup-required.json", "{\"required\":true}")) { journal.healthy=false; return false; }
+    } else if (LittleFS.exists("/cleanup-required.json") && !LittleFS.remove("/cleanup-required.json")) {
+        journal.healthy=false; return false;
+    }
+    cleanupRequired=required; return true;
+}
+bool reviewedProgramStillCurrent() {
+    return reviewedProgramId == washer.program.id && reviewedRevision == washer.program.revision && reviewedCatalogDigest == catalogDigest;
+}
 void openWifi() {
     wifiDraft.clear();
     strlcpy(wifiDraft.ssid,network.ssid.c_str(),sizeof(wifiDraft.ssid));
@@ -161,6 +176,7 @@ void snapshot(JsonDocument& d) {
     s["initialization"] = static_cast<unsigned>(startup.phase);
     if (startup.active()) s["drain_pwm"] = s["overflow_pwm"] = startup.drain();
     s["catalog_sync"]=1; s["catalog_digest"]=catalogDigest; s["program_count"]=programLibrary.count;
+    s["cleanup_required"]=cleanupRequired; s["journal_pending"]=journal.pending(); s["journal_free"]=journal.criticalFree();
 }
 bool logEvent(const char* event, const char* message = "") {
     if (!runId.length()) return true;
@@ -169,12 +185,14 @@ bool logEvent(const char* event, const char* message = "") {
     log["run_id"] = runId; log["recipe_id"] = washer.program.id;
     log["revision"] = washer.program.revision; log["step"] = washer.index;
     log["event"] = event; log["message"] = message;
-    if (!journal.save(d)) { washer.stop(Storage); outputsOff(); return false; }
+    bool terminal=!strcmp(event,"completed") || !strcmp(event,"aborted") || !strcmp(event,"fault") || !strcmp(event,"power_loss");
+    if (!journal.save(d,false,terminal)) { washer.stop(Storage); outputsOff(); return false; }
     return true;
 }
 void stopRun(Fault fault, const char* reason) {
     startup.stop();
     bool wasRunning = washer.running;
+    if (!setCleanupRequired(true)) fault=Storage;
     washer.stop(fault); outputsOff(); homeComplete = false; homeIndex = fillIndex = 255;
     if (wasRunning && logEvent(fault == None ? "aborted" : "fault", reason)) {
         LittleFS.remove("/run.json"); runId = "";
@@ -186,7 +204,11 @@ bool saveRunMarker() {
 }
 void startRun() {
     if (startup.phase != Startup::Ready) { uiMessage="Initialize the instrument in Device Care first."; return; }
+    if (cleanupRequired) { uiMessage="Initialization cleanup is required before starting."; return; }
     if (!screenReady || !commissioned || !journal.healthy || !motor) { uiMessage = "Start blocked: check setup and log storage."; return; }
+    unsigned waits=0; for (uint8_t i=0;i<washer.program.count;++i) if (washer.program.steps[i].kind==StepKind::Wait) ++waits;
+    if (!journal.reserveCritical(unsigned(washer.program.count)+waits*2+6)) { uiMessage="Start blocked: upload or service the full event log."; return; }
+    if (!setCleanupRequired(true)) { uiMessage="Start blocked: cleanup state could not be saved."; return; }
     if (motor->isRunning() || !washer.start(millis(), commissioned, motionAllowed())) { uiMessage = "Start blocked: check setup, program and active fault."; return; }
     uiMessage = "";
     runId = runtime::randomId(); homeIndex = fillIndex = 255; homeComplete = rotorHomed = false;
@@ -235,7 +257,10 @@ void localCommand(const char* command) {
     }
     if (!strcmp(command, "UI|STOP")) { stopRun(None, "Stopped locally"); return; }
     if (!screenReady) return;
-    if (!strcmp(command, "UI|START")) startRun();
+    if (!strcmp(command, "UI|START")) {
+        if (reviewedProgramStillCurrent()) startRun();
+        else uiMessage="Program changed. Review it again before starting.";
+    }
     else if (!strcmp(command, "UI|CONTINUE") && motionAllowed()) {
         if (!loading.active && motor && washer.resume(millis(), !motor->isRunning())) { loading.reset(); loadingIndex = 255; logEvent("continued"); display.page = 0; }
     }
@@ -284,8 +309,13 @@ void touchCommand(int button) {
     else if (button==5 && display.page==2 && idleForSettings()) display.page=0;
     else if (button == 0) {
         if ((display.page == 0 || display.page == 4) && washer.waiting) localCommand("UI|CONTINUE");
-        else if (display.page == 0 && idleForSettings()) display.page = 1;
-        else if (display.page == 1) { startRun(); display.page = 0; }
+        else if (display.page == 0 && idleForSettings()) {
+            reviewedProgramId=washer.program.id; reviewedRevision=washer.program.revision; reviewedCatalogDigest=catalogDigest; display.page = 1;
+        }
+        else if (display.page == 1) {
+            if (!reviewedProgramStillCurrent()) uiMessage="Program changed. Return and review the current version.";
+            else { startRun(); if (washer.running) display.page = 0; }
+        }
         else if (display.page == 2) { localCommand("UI|RESET"); display.page = 0; }
         else if (display.page == 3) { sdUpdate(); display.page = 0; }
     } else if (button == 1) {
@@ -347,6 +377,7 @@ void usbDiagnostics() {
         if (WiFi.status() == WL_CONNECTED) { d["ip"] = WiFi.localIP().toString(); d["rssi"] = WiFi.RSSI(); }
         d["platform_configured"] = networkReady; d["sync_in_flight"] = catalogInFlight;
         d["catalog_digest"] = catalogDigest; d["program_count"] = programLibrary.count;
+        d["cleanup_required"] = cleanupRequired; d["journal_pending"] = journal.pending(); d["journal_free"] = journal.criticalFree();
         d["selected_program"] = washer.program.id; d["selected_revision"] = washer.program.revision;
         d["enable_pin"] = digitalRead(ENABLE); d["inlet_a_pin"] = digitalRead(IN_A); d["inlet_b_pin"] = digitalRead(IN_B);
         d["drain_pwm"] = ledcRead(0); d["overflow_pwm"] = ledcRead(1);
@@ -389,7 +420,7 @@ String fetchCatalog(const String& knownDigest) {
 }
 bool applyCatalog(const String& reply) {
     if (reply=="UNCHANGED") return true;
-    if (reply.length()<66 || reply[64]!='\n' || !idleForSettings() || display.page>=6) return false;
+    if (reply.length()<66 || reply[64]!='\n' || !idleForSettings() || display.page==1 || display.page>=6) return false;
     const char* body=reply.c_str()+65;
     uint8_t hash[32]; char hex[65];
     if (mbedtls_sha256_ret(reinterpret_cast<const uint8_t*>(body),reply.length()-65,hash,0)) return false;
@@ -429,10 +460,15 @@ void networkTick(uint32_t now) {
     bool online=WiFi.status()==WL_CONNECTED && time(nullptr)>=1700000000;
     if (online && !previouslyOnline) catalogCheckedAt=0;
     previouslyOnline=online;
+    if (pendingCatalog.length() && idleForSettings() && display.page!=1 && display.page<6) {
+        String deferred=pendingCatalog; pendingCatalog="";
+        if (!applyCatalog(deferred)) uiMessage="Sync unavailable. Local programs unchanged.";
+    }
     String* text = nullptr;
     if (xQueueReceive(responses, &text, 0) == pdTRUE) {
         if (catalogInFlight) {
-            if (!applyCatalog(*text)) uiMessage="Sync unavailable. Local programs unchanged.";
+            if (display.page==1) pendingCatalog=*text;
+            else if (!applyCatalog(*text)) uiMessage="Sync unavailable. Local programs unchanged.";
             catalogInFlight=false;
         } else {
             DynamicJsonDocument reply(8192);
@@ -443,7 +479,7 @@ void networkTick(uint32_t now) {
         }
         delete text; inFlight = false;
     }
-    if (!inFlight && idleForSettings() && display.page<6 && (catalogCheckedAt==0 || elapsed(now,catalogCheckedAt)>=30000)) {
+    if (!inFlight && !pendingCatalog.length() && idleForSettings() && display.page!=1 && display.page<6 && (catalogCheckedAt==0 || elapsed(now,catalogCheckedAt)>=30000)) {
         catalogCheckedAt=now?now:1;
         String* outgoing=new String("CATALOG|"+catalogDigest);
         if (xQueueSend(requests,&outgoing,0)==pdTRUE) { inFlight=true; catalogInFlight=true; }
@@ -499,7 +535,9 @@ void startupTick(uint32_t now) {
     if (fault!=None) stopRun(fault,"Initialization failed");
     if (startup.phase!=previous) display.dirty=true;
     if (previous==Startup::Draining && startup.phase==Startup::Ready) {
-        outputsOff(); uiMessage="Initialization complete. Select a stored program.";
+        outputsOff();
+        if (setCleanupRequired(false)) uiMessage="Initialization complete. Select a stored program.";
+        else stopRun(Storage,"Initialization state could not be saved");
     }
 }
 void motionTick() {
@@ -523,12 +561,16 @@ void motionTick() {
         if (fillIndex != washer.index) {
             fillIndex = washer.index; fillPhase = 0; fillMoveAt = millis();
             motor->setSpeedInHz(WasherMotorProfile::PositionHz); motor->setAcceleration(WasherMotorProfile::MotionAcceleration);
-            if (!acceptedMotion(motor->moveTo(133))) return;
+            int32_t position=motor->getCurrentPosition()%static_cast<int32_t>(STEPS_PER_REV); if(position<0) position+=STEPS_PER_REV;
+            motor->setCurrentPosition(position);
+            if (!acceptedMotion(motor->move(cyclicDelta(position,133,STEPS_PER_REV)))) return;
             lastSpeed = 0;
         }
         if (fillPhase == 0 && !motor->isRunning()) { fillPhase = 1; washer.entered = millis(); }
         else if (fillPhase == 1 && elapsed(millis(), washer.entered) >= step.duration) {
-            if (!acceptedMotion(motor->moveTo(0))) return;
+            int32_t position=motor->getCurrentPosition()%static_cast<int32_t>(STEPS_PER_REV); if(position<0) position+=STEPS_PER_REV;
+            motor->setCurrentPosition(position);
+            if (!acceptedMotion(motor->move(cyclicDelta(position,0,STEPS_PER_REV)))) return;
             fillPhase = 2; fillMoveAt = millis();
         } else if (fillPhase == 2 && !motor->isRunning()) fillPhase = 3;
         if ((fillPhase == 0 || fillPhase == 2) && elapsed(millis(), fillMoveAt) > 5000) { stopRun(RunTimeout, "Fill positioning timeout"); return; }
@@ -645,6 +687,7 @@ void setup() {
     else commissioned = false;
     sensors.begin(); sensors.setResolution(11); sensors.setWaitForConversion(false);
     probeAttached = sensors.getDeviceCount() == 1 && sensors.getAddress(probeAddress, 0);
+    if (probeAttached) sensors.setResolution(probeAddress,11);
     requests = xQueueCreate(1, sizeof(String*)); responses = xQueueCreate(1, sizeof(String*));
     if (networkReady && requests && responses) xTaskCreatePinnedToCore(networkTask, "instrument_net", 8192, nullptr, 1, nullptr, 0);
     else networkReady = false;
@@ -658,12 +701,15 @@ void loop() {
         screenReady = false;
         if (washer.running || startup.active()) stopRun(Storage, "Local screen connection lost");
     }
-    if (!conversion) { sensors.requestTemperatures(); conversionAt = now; conversion = true; }
+    if (!conversion) {
+        if (!probeAttached && sensors.getAddress(probeAddress,0)) { probeAttached=true; sensors.setResolution(probeAddress,11); }
+        sensors.requestTemperatures(); conversionAt = now; conversion = true;
+    }
     else if (elapsed(now, conversionAt) >= 400) {
         bool wasValid = temperature.valid;
-        if (!probeAttached) probeAttached = sensors.getAddress(probeAddress, 0);
         temperature.value = probeAttached ? sensors.getTempC(probeAddress) : DEVICE_DISCONNECTED_C; temperature.sampled = now;
         temperature.valid = std::isfinite(temperature.value) && temperature.value != DEVICE_DISCONNECTED_C && temperature.value != 85 && temperature.value >= -20 && temperature.value < 85;
+        if (!temperature.valid) probeAttached=false;
         conversion = false;
         if (washer.running && wasValid != temperature.valid) logEvent(temperature.valid ? "sensor_recovered" : "sensor_warning", temperature.valid ? "Liquid temperature reading restored" : "Liquid temperature unavailable; timed program continues");
     }
@@ -674,7 +720,11 @@ void loop() {
     washer.tick(now, motionAllowed(), homeComplete, fillIndex == washer.index && fillPhase >= 1, fillIndex == washer.index && fillPhase == 3, !motor || !motor->isRunning());
     if (before && !washer.running) {
         outputsOff();
-        if (logEvent(washer.completed ? "completed" : "fault", washer.completed ? "Program finished" : "Safety interlock stopped run")) { LittleFS.remove("/run.json"); runId = ""; }
+        if (logEvent(washer.completed ? "completed" : "fault", washer.completed ? "Program finished" : "Safety interlock stopped run")) {
+            LittleFS.remove("/run.json");
+            if (washer.completed && !setCleanupRequired(false)) washer.fault=Storage;
+            runId = "";
+        }
     } else if (washer.running && prior != washer.index) {
         logEvent("step"); homeComplete = false;
     } else if (washer.waiting && !waited) logEvent("waiting");

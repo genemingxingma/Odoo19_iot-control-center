@@ -37,6 +37,9 @@ class Instrument(models.Model):
     hardware = fields.Char(readonly=True)
     boot_id = fields.Char(readonly=True)
     last_seq = fields.Integer(readonly=True)
+    status_uptime_ms = fields.Integer(readonly=True)
+    last_heartbeat_event_id = fields.Char(readonly=True, groups="base.group_system")
+    last_heartbeat_digest = fields.Char(readonly=True, groups="base.group_system")
     status_json = fields.Json(readonly=True)
     catalog_sync_enabled = fields.Boolean(compute="_compute_catalog_sync", string="Automatic Program Sync")
     online = fields.Boolean(compute="_compute_online")
@@ -47,7 +50,9 @@ class Instrument(models.Model):
     chip_id = fields.Char(readonly=True, string="Chip ID")
     device_ip = fields.Char(readonly=True, string="Device IP Address")
     heating_enabled = fields.Boolean(readonly=True, string="Heating Enabled")
-    heater_output = fields.Boolean(readonly=True, string="Heater Output")
+    heater_output = fields.Boolean(readonly=True, string="Output at Last Sample")
+    heater_demand = fields.Boolean(readonly=True, string="Heat Demand")
+    communication_pause = fields.Boolean(readonly=True, string="Communication Safety Pause")
     dropped_observations = fields.Integer(readonly=True, string="Offline Samples Overwritten")
     rise_window_s = fields.Integer(default=600, string="Heating Observation Time (s)")
     minimum_rise_c = fields.Float(default=1, digits=(5, 3), string="Minimum Temperature Rise (C)")
@@ -212,8 +217,24 @@ class Instrument(models.Model):
         self.invalidate_recordset()
         now = fields.Datetime.now()
         key = contract.digest({"device": self.uid, "event": data["event_id"]})
-        fresh = self.env["iot.ingest.event"]._claim(key, "instrument", contract.digest(data), now)
+        durable = data.get("observation") is True or data.get("alarm") is True or bool(data.get("log")) or bool(data.get("ack"))
+        payload_digest = contract.digest(data)
+        if durable:
+            fresh = self.env["iot.ingest.event"]._claim(key, "instrument", payload_digest, now)
+        elif self.last_heartbeat_event_id == data["event_id"]:
+            if self.last_heartbeat_digest != payload_digest:
+                raise ValueError("event identity reused with different payload")
+            fresh = False
+        else:
+            fresh = True
         sampled = datetime.fromtimestamp(data["sampled_at"], timezone.utc).replace(tzinfo=None) if data["sampled_at"] else False
+        time_quality = "synchronized" if sampled else "unsynchronized"
+        if not sampled and self.boot_id == data["boot_id"] and self.status_sampled_at:
+            delta_ms = data["uptime_ms"] - self.status_uptime_ms
+            if abs(delta_ms) <= 7 * 24 * 3600 * 1000:
+                estimate = self.status_sampled_at + timedelta(milliseconds=delta_ms)
+                if estimate <= now + timedelta(minutes=5):
+                    sampled, time_quality = estimate, "same_boot_estimate"
         if sampled and sampled > now + timedelta(minutes=5):
             raise ValueError("future sample")
         if fresh:
@@ -224,12 +245,14 @@ class Instrument(models.Model):
                      or data["boot_id"] != self.boot_id and (not self.status_sampled_at or sampled > self.status_sampled_at)))
             if current:
                 values = dict(state=status["state"], firmware=status["firmware"], hardware=str(status.get("hardware", ""))[:64],
-                    boot_id=data["boot_id"], last_seq=data["seq"], status_json=status, status_sampled_at=sampled)
+                    boot_id=data["boot_id"], last_seq=data["seq"], status_uptime_ms=data["uptime_ms"], status_json=status, status_sampled_at=sampled)
                 if self.kind == "heater":
                     values["settings_ready"] = status.get("settings_ready", False)
                     values.update(chip_id=status.get("chip_id", False), device_ip=status.get("ip", False),
                         dropped_observations=status.get("dropped_observations", 0),
                         heating_enabled=status.get("enabled", False), heater_output=status["a"]["output"],
+                        heater_demand=status["a"].get("demand", status["a"]["output"]),
+                        communication_pause=status.get("communication_pause", False),
                         applied_rise_window_s=status.get("rise_window_s", 0),
                         applied_minimum_rise_c=status.get("minimum_rise_c", 0))
                     for channel in ("a",):
@@ -246,18 +269,22 @@ class Instrument(models.Model):
                     probe = status[channel]
                     self.env["iot.instrument.reading"].create({"instrument_id": self.id, "company_id": self.company_id.id,
                         "channel": channel, "sampled_at": sampled, "received_at": now, "event_id": key,
+                        "device_boot_id": data["boot_id"], "device_seq": data["seq"], "device_uptime_ms": data["uptime_ms"], "time_quality": time_quality,
                         "valid": probe["valid"], "temperature": probe.get("temperature", 0) if probe["valid"] else 0,
-                        "target": probe["target"], "output": probe["output"], "fault": probe.get("fault", "none")})
+                        "target": probe["target"], "output": probe["output"], "demand": probe.get("demand", probe["output"]),
+                        "communication_pause": status.get("communication_pause", False), "fault": probe.get("fault", "none")})
             if self.kind == "heater" and data.get("alarm") is True:
                 for channel in ("a",):
                     fault = status[channel].get("fault", "none")
                     if fault != "none":
                         self.env["iot.instrument.alarm"].create({"instrument_id": self.id, "company_id": self.company_id.id,
-                            "event_id": key, "channel": channel, "fault": fault, "sampled_at": sampled, "received_at": now})
+                            "event_id": key, "channel": channel, "fault": fault, "sampled_at": sampled, "received_at": now,
+                            "device_boot_id": data["boot_id"], "device_seq": data["seq"], "device_uptime_ms": data["uptime_ms"], "time_quality": time_quality})
             if data.get("log"):
                 log = data["log"]
                 self.env["iot.instrument.run.log"].create({"instrument_id": self.id, "company_id": self.company_id.id,
                     "event_id": key, "sampled_at": sampled, "received_at": now, "run_id": log["run_id"],
+                    "device_boot_id": data["boot_id"], "device_seq": data["seq"], "device_uptime_ms": data["uptime_ms"], "time_quality": time_quality,
                     "recipe_uid": log["recipe_id"], "revision": log["revision"], "step": log["step"],
                     "event": log["event"], "message": log.get("message", ""), "temperature_valid": status.get("temperature_valid", False),
                     "temperature": status.get("temperature", 0) if status.get("temperature_valid") else 0})
@@ -267,6 +294,8 @@ class Instrument(models.Model):
                     ("uid", "=", ack["id"]), ("state", "in", ["queued", "sent", "expired"])], limit=1)
                 if pending:
                     pending.write({"state": ack["result"], "acknowledged_at": now})
+        if not durable and self.last_heartbeat_event_id != data["event_id"]:
+            self.write({"last_heartbeat_event_id": data["event_id"], "last_heartbeat_digest": payload_digest})
         self.last_seen = now
         queue = self.env["iot.instrument.command"]
         queue.search([("instrument_id", "=", self.id), ("state", "in", ["queued", "sent"]), ("expires_at", "<=", now)]).write({"state": "expired"})
@@ -305,11 +334,18 @@ class InstrumentReading(models.Model):
     event_id = fields.Char(required=True)
     sampled_at = fields.Datetime(index=True)
     received_at = fields.Datetime(required=True, index=True)
+    device_boot_id = fields.Char(index=True)
+    device_seq = fields.Integer()
+    device_uptime_ms = fields.Integer()
+    time_quality = fields.Selection([("synchronized", "Device Clock"), ("same_boot_estimate", "Estimated from Same Boot"),
+        ("unsynchronized", "Clock Not Synchronized")], default="unsynchronized")
     channel = fields.Selection([("a", "Liquid Temperature")], required=True, default="a")
     valid = fields.Boolean()
     temperature = fields.Float(digits=(5, 2), aggregator="avg")
     target = fields.Float(digits=(5, 2), aggregator="avg")
     output = fields.Boolean()
+    demand = fields.Boolean()
+    communication_pause = fields.Boolean()
     fault = fields.Selection(HEATER_FAULT_SELECTION)
     _sample_unique = models.Constraint("UNIQUE(event_id,channel)", "Sample already received.")
 
@@ -329,6 +365,11 @@ class InstrumentAlarm(models.Model):
     event_id = fields.Char(required=True)
     sampled_at = fields.Datetime()
     received_at = fields.Datetime(required=True)
+    device_boot_id = fields.Char(index=True)
+    device_seq = fields.Integer()
+    device_uptime_ms = fields.Integer()
+    time_quality = fields.Selection([("synchronized", "Device Clock"), ("same_boot_estimate", "Estimated from Same Boot"),
+        ("unsynchronized", "Clock Not Synchronized")], default="unsynchronized")
     channel = fields.Selection([("a", "Liquid Temperature")], required=True, default="a")
     fault = fields.Selection(HEATER_FAULT_SELECTION, required=True)
     _event_unique = models.Constraint("UNIQUE(event_id,channel)", "Alarm already received.")
@@ -343,6 +384,11 @@ class InstrumentRunLog(models.Model):
     event_id = fields.Char(required=True)
     sampled_at = fields.Datetime(index=True)
     received_at = fields.Datetime(required=True)
+    device_boot_id = fields.Char(index=True)
+    device_seq = fields.Integer()
+    device_uptime_ms = fields.Integer()
+    time_quality = fields.Selection([("synchronized", "Device Clock"), ("same_boot_estimate", "Estimated from Same Boot"),
+        ("unsynchronized", "Clock Not Synchronized")], default="unsynchronized")
     run_id = fields.Char(required=True, index=True)
     recipe_uid = fields.Char(required=True)
     revision = fields.Integer(required=True)
@@ -407,8 +453,14 @@ class InstrumentRecipe(models.Model):
 
     def action_release(self):
         self._check_iot_access(manage=True)
+        company_uids = {}
         for rec in self:
             rec._lock_draft()
+            current = company_uids.setdefault(rec.company_id.id, {
+                item.uid for item in self.with_context(active_test=False).search([
+                    ("company_id", "=", rec.company_id.id), ("state", "=", "released"), ("active", "=", True)])})
+            if rec.uid not in current and len(current) >= contract.MAX_PROGRAMS:
+                raise ValidationError(_("A company can publish at most %s washer programs. Archive one before adding another.", contract.MAX_PROGRAMS))
             try:
                 body = contract.recipe({"schema": 1, "id": rec.uid, "label": rec.device_label, "revision": rec.revision,
                     "steps": [{"kind": s.kind, "duration_s": s.duration_s, "rps": s.rps, "reverse_s": s.reverse_s, "cycles": s.cycles}
@@ -416,6 +468,7 @@ class InstrumentRecipe(models.Model):
             except (ValueError, TypeError, AttributeError) as exc:
                 raise ValidationError(_("Invalid program: %s", str(exc))) from exc
             rec.sudo().write({"state": "released", "snapshot": body, "checksum": contract.digest(body)})
+            current.add(rec.uid)
 
 class InstrumentRecipeStep(models.Model):
     _name = "iot.instrument.recipe.step"

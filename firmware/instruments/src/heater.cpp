@@ -84,11 +84,13 @@ void snapshot(JsonDocument& d, bool observation) {
     s["ip"] = WiFi.status() == WL_CONNECTED ? WiFi.localIP().toString() : String();
     s["enabled"] = heater.enabled; s["settings_ready"] = settingsReady;
     s["dropped_observations"] = journal.droppedObservations;
+    s["journal_pending"] = journal.pending(); s["journal_free"] = journal.criticalFree();
+    s["communication_pause"] = resampleAfterNetwork;
     s["rise_window_s"] = heater.riseWindowMs / 1000; s["minimum_rise_c"] = heater.minimumRise;
     JsonObject p = s.createNestedObject("a");
     p["valid"] = probe.valid && elapsed(millis(), probe.sampled) <= 3000;
     if (p["valid"].as<bool>()) p["temperature"] = probe.value;
-    p["target"] = heater.target; p["output"] = digitalRead(HEAT) == HIGH; p["fault"] = faultCode();
+    p["target"] = heater.target; p["output"] = digitalRead(HEAT) == HIGH; p["demand"] = heater.demand; p["fault"] = faultCode();
 }
 void recordFault() {
     if (!storage || recordedFault == faultCode()) return;
@@ -130,7 +132,9 @@ void handleCommand(JsonObjectConst c) {
     else if (name == "set_temperature") {
         HeaterChannel candidate = heater;
         if (parseSettings(c["payload"], candidate)) {
-            String text; serializeJson(c["payload"], text);
+            DynamicJsonDocument target(768); target.set(c["payload"]);
+            target["_command"]["seq"]=seq; target["_command"]["id"]=id;
+            String text; serializeJson(target, text);
             ok = runtime::atomicFile("/targets.json", text);
             if (ok) { heater = candidate; settingsReady = true; }
             else { journal.healthy = false; stopHeat(); }
@@ -212,8 +216,12 @@ void setup() {
             commissioned = config["commissioned"] == true && config["profile"].as<String>() == HARDWARE &&
                 config["output_active_high"] == true && sensorConfigured;
         }
-        DynamicJsonDocument d(512);
-        settingsReady = !deserializeJson(d, runtime::readFile("/targets.json", 512)) && parseSettings(d.as<JsonVariantConst>(), heater);
+        DynamicJsonDocument d(768);
+        settingsReady = !deserializeJson(d, runtime::readFile("/targets.json", 768)) && parseSettings(d.as<JsonVariantConst>(), heater);
+        if (settingsReady && d["_command"]["seq"].is<uint32_t>() && runtime::safeId(d["_command"]["id"].as<String>())) {
+            uint32_t seq=d["_command"]["seq"]; String id=d["_command"]["id"];
+            if (seq==journal.lastCommand && journal.ackId==id && journal.ackResult=="rejected") journal.remember(seq,id,"applied");
+        }
         loadFault(); networkReady = network.load();
     } else journal.healthy = false;
     commissioned = commissioned && displayReady && ESP.getFlashChipRealSize() == 4194304;
@@ -251,13 +259,13 @@ void loop() {
     }
     if (networkReady && WiFi.status() == WL_CONNECTED && time(nullptr) >= 1700000000 && elapsed(now, lastPoll) >= pollDelay && !keys && !resampleAfterNetwork) {
         lastPoll = now;
-        // TLS is synchronous: remove power first. The SW2 interrupt latches STOP
-        // during the exchange so a short press cannot be lost.
-        heater.pause(now); outputsOff(); watchdog.detach();
         String path = journal.oldestPath(), text;
         if (!exchangeSchedule.useBacklog(path.length() != 0)) path = "";
         if (path.length()) text = runtime::readFile(path.c_str());
         else { DynamicJsonDocument d(1536); snapshot(d, false); serializeJson(d, text); }
+        // TLS is synchronous: remove power first. The SW2 interrupt latches STOP
+        // during the exchange so a short press cannot be lost.
+        heater.pause(now); outputsOff(); watchdog.detach();
         String response = runtime::exchange(network, text);
         DynamicJsonDocument reply(2048), sent(1536);
         bool accepted = !deserializeJson(reply, response) && !deserializeJson(sent, text) && reply["ok"] == true && reply["event_id"].as<String>() == sent["event_id"].as<String>();

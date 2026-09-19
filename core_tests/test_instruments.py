@@ -27,6 +27,7 @@ class InstrumentContractTests(unittest.TestCase):
         invalid=program(); invalid["steps"]=[{"kind":"invalid"}]
         with self.assertRaises(ValueError): c.program_catalog("device_fixture",[program(),invalid])
         with self.assertRaises(ValueError): c.program_catalog("device_fixture",[dict(program(),id=f"program_{i}") for i in range(100)])
+        with self.assertRaises(ValueError): c.program_catalog("device_fixture",[dict(program(),id=f"program_{i}") for i in range(c.MAX_PROGRAMS+1)])
 
     def test_cycles_derive_duration(self):
         p=program(); p["steps"][2].update(cycles=10,reverse_s=3)
@@ -54,6 +55,8 @@ class InstrumentContractTests(unittest.TestCase):
         self.assertEqual(c.digest(p), c.digest(json.loads(c.canonical(p))))
 
     def test_invalid_recipe_order(self):
+        only_home=program(); only_home["steps"]=[{"kind":"home","duration_s":10,"rps":0}]
+        with self.assertRaises(ValueError): c.recipe(only_home)
         for kinds in [("wash",), ("fill_a", "dry"), ("fill_a", "home"),
                       ("fill_a", "fill_b", "drain")]:
             p = program(); p["steps"] = [{"kind": k, "duration_s": 10, "rps": 1 if k in {"wash", "dry"} else 0} for k in kinds]

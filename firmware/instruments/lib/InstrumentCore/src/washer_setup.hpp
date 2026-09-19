@@ -5,9 +5,12 @@
 namespace instrument {
 class ProgramLibrary {
 public:
-    // Bound RAM consumption on the 4MB/no-PSRAM controller, not the usual count.
+    static constexpr size_t MaximumPrograms = 64;
+    // Bound RAM consumption on the 4MB/no-PSRAM controller and keep the wire
+    // contract identical to the platform even when more RAM is available.
     static constexpr size_t MemoryBudget = 48 * 1024;
-    static constexpr size_t Capacity = MemoryBudget / sizeof(Recipe);
+    static constexpr size_t MemoryCapacity = MemoryBudget / sizeof(Recipe);
+    static constexpr size_t Capacity = MemoryCapacity < MaximumPrograms ? MemoryCapacity : MaximumPrograms;
     std::vector<Recipe> items;
     uint8_t count = 0, selected = 0;
     int find(const char* id) const {
@@ -52,7 +55,9 @@ public:
         if (!permitted || active() || phase == Ready) return false;
         phase = Homing; entered = now; return true;
     }
-    void stop() { if (phase != Ready) phase = Stopped; }
+    // STOP always invalidates the ready state. A fresh home-and-drain cycle is
+    // required before another run can start after any interruption.
+    void stop() { phase = Stopped; }
     Fault tick(uint32_t now, bool safe, bool homed, bool stationary) {
         if (!active()) return None;
         if (!safe) { phase = Stopped; return DoorOpen; }

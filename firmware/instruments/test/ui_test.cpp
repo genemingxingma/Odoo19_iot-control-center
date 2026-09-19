@@ -39,6 +39,8 @@ int main(int argc, char** argv) {
     assert(serial.output.find("STOP") != std::string::npos);
     assert(serial.output.find("Array Wash A / r2") != std::string::npos);
     assert(serial.output.find("fill 0,0,800,62,"+std::to_string(tjc::Header)) != std::string::npos);
+    assert(serial.output.find("fill 0,62,800,4,"+std::to_string(tjc::Blue)) != std::string::npos);
+    assert(serial.output.find("xstr 24,10,472,42,"+std::to_string(tjc::Font)) != std::string::npos);
     assert(serial.output.find(","+std::to_string(tjc::Button)+",1,1,1,\"PROGRAMS\"") != std::string::npos);
     assert(serial.output.find("Lid closed") == std::string::npos);
     assert(serial.output.find("read only") == std::string::npos);

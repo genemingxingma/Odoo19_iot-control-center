@@ -7,6 +7,7 @@ import re
 PROTOCOL = 1
 MAX_BODY = 32768
 MAX_STEPS = 32
+MAX_PROGRAMS = 64
 KINDS = {"heater", "washer"}
 HEATER_HARDWARE = "heater-esp12s-ds18b20-v1"
 STEP_KINDS = {"home", "fill_a", "fill_b", "wash", "drain", "dry", "wait"}
@@ -66,6 +67,8 @@ def recipe(value):
         if len(steps) == MAX_STEPS:
             raise ValueError("automatic homing leaves room for at most 31 configured steps")
         steps = [dict(kind="home", duration_s=10, rps=0, reverse_s=5, cycles=0), *steps]
+    if len(steps) < 2:
+        raise ValueError("recipe requires at least one operating step after homing")
     liquid, total, clean = False, 0, []
     for index, step in enumerate(steps):
         if not isinstance(step, dict) or step.get("kind") not in STEP_KINDS:
@@ -107,6 +110,8 @@ def recipe(value):
 def program_catalog(device_uid, programs):
     """A complete authoritative snapshot; failures must never look like an empty list."""
     identifier(device_uid)
+    if not isinstance(programs, (list, tuple)) or len(programs) > MAX_PROGRAMS:
+        raise ValueError(f"program catalog is limited to {MAX_PROGRAMS} programs")
     clean = [recipe(p) for p in programs]
     if len({p["id"] for p in clean}) != len(clean):
         raise ValueError("duplicate program identities")
@@ -181,11 +186,15 @@ def event(value, kind):
                 number(probe.get("temperature"), -20, 85)
             if type(probe.get("output")) is not bool:
                 raise ValueError("boolean required")
+            if "demand" in probe and type(probe["demand"]) is not bool:
+                raise ValueError("boolean heat demand required")
             if probe.get("fault", "none") not in HEATER_FAULTS:
                 raise ValueError("invalid heater fault")
             number(probe.get("target"), 10, 50)
         if "enabled" in status and type(status["enabled"]) is not bool:
             raise ValueError("boolean heating permission required")
+        if "communication_pause" in status and type(status["communication_pause"]) is not bool:
+            raise ValueError("boolean communication pause required")
         if "dropped_observations" in status:
             integer(status["dropped_observations"], 0, 2147483647)
         if "chip_id" in status and not re.fullmatch(r"[0-9A-Fa-f]{6}", str(status["chip_id"])):

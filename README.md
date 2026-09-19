@@ -1,14 +1,14 @@
 # IoT Control Center V2 (Odoo 19)
 
 Company-isolated environmental monitoring, relay control, attendance and OpenWrt management.
-Production release: Odoo `19.0.2.2.0`, bridge protocol `2`, relay firmware `2.0.2`.
+Production release: Odoo `19.0.2.3.0`, bridge protocol `2`, relay firmware `2.0.2`.
 
-Released on imytestth on 2026-09-19, `19.0.2.2.0` completes the buffer-heater and array-washer workspaces,
+Released on imytestth on 2026-09-19, `19.0.2.3.0` completes the buffer-heater and array-washer workspaces,
 acknowledged device-scoped HTTPS commands, hourly temperature analysis and run
 logs, washer program authoring, release revisions and authoritative catalog sync.
 The ESP8266/ESP32 firmware, signed OTA/SD packaging and TJC8048X550 screen
 project are under `firmware/instruments`. The platform and bridge are deployed;
-instrument firmware remains a **hardware-unaccepted candidate**, not a field release.
+instrument firmware remains subject to hardware commissioning before loaded operation.
 **Source correction (2026-09-19):** the newly supplied `hj_heating.tar.gz`
 confirms a single DS18B20 on GPIO14, active-high heat on GPIO16 and SSD1306
 128x64 at 0x3C. The new profile is `heater-esp12s-ds18b20-v1`; all previous
@@ -19,18 +19,20 @@ acceptance must still be verified. The heater interface reports
 remote start; SW2 remains the local heating-enable control.
 Relay receipt lanes, replay freshness and overview scrolling fixes are included
 in this combined release. Startup home/drain, local multi-program selection and
-explicit wash-cycle counts were unfinished at that release. They are now in the
-USB-tested `3.4.0-rc3` candidate, together with touchscreen Wi-Fi entry and
+explicit wash-cycle counts, authoritative catalog replacement and bounded local
+storage are now included. The washer ESP32 and TJC screen run the USB-tested
+`3.4.0-rc5` candidate, together with touchscreen Wi-Fi entry and
 [authoritative offline program synchronization](docs/WASHER_PROGRAM_SYNC_20260919.md).
 Three programs per page is pagination, not a three-program storage limit.
 The production platform supplies the complete released company catalog; it
 automatically prepends one safe homing step without cluttering the authored
 program. One ESP32 and its TJC screen have been flashed with actuator power
-isolated. The darker blue/white screen uses light-blue secondary buttons rather
-than white-on-white controls; commissioning gates remain.
-See [USB test evidence and remaining gates](docs/WASHER_USB_TEST_20260919.md).
-See [production acceptance and unresolved items](deploy/PRODUCTION_COMBINED_2026-09-19.md)
-and the [current multilingual user guide](docs/IOT_19_0_2_1_1_USER_GUIDE.md).
+isolated. The English-only darker blue/white screen uses an embedded bold
+Verdana resource and light-blue secondary buttons rather than white-on-white
+controls; commissioning gates remain.
+See [final USB and screen evidence](docs/WASHER_USB_RC5_RELEASE_20260919.md).
+See [production acceptance and unresolved items](deploy/PRODUCTION_INSTRUMENTS_2_3_0_2026-09-19.md)
+and the [current multilingual user guide](docs/IOT_19_0_2_3_0_USER_GUIDE.md).
 See [corrected hardware and key definitions](docs/HEATER_ESP12S_HARDWARE_20260917.md).
 See [commissioning and limitations](docs/INSTRUMENTS_V3_COMMISSIONING.md).
 The [current candidate validation record](docs/INSTRUMENTS_V3_3_VALIDATION_20260917.md)
