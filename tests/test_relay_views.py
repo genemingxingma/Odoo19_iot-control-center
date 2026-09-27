@@ -6,6 +6,12 @@ from odoo.tests.common import TransactionCase, tagged
 
 @tagged("post_install", "-at_install")
 class TestRelayLocationDetailViews(TransactionCase):
+    def test_all_relay_views_use_read_only_live_refresh(self):
+        for xmlid, kind in (("view_iot_device_tree", "list"),
+                            ("view_iot_device_kanban", "kanban"), ("view_iot_device_form", "form")):
+            with self.subTest(kind=kind):
+                self.assertEqual(self._view_arch(xmlid, kind).get("js_class"), "iot_relay_live_" + kind)
+
     def _view_arch(self, xmlid, view_type):
         view = self.env.ref("iot_control_center." + xmlid)
         result = self.env["iot.device"].get_view(view.id, view_type)

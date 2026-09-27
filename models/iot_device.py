@@ -844,7 +844,8 @@ class IoTDevice(models.Model):
                 delivery.state = "confirmed"
             if command_id != (rec.last_command_id or ""):
                 continue
-            if rec.desired_relay_state in ("on", "off") and state == rec.desired_relay_state:
+            if (rec.desired_relay_state in ("on", "off") and state == rec.desired_relay_state
+                    and rec.relay_command_state != "confirmed"):
                 rec.relay_command_state = "confirmed"
                 rec.last_command_confirmed_at = at
 

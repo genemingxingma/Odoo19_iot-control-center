@@ -4,7 +4,7 @@
         <field name="name">iot.device.tree</field>
         <field name="model">iot.device</field>
         <field name="arch" type="xml">
-            <list create="0" class="iot_list" decoration-muted="not online">
+            <list create="0" class="iot_list" js_class="iot_relay_live_list" decoration-muted="not online">
                 <field name="name"/>
                 <field name="location_detail"/>
                 <field name="schedule_execution_state" widget="badge"/>
@@ -36,7 +36,7 @@
         <field name="name">iot.device.kanban</field>
         <field name="model">iot.device</field>
         <field name="arch" type="xml">
-            <kanban class="o_kanban_mobile iot_device_cards" create="0">
+            <kanban class="o_kanban_mobile iot_device_cards" js_class="iot_relay_live_kanban" create="0">
                 <field name="name"/>
                 <field name="switch_id_display"/>
                 <field name="relay_state"/>
@@ -96,7 +96,7 @@
         <field name="name">iot.device.form</field>
         <field name="model">iot.device</field>
         <field name="arch" type="xml">
-            <form>
+            <form js_class="iot_relay_live_form">
                 <header>
                     <button name="action_unbind" type="object" string="Unbind" class="btn-secondary" confirm="Unbind this switch from current company?"/>
                     <button name="action_turn_on" groups="iot_control_center.group_iot_operator" type="object" string="Turn On" class="btn-primary" invisible="relay_state != 'on'"/>

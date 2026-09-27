@@ -1013,7 +1013,36 @@ async fn forward_or_queue(_forwarder: &Forwarder, queue: &DurableQueue, path: &s
     };
     loop {
         match queue.persist(&item).await {
-            Ok(()) => return,
+            Ok(()) => {
+                // Persist first, then expedite fresh relay status without making
+                // the MQTT event loop wait on HTTP. Saturation uses the durable
+                // retry worker; telemetry and historical replay retain that lane.
+                if path == "/iot_control_center/internal/mqtt_ingest"
+                    && body.get("retained").and_then(Value::as_bool) == Some(false)
+                    && body
+                        .get("topic")
+                        .and_then(Value::as_str)
+                        .is_some_and(|topic| topic.ends_with("/status"))
+                {
+                    static SLOTS: std::sync::OnceLock<Arc<tokio::sync::Semaphore>> =
+                        std::sync::OnceLock::new();
+                    let slots = SLOTS.get_or_init(|| Arc::new(tokio::sync::Semaphore::new(2)));
+                    if let Ok(permit) = slots.clone().try_acquire_owned() {
+                        let forwarder = _forwarder.clone();
+                        let queue = queue.clone();
+                        let item = item.clone();
+                        tokio::spawn(async move {
+                            let _permit = permit;
+                            if forwarder.post_json(&item.path, &item.body).await.is_ok() {
+                                if let Err(err) = queue.ack(&item.id).await {
+                                    error!("Fast status ACK persistence failed: {err}");
+                                }
+                            }
+                        });
+                    }
+                }
+                return;
+            }
             Err(err) => {
                 error!("ingress backpressure: event persistence unavailable: {err}");
                 INGRESS_FAILURES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -2360,6 +2389,111 @@ fn sanitize_client_id(value: &str) -> String {
 #[cfg(test)]
 mod receipt_tests {
     use super::*;
+
+    #[tokio::test]
+    async fn fresh_status_is_durable_before_fast_forward_without_retry_worker() -> anyhow::Result<()>
+    {
+        let root = std::env::temp_dir().join(format!(
+            "iot-fast-status-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)?
+                .as_nanos()
+        ));
+        let queue = DurableQueue::new(root.clone()).await?;
+        let expected_root = root.clone();
+        let listener = TcpListener::bind("127.0.0.1:0").await?;
+        let address = listener.local_addr()?;
+        let path = "/iot_control_center/internal/mqtt_ingest";
+        let app = Router::new().route(
+            path,
+            post(move |Json(body): Json<Value>| {
+                let root = expected_root.clone();
+                async move {
+                    assert!(root
+                        .join("pending")
+                        .join(format!("{}.json", body["event_id"].as_str().unwrap()))
+                        .exists());
+                    Json(serde_json::json!({"ok":true,"event_id":body["event_id"]}))
+                }
+            }),
+        );
+        let server = tokio::spawn(async move { axum::serve(listener, app).await });
+        let forwarder = Forwarder {
+            http: Client::builder().no_proxy().build()?,
+            odoo_base_url: format!("http://{address}"),
+            token: String::new(),
+        };
+        forward_or_queue(&forwarder, &queue, path,
+            &serde_json::json!({"topic":"iot/relay/FIXTURE/status","retained":false,"payload":"{}"})).await;
+        let deadline = tokio::time::timeout(Duration::from_secs(2), async {
+            while std::fs::read_dir(root.join("pending"))
+                .unwrap()
+                .any(|entry| {
+                    entry.unwrap().path().extension().and_then(|s| s.to_str()) == Some("json")
+                })
+            {
+                tokio::time::sleep(Duration::from_millis(10)).await;
+            }
+        })
+        .await;
+        server.abort();
+        tokio::fs::remove_dir_all(root).await?;
+        assert!(
+            deadline.is_ok(),
+            "Fresh status must not wait for the five-second replay interval"
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn failed_fast_status_remains_durable_and_retained_status_is_not_fast_forwarded(
+    ) -> anyhow::Result<()> {
+        let root = std::env::temp_dir().join(format!(
+            "iot-fast-failure-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)?
+                .as_nanos()
+        ));
+        let queue = DurableQueue::new(root.clone()).await?;
+        let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let seen = count.clone();
+        let listener = TcpListener::bind("127.0.0.1:0").await?;
+        let address = listener.local_addr()?;
+        let path = "/iot_control_center/internal/mqtt_ingest";
+        let app = Router::new().route(
+            path,
+            post(move || {
+                let seen = seen.clone();
+                async move {
+                    seen.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                    StatusCode::SERVICE_UNAVAILABLE
+                }
+            }),
+        );
+        let server = tokio::spawn(async move { axum::serve(listener, app).await });
+        let forwarder = Forwarder {
+            http: Client::builder().no_proxy().build()?,
+            odoo_base_url: format!("http://{address}"),
+            token: String::new(),
+        };
+        for retained in [false, true] {
+            forward_or_queue(&forwarder, &queue, path,
+                &serde_json::json!({"topic":"iot/relay/FIXTURE/status","retained":retained,"payload":"{}"})).await;
+        }
+        tokio::time::sleep(Duration::from_millis(500)).await;
+        let attempted = count.load(std::sync::atomic::Ordering::SeqCst);
+        let durable = queue.batch(200).await?.len();
+        server.abort();
+        tokio::fs::remove_dir_all(root).await?;
+        assert_eq!(
+            attempted, 2,
+            "Only the fresh status is attempted, with the normal two HTTP retries"
+        );
+        assert_eq!(durable, 2);
+        Ok(())
+    }
 
     #[tokio::test]
     async fn slow_sensor_endpoint_does_not_block_relay_worker() -> anyhow::Result<()> {

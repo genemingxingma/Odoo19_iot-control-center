@@ -54,7 +54,10 @@ class IoTInternalIngestController(http.Controller):
         def apply(data):
             if not isinstance(data.get("topic"), str) or not isinstance(data.get("payload"), str):
                 raise ValueError("topic and payload are required")
-            request.env["iot.mqtt.message"].sudo()._create_from_mqtt(data["topic"], data["payload"], retained=bool(data.get("retained")), received_at=envelope(data)[1])
+            request.env["iot.mqtt.message"].sudo()._create_from_mqtt(
+                data["topic"], data["payload"], retained=bool(data.get("retained")),
+                received_at=envelope(data)[1], process_immediately=True,
+            )
             return {"ok": True, "event_id": data["event_id"]}
         return self._dispatch("mqtt", apply)
 

@@ -108,13 +108,19 @@ class IoTMQTTMessage(models.Model):
         return device_model.with_context(iot_auto_discovery=True).create({"name": key, "serial": key, "company_id": False})
 
     @api.model
-    def _create_from_mqtt(self, topic, payload_text, retained=False, received_at=None):
+    def _create_from_mqtt(self, topic, payload_text, retained=False, received_at=None, process_immediately=False):
         parts = (topic or "").split("/")
         serial = parts[-2] if len(parts) >= 3 else False
         kind = parts[-1] if parts and parts[-1] in ("status", "telemetry") else "unknown"
-        return self.sudo().create({"topic": topic, "payload": payload_text,
+        message = self.sudo().create({"topic": topic, "payload": payload_text,
             "retained": bool(retained), "device_serial": serial, "message_type": kind,
             "received_at": received_at or fields.Datetime.now()})
+        if process_immediately:
+            # Receipt, audit row and device state commit together. A failed write
+            # returns 503 so the bridge retains this exact durable event for retry.
+            message._process_one()
+            self.env.flush_all()
+        return message
 
     def _parse_payload(self):
         self.ensure_one()

@@ -3,9 +3,11 @@ import json
 import secrets
 import time
 import uuid
+from datetime import timedelta
 
 from odoo.tests import tagged
 from odoo.tests.common import HttpCase
+from odoo import fields
 
 
 @tagged("post_install", "-at_install")
@@ -46,6 +48,48 @@ class TestInternalIngestHTTP(HttpCase):
         self.assertEqual(response.status_code, 400)
         self.env.invalidate_all()
         self.assertFalse(self.env["iot.ingest.event"].search_count([("event_id", "=", event["event_id"])]))
+
+    def test_relay_command_confirmed_in_http_transaction_without_cron(self):
+        identity = "HTTPFAST" + uuid.uuid4().hex
+        device = self.env["iot.device"].create({"name": "Immediate receipt fixture", "serial": identity,
+            "module_id": identity, "company_id": self.env.company.id})
+        command = self.env["iot.command"].create({"device_id": device.id, "company_id": device.company_id.id,
+            "command": "relay", "payload": {"state": "on"}, "state": "sent",
+            "expires_at": fields.Datetime.now() + timedelta(minutes=2)})
+        device.write({"desired_relay_state": "on", "relay_command_state": "pending",
+            "last_command_id": command.command_id})
+        event = self.event(topic=f"iot/relay/{identity}/status", retained=False,
+            payload=json.dumps({"module_id": identity, "state": "on", "last_command_id": command.command_id}))
+        response = self.post_event("mqtt_ingest", event)
+        self.assertEqual(response.status_code, 200)
+        self.env.invalidate_all()
+        self.assertEqual(device.relay_state, "on")
+        self.assertEqual(device.relay_command_state, "confirmed")
+        self.assertEqual(command.state, "confirmed")
+        message = self.env["iot.mqtt.message"].search([("topic", "=", event["topic"])])
+        self.assertEqual(message.state, "done")
+        self.assertTrue(message.processed_at)
+        confirmed_at = device.last_command_confirmed_at
+        event["event_id"] = uuid.uuid4().hex
+        event["received_at_ms"] += 30000
+        response = self.post_event("mqtt_ingest", event)
+        self.assertEqual(response.status_code, 200)
+        self.env.invalidate_all()
+        self.assertEqual(device.last_command_confirmed_at, confirmed_at)
+
+    def test_immediate_late_and_retained_reports_do_not_undo_state(self):
+        identity = "HTTPORDER" + uuid.uuid4().hex
+        device = self.env["iot.device"].create({"name": "Immediate ordering fixture", "serial": identity,
+            "module_id": identity, "company_id": self.env.company.id})
+        event = self.event(topic=f"iot/relay/{identity}/status", retained=False,
+            payload=json.dumps({"module_id": identity, "state": "on"}))
+        self.assertEqual(self.post_event("mqtt_ingest", event).status_code, 200)
+        for retained in (False, True):
+            late = {**event, "event_id": uuid.uuid4().hex, "received_at_ms": event["received_at_ms"] - 30000,
+                "retained": retained, "payload": json.dumps({"module_id": identity, "state": "off"})}
+            self.assertEqual(self.post_event("mqtt_ingest", late).status_code, 200)
+        self.env.invalidate_all()
+        self.assertEqual(device.relay_state, "on")
 
     def test_invalid_authentication_does_not_create_receipt(self):
         event = self.event(topic="iot/relay/TEST/status", payload="{}")

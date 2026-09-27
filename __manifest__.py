@@ -1,7 +1,7 @@
 {
     "name": "IoT Control Center",
     "summary": "Company-isolated device control and immutable environmental monitoring",
-    "version": "19.0.2.6.0",
+    "version": "19.0.2.6.1",
     "category": "IoT",
     "author": "mamingxing",
     "maintainer": "mamingxing",
@@ -57,6 +57,7 @@
             "iot_control_center/static/src/css/operations.css",
             "iot_control_center/static/src/xml/operations_overview.xml",
             "iot_control_center/static/src/js/operations_overview.js",
+            "iot_control_center/static/src/js/relay_live_refresh.js",
         ],
         "web.assets_backend_lazy": [
             "iot_control_center/static/src/xml/delay_countdown_field.xml",

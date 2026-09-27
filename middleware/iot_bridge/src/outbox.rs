@@ -220,7 +220,11 @@ impl DurableQueue {
     }
 
     pub async fn ack(&self, id: &str) -> Result<()> {
-        fs::remove_file(self.pending(id)?).await?;
+        match fs::remove_file(self.pending(id)?).await {
+            Ok(()) => {}
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => {}
+            Err(err) => return Err(err.into()),
+        }
         self.sync_directory("pending").await
     }
 
@@ -238,6 +242,22 @@ impl DurableQueue {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn fast_and_replay_ack_are_idempotent() -> Result<()> {
+        let (path, queue) = test_queue("double-ack").await?;
+        let id = queue
+            .enqueue(
+                "/iot_control_center/internal/mqtt_ingest",
+                &serde_json::json!({}),
+            )
+            .await?;
+        queue.ack(&id).await?;
+        queue.ack(&id).await?;
+        assert!(queue.batch(200).await?.is_empty());
+        fs::remove_dir_all(path).await?;
+        Ok(())
+    }
 
     #[tokio::test]
     async fn independent_lanes_keep_failed_sensor_events_without_blocking_relays() -> Result<()> {
