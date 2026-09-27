@@ -11,6 +11,7 @@ access_instrument_recipe_manager,Instrument program manager,model_iot_instrument
 access_instrument_step,Instrument steps,model_iot_instrument_recipe_step,iot_control_center.group_iot_user,1,0,0,0
 access_instrument_step_manager,Instrument step manager,model_iot_instrument_recipe_step,iot_control_center.group_iot_manager,1,1,1,1
 access_instrument_provision,Instrument provisioning,model_iot_instrument_provision,iot_control_center.group_iot_manager,1,1,1,1
+access_instrument_bind_wizard,Instrument binding wizard,model_iot_instrument_bind_wizard,iot_control_center.group_iot_manager,1,1,1,1
 access_instrument_release,Instrument firmware,model_iot_instrument_release,iot_control_center.group_iot_manager,1,1,1,0
 access_iot_command_manager,IoT Command manager,model_iot_command,iot_control_center.group_iot_manager,1,0,0,0
 access_iot_receipt_system,IoT Event receipt admin,model_iot_ingest_event,base.group_system,1,0,0,0
@@ -42,6 +43,7 @@ access_iot_firmware_upgrade_log_admin,access.iot.firmware.upgrade.log.admin,mode
 access_iot_mqtt_message_admin,access.iot.mqtt.message.admin,model_iot_mqtt_message,base.group_system,1,1,1,1
 access_iot_firmware_push_wizard_admin,access.iot.firmware.push.wizard.admin,model_iot_firmware_push_wizard,base.group_system,1,1,1,1
 access_iot_device_bind_wizard_admin,access.iot.device.bind.wizard.admin,model_iot_device_bind_wizard,base.group_system,1,1,1,1
+access_iot_instrument_bind_wizard_admin,access.iot.instrument.bind.wizard.admin,model_iot_instrument_bind_wizard,base.group_system,1,1,1,1
 access_iot_th_sensor_bind_wizard_admin,access.iot.th.sensor.bind.wizard.admin,model_iot_th_sensor_bind_wizard,base.group_system,1,1,1,1
 access_iot_reset_uptime_wizard_admin,access.iot.reset.uptime.wizard.admin,model_iot_reset_uptime_wizard,base.group_system,1,1,1,1
 access_iot_control_board_user,access.iot.control.board.user,model_iot_control_board,iot_control_center.group_iot_user,1,0,0,0

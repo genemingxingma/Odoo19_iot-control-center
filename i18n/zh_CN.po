@@ -130,6 +130,7 @@ msgstr "蓝色"
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_provision
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_bind_wizard_form
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_firmware_push_wizard_form
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_instrument_bind_wizard_form
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_reset_uptime_wizard_form
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_th_sensor_bind_wizard_form
 msgid "Cancel"
@@ -185,6 +186,7 @@ msgstr "命令"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_firmware_upgrade_log__company_id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__company_id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__company_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_bind_wizard__company_id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__company_id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__company_id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe__company_id
@@ -217,6 +219,7 @@ msgstr "配置设置"
 
 #. module: iot_control_center
 #: model:ir.actions.act_window,name:iot_control_center.action_iot_control_board
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_switch_cards
 msgid "Control Cards"
 msgstr "控制卡片"
 
@@ -237,6 +240,7 @@ msgstr "控制卡片"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_ingest_event__create_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__create_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__create_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_bind_wizard__create_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__create_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_provision__create_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__create_uid
@@ -279,6 +283,7 @@ msgstr "创建人"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_ingest_event__create_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__create_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__create_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_bind_wizard__create_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__create_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_provision__create_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__create_date
@@ -386,6 +391,7 @@ msgstr "设备"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_ingest_event__display_name
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__display_name
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__display_name
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_bind_wizard__display_name
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__display_name
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_provision__display_name
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__display_name
@@ -583,6 +589,7 @@ msgstr "湿度下限"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_ingest_event__id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_bind_wizard__id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_provision__id
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__id
@@ -781,6 +788,7 @@ msgstr "最新温度"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_ingest_event__write_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__write_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__write_uid
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_bind_wizard__write_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__write_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_provision__write_uid
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__write_uid
@@ -824,6 +832,7 @@ msgstr "最后更新人"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_ingest_event__write_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__write_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_alarm__write_date
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_bind_wizard__write_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_command__write_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_provision__write_date
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_reading__write_date
@@ -866,6 +875,7 @@ msgstr "位置"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device__location_detail
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device_bind_wizard__location_detail
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__location_detail
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_bind_wizard__location_detail
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_openwrt_ap__location_detail
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_gateway__location_detail
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_reading__sensor_location_detail
@@ -1426,9 +1436,6 @@ msgstr "周日"
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_reset_uptime_wizard__device_id
-#: model:ir.ui.menu,name:iot_control_center.menu_iot_device
-#: model:ir.ui.menu,name:iot_control_center.menu_iot_switch_cards
-#: model:ir.ui.menu,name:iot_control_center.menu_iot_switch_root
 msgid "Switch"
 msgstr "开关"
 
@@ -1779,7 +1786,6 @@ msgstr "阈值来源"
 #: model:iot.control.board,name:iot_control_center.card_openwrt_control
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_control_board__key__openwrt
 #: model:ir.ui.menu,name:iot_control_center.menu_iot_openwrt_cards
-#: model:ir.ui.menu,name:iot_control_center.menu_iot_openwrt_root
 #: model_terms:ir.ui.view,arch_db:iot_control_center.res_config_settings_view_form_iot_control_center
 msgid "OpenWrt AC"
 msgstr "OpenWrt AC"
@@ -3022,6 +3028,7 @@ msgstr "已接收"
 #. odoo-python
 #: code:addons/iot_control_center/models/iot_control_board.py:0
 #: model:iot.control.board,name:iot_control_center.card_relay_control
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_switch_root
 msgid "Relay Control"
 msgstr "继电器控制"
 
@@ -4271,6 +4278,7 @@ msgstr "必须与中间件环境配置中的 IOT_BRIDGE_TOKEN 完全一致。保
 #. module: iot_control_center
 #. odoo-python
 #: code:addons/iot_control_center/models/iot_control_board.py:0
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_openwrt_root
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_device_tree
 msgid "Network"
 msgstr "网络"
@@ -4540,6 +4548,7 @@ msgstr "统计时段"
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device_bind_wizard__status_message
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_bind_wizard__status_message
 msgid "Status Message"
 msgstr "状态消息"
 
@@ -4673,6 +4682,7 @@ msgstr "用户数量"
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_device_bind_wizard__validated
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_bind_wizard__validated
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_th_sensor_bind_wizard__validated
 msgid "Validated"
 msgstr "已验证"
@@ -5894,6 +5904,7 @@ msgstr "设备确认时间"
 
 #. module: iot_control_center
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__kind__washer
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_bind_wizard__kind__washer
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_release__kind__washer
 msgid "Array Washer"
 msgstr "洗脱仪"
@@ -5901,6 +5912,7 @@ msgstr "洗脱仪"
 #. module: iot_control_center
 #. odoo-python
 #: code:addons/iot_control_center/models/iot_control_board.py:0
+#: code:addons/iot_control_center/models/iot_instrument.py:0
 #: model:ir.actions.act_window,name:iot_control_center.action_array_washers
 #: model:ir.ui.menu,name:iot_control_center.menu_array_washers
 msgid "Array Washers"
@@ -5940,6 +5952,7 @@ msgstr "B 液"
 
 #. module: iot_control_center
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__kind__heater
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_bind_wizard__kind__heater
 #: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument_release__kind__heater
 msgid "Buffer Heater"
 msgstr "洗脱液加热器"
@@ -6100,6 +6113,7 @@ msgstr "请保留独立过温保护和机械安全联锁。确认接线及输出
 
 #. module: iot_control_center
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__kind
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_bind_wizard__kind
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_recipe_step__kind
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_release__kind
 msgid "Kind"
@@ -6242,6 +6256,7 @@ msgstr "程序版本"
 
 #. module: iot_control_center
 #: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_instrument_bind_wizard_form
 msgid "Room and equipment location"
 msgstr "房间及设备位置"
 
@@ -6487,8 +6502,10 @@ msgid "Washer Program Version"
 msgstr "洗脱程序版本"
 
 #. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_control_board.py:0
+#: code:addons/iot_control_center/models/iot_instrument.py:0
 #: model:ir.actions.act_window,name:iot_control_center.action_washer_programs
-#: model:ir.ui.menu,name:iot_control_center.menu_washer_programs
 msgid "Washer Programs"
 msgstr "洗脱程序"
 
@@ -7174,3 +7191,470 @@ msgstr "最近心跳内容摘要"
 #: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__last_heartbeat_event_id
 msgid "Last Heartbeat Event"
 msgstr "最近心跳事件标识"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "%(name)s / r%(revision)s"
+msgstr "%(name)s / 版本%(revision)s"
+
+#. module: iot_control_center
+#: model:ir.model.fields,help:iot_control_center.field_iot_instrument_recipe__device_label
+msgid ""
+"A short English label for the instrument screen. The program name in Odoo "
+"may use any language."
+msgstr "仪器屏幕显示简短英文名称；平台中的程序名称不限语言。"
+
+#. module: iot_control_center
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_administration
+msgid "Administration"
+msgstr "系统管理"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__program_scope__all
+msgid "All company programs"
+msgstr "本公司全部已发布程序"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__program_sync_state__unsupported
+msgid "Automatic sync not reported"
+msgstr "设备未报告自动同步能力"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Choose What to Download"
+msgstr "选择需要下发的程序"
+
+#. module: iot_control_center
+#. odoo-javascript
+#: code:addons/iot_control_center/static/src/xml/operations_overview.xml:0
+msgid "Common tasks"
+msgstr "常用操作"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Device Confirmation"
+msgstr "设备确认"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__program_sync_state__synced
+msgid "Device confirmed current list"
+msgstr "设备已确认当前清单"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__program_sync_state__unconnected
+msgid "Device not connected yet"
+msgstr "设备尚未接入"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Edit steps"
+msgstr "编写步骤"
+
+#. module: iot_control_center
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_instruments
+msgid "Laboratory Instruments"
+msgstr "实验室仪器"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Open Program Library"
+msgstr "打开程序库"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_control_board.py:0
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Program Library"
+msgstr "程序库"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_recipe_form
+msgid "Program Rules and Motor Settings"
+msgstr "程序规则与电机参数"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__program_sync_state
+msgid "Program Sync"
+msgstr "程序同步状态"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__program_sync_state__invalid
+msgid "Program list needs review"
+msgstr "程序清单需要检查"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Program selection saved"
+msgstr "下发范围已保存"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Programs and Sync"
+msgstr "程序选择与下发"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__effective_program_ids
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Programs for This Washer"
+msgstr "此洗脱仪的下发清单"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__program_scope
+msgid "Programs to Sync"
+msgstr "下发程序范围"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Release a program"
+msgstr "发布程序"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_recipe_form
+msgid ""
+"Release the program, then open the target washer to select its download "
+"list. Publishing alone does not confirm delivery."
+msgstr "发布后打开目标洗脱仪，选择需要下发的程序。平台已发布不代表设备已收到。"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Save Program Selection"
+msgstr "保存下发范围"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid ""
+"Saving updates this washer's download list. New released revisions follow "
+"automatically; archived programs are removed. An offline washer keeps its "
+"existing local list."
+msgstr "保存后更新此洗脱仪的下发清单，后续发布的新版本会自动同步，归档的程序会移除。设备断网时保留原有本地程序。"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__assigned_program_ids
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_kanban
+msgid "Select Programs"
+msgstr "选择下发程序"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_control_board.py:0
+msgid "Select Programs for a Washer"
+msgstr "选择程序并下发"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_recipe_form
+msgid "Select Target Washer"
+msgstr "选择目标洗脱仪"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Select an active washer."
+msgstr "请选择未归档的洗脱仪。"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Select at least one released program, or choose all company programs."
+msgstr "请至少选择一个已发布程序，或改为同步本公司全部程序。"
+
+#. module: iot_control_center
+#: model:ir.model.fields,help:iot_control_center.field_iot_instrument__assigned_program_ids
+msgid ""
+"Select program names once. New released revisions follow automatically."
+msgstr "选择程序后，新发布的版本会自动同步，无需重新选择。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Select programs here"
+msgstr "选择下发范围"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "Select released programs belonging to this device's company."
+msgstr "只能选择设备所属公司的已发布程序。"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__program_scope__selected
+msgid "Selected programs"
+msgstr "仅同步指定程序"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_control_board.py:0
+msgid "Set Buffer Temperature"
+msgstr "设置洗脱液温度"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Temperature and Legacy Devices"
+msgstr "温度与旧版设备"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid ""
+"The washer will download this list when connected and idle. This does not "
+"start a run. Check Program Sync for device confirmation."
+msgstr "洗脱仪联网且空闲时会下载此清单，不会自动启动运行。请通过程序同步状态确认设备是否收到。"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "Wait for device confirmation"
+msgstr "等待设备确认"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__program_sync_state__offline
+msgid "Waiting for device contact"
+msgstr "等待设备重新连接"
+
+#. module: iot_control_center
+#: model:ir.model.fields.selection,name:iot_control_center.selection__iot_instrument__program_sync_state__pending
+msgid "Waiting for device sync"
+msgstr "等待设备同步"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_control_board.py:0
+msgid "Write Washer Programs"
+msgstr "编写洗脱程序"
+
+#. module: iot_control_center
+#: code:addons/iot_control_center:0
+msgid "programs in sync list"
+msgstr "个待同步程序"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_recipe_form
+msgid ""
+"<span><b>1</b> Edit steps</span><span><b>2</b> Release "
+"Program</span><span><b>3</b> Select Target Washer</span>"
+msgstr ""
+"<span><b>1</b> 编写步骤</span><span><b>2</b> 发布程序</span><span><b>3</b> "
+"选择目标洗脱仪</span>"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid ""
+"<span><b>1</b> Release a program</span><span><b>2</b> Select programs "
+"here</span><span><b>3</b> Wait for device confirmation</span>"
+msgstr ""
+"<span><b>1</b> 发布程序</span><span><b>2</b> 选择下发范围</span><span><b>3</b> "
+"等待设备确认</span>"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_kanban
+msgid "<span>programs in sync list</span>"
+msgstr "<span>个待同步程序</span>"
+
+#. module: iot_control_center
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_device
+msgid "Device Inventory"
+msgstr "设备列表"
+
+#. module: iot_control_center
+#: model:ir.ui.menu,name:iot_control_center.menu_washer_programs
+msgid "Washer Program Library"
+msgstr "洗脱程序库"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "company_id"
+msgstr "公司"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid "kind"
+msgstr "设备类型"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__program_count
+msgid "Program Count"
+msgstr "程序数量"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__pump_a_seconds
+msgid "Device Fill A (s)"
+msgstr "设备 A 泵注液时间（秒）"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__pump_b_seconds
+msgid "Device Fill B (s)"
+msgstr "设备 B 泵注液时间（秒）"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid "Device Pump Settings"
+msgstr "设备上报的注液设置"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_recipe_form
+msgid ""
+"Fill A and Fill B use pump times saved on each washer. Set them on the "
+"device under Device Care / Pump Times before running."
+msgstr "注入 A 液和 B 液使用各台洗脱仪本地保存的时间。运行前请在设备的 Device Care / Pump Times 中设置。"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__pump_settings_revision
+msgid "Pump Settings Revision"
+msgstr "注液设置版本"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_run_log__pump_timing
+msgid "Run Pump Settings"
+msgstr "本次运行的注液设置"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_instrument_form
+msgid ""
+"Times are reported by the washer, not sent by programs. Zero means not set. "
+"Adjust them on the device; offline values may be stale."
+msgstr "时间由洗脱仪上报，不随程序下发；0 表示未设置。请在设备上调整，离线时显示值可能不是最新值。"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_instrument_bind_wizard_form
+msgid "Add Instrument"
+msgstr "添加仪器"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/wizard/iot_instrument_bind_wizard.py:0
+#: model:ir.actions.act_window,name:iot_control_center.action_iot_instrument_bind
+#: model:ir.model,name:iot_control_center.model_iot_instrument_bind_wizard
+#: model:ir.ui.menu,name:iot_control_center.menu_iot_instrument_bind
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_instrument_bind_wizard_form
+msgid "Add Instrument by Device ID"
+msgstr "按设备 ID 添加仪器"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_instrument_bind_wizard_form
+msgid ""
+"After adding it, keep the instrument online. It will securely claim this "
+"registration using its private device token."
+msgstr "添加后请保持仪器联网；设备将使用本机私有令牌安全认领此登记。"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/wizard/iot_instrument_bind_wizard.py:0
+msgid "Array Washer %s"
+msgstr "洗脱仪 %s"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/wizard/iot_instrument_bind_wizard.py:0
+msgid "Buffer Heater %s"
+msgstr "洗脱液加热器 %s"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument__device_id
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_bind_wizard__device_id
+msgid "Device ID"
+msgstr "设备 ID"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/wizard/iot_instrument_bind_wizard.py:0
+msgid "Device ID is available. Confirm the company and location, then add it."
+msgstr "此设备 ID 可添加。请确认所属公司和位置后完成添加。"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/wizard/iot_instrument_bind_wizard.py:0
+msgid "Enter a valid Device ID shown on the instrument."
+msgstr "请输入仪器屏幕上显示的有效设备 ID。"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/wizard/iot_instrument_bind_wizard.py:0
+msgid ""
+"Enter the exact Device ID shown on the instrument, such as HTR-C82B962D09D7."
+msgstr "请输入仪器屏幕上完整显示的设备 ID，例如 HTR-C82B962D09D7。"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_bind_wizard__existing_instrument_id
+msgid "Existing Instrument"
+msgstr "已登记仪器"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_instrument_bind_wizard_form
+msgid "Existing Registration"
+msgstr "现有登记"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_instrument_bind_wizard_form
+msgid ""
+"Find the Device ID on the instrument screen. Company and country settings "
+"remain in IoT Control Center and are never taken from the device."
+msgstr "请在仪器屏幕上查看设备 ID。公司和国家信息始终以 IoT 控制中心为准，不从设备读取。"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_instrument_bind_wizard_form
+msgid "HTR-C82B962D09D7"
+msgstr "HTR-C82B962D09D7"
+
+#. module: iot_control_center
+#: model:ir.model.fields,field_description:iot_control_center.field_iot_instrument_bind_wizard__name
+msgid "Instrument Name"
+msgstr "仪器名称"
+
+#. module: iot_control_center
+#: model_terms:ir.ui.view,arch_db:iot_control_center.view_iot_instrument_bind_wizard_form
+msgid "Search Device ID"
+msgstr "查询设备 ID"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/wizard/iot_instrument_bind_wizard.py:0
+msgid "Search the Device ID and enter an instrument name before confirming."
+msgstr "请先查询设备 ID，并填写仪器名称后再确认。"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/wizard/iot_instrument_bind_wizard.py:0
+msgid "This Device ID is already registered as %s in %s."
+msgstr "此设备 ID 已登记为 %s，所属公司为 %s。"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/wizard/iot_instrument_bind_wizard.py:0
+msgid "This Device ID is already registered to another company."
+msgstr "此设备 ID 已登记到其他公司。"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/wizard/iot_instrument_bind_wizard.py:0
+msgid "This Device ID is already registered."
+msgstr "此设备 ID 已登记。"
+
+#. module: iot_control_center
+#: model:ir.model.fields,help:iot_control_center.field_iot_instrument__device_id
+msgid ""
+"Unique ID shown on the physical instrument. Use it to add the instrument to "
+"IoT Control Center."
+msgstr "实体仪器上显示的唯一 ID，用于将仪器添加到 IoT 控制中心。"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/models/iot_instrument.py:0
+msgid ""
+"Use the Device ID shown by the instrument, for example HTR-C82B962D09D7."
+msgstr "请使用仪器显示的设备 ID，例如 HTR-C82B962D09D7。"
+
+#. module: iot_control_center
+#. odoo-python
+#: code:addons/iot_control_center/wizard/iot_instrument_bind_wizard.py:0
+msgid "You can only add instruments to companies you can access."
+msgstr "只能将仪器添加到您有权访问的公司。"
+
+#. module: iot_control_center
+#: model:ir.model.constraint,message:iot_control_center.constraint_iot_instrument_device_id_unique
+msgid "Device ID must be unique."
+msgstr "设备 ID 不能重复。"

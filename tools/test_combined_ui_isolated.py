@@ -31,7 +31,7 @@ def main():
     client = connect('192.168.10.15',config)
     password = secrets.token_hex(32)
     unit = args.database+'-ui'
-    output_dir = ROOT/'deploy/artifacts/combined-ui-imytestth-20260919-r230'
+    output_dir = ROOT/'deploy/artifacts/combined-ui-imytestth-20260919-r240'
     output_dir.mkdir(parents=True,exist_ok=True)
     try:
         _,out,_ = client.exec_command('hostname')
@@ -96,6 +96,10 @@ def main():
                         except Exception:
                             if attempt==29: raise RuntimeError('Preview login unavailable') from None
                             time.sleep(1)
+                    reset=context.request.post(base+'/web/dataset/call_kw/iot.instrument/write',data={
+                        'jsonrpc':'2.0','method':'call','id':2,'params':{'model':'iot.instrument','method':'write',
+                        'args':[[fixture['washer']],{'program_scope':'all','assigned_program_ids':[[5,0,0]]}], 'kwargs':{}}})
+                    assert reset.json().get('result') is True, 'Synthetic selection reset failed'
                     page=context.new_page(); errors=[]
                     page.on('pageerror',lambda error:errors.append(str(error)))
                     page.goto(base+'/odoo/action-'+str(fixture['actions']['action_iot_operations_overview']),wait_until='domcontentloaded')
@@ -105,21 +109,46 @@ def main():
                                     'zh_CN':'目标温度设置与每小时温度趋势',
                                     'th_TH':'การตั้งค่าอุณหภูมิและประวัติรายชั่วโมง'}
                     page.get_by_text(descriptions[lang],exact=True).wait_for()
-                    for width,height in ((1440,900),(960,700),(390,844)):
+                    for width,height in ((1920,1080),(1440,900),(1366,768),(390,844)):
                         page.set_viewport_size({'width':width,'height':height})
                         page.reload(wait_until='domcontentloaded')
                         page.locator('.iot_module_card').first.wait_for(timeout=60000)
+                        page.locator('.iot_module_card').evaluate_all('nodes => Promise.all(nodes.flatMap(node => node.getAnimations()).map(animation => animation.finished.catch(() => {})))')
                         scroll=page.locator('.iot_workspace_inner')
                         scroll.evaluate('e=>e.scrollTop=0')
-                        scroll.hover(); page.mouse.wheel(0,10000)
-                        page.wait_for_function('document.querySelector(".iot_workspace_inner").scrollTop>0')
+                        if width < 1200:
+                            scroll.hover(); page.mouse.wheel(0,10000)
+                            page.wait_for_function('document.querySelector(".iot_workspace_inner").scrollTop>0')
                         metrics=scroll.evaluate('e=>({client:e.clientHeight,total:e.scrollHeight,scroll:e.scrollTop})')
-                        assert metrics['total']>metrics['client'] and metrics['scroll']>0
                         page.screenshot(path=str(output_dir/(lang+'-'+str(width)+'-overview.png')))
+                        if width >= 1200:
+                            assert metrics['total'] <= metrics['client'] + 1, (lang,width,metrics)
+                        else:
+                            assert metrics['total']>metrics['client'] and metrics['scroll']>0
                         overflowing=page.evaluate('''()=>Array.from(document.querySelectorAll('body *')).filter(e=>e.getBoundingClientRect().right>innerWidth+1 && e.getBoundingClientRect().width>0).slice(0,15).map(e=>({cls:e.className,w:e.getBoundingClientRect().width,right:e.getBoundingClientRect().right}))''')
                         print('UI_METRICS',lang,width,json.dumps(metrics),json.dumps(overflowing),flush=True)
                         assert page.evaluate('document.documentElement.scrollWidth<=window.innerWidth'), (lang,width,overflowing)
                         results.append({'lang':lang,'width':width,'scroll':metrics})
+                    page.set_viewport_size({'width':1440,'height':900})
+                    page.goto(base+'/odoo/action-'+str(fixture['actions']['action_iot_operations_overview']))
+                    page.locator('.iot_quick_actions button').nth(1).click()
+                    page.get_by_text('Synthetic Array Washer',exact=True).wait_for()
+                    page.locator('.o_kanban_record').filter(has_text='Synthetic Array Washer').locator('[name="action_open_program_selection"]').click()
+                    page.locator('[name="program_scope"]').wait_for()
+                    assert page.locator('[name="program_sync_state"]').count()>0
+                    assert page.locator('[name="action_apply_programs"]').is_visible()
+                    page.locator('[name="program_scope"] input').nth(1).check()
+                    selector=page.locator('[name="assigned_program_ids"] input')
+                    selector.fill('Synthetic General')
+                    page.get_by_role('option').filter(has_text='Synthetic General Microarray').first.click()
+                    page.locator('[name="action_apply_programs"]').click()
+                    page.locator('.o_notification').first.wait_for()
+                    page.reload(wait_until='domcontentloaded')
+                    page.locator('[name="program_scope"]').wait_for()
+                    assert page.locator('[name="program_scope"] input').nth(1).is_checked()
+                    assert page.locator('[name="effective_program_ids"] .o_data_row').count()==1
+                    page.set_viewport_size({'width':1440,'height':1100})
+                    page.screenshot(path=str(output_dir/(lang+'-washer-selection.png')),full_page=True)
                     page.set_viewport_size({'width':1440,'height':900})
                     page.goto(base+'/odoo/action-'+str(fixture['actions']['action_buffer_heaters']))
                     page.get_by_text('Synthetic Buffer Heater',exact=True).wait_for()
@@ -156,11 +185,11 @@ def main():
                     context.close()
                 browser.close()
                 ui_receipt = {'status':'passed','host':'imytestth','database':args.database,
-                              'sha256':receipt['sha256'],'scenarios':results,'heater_forms':3,'program_forms':3}
+                              'sha256':receipt['sha256'],'scenarios':results,'heater_forms':3,'program_forms':3,'washer_selection_forms':3}
                 (output_dir/'results.json').write_text(json.dumps(ui_receipt,indent=2),encoding='utf-8')
                 (ROOT/'deploy/artifacts/instruments-ui-receipt.json').write_text(json.dumps(ui_receipt),encoding='utf-8')
             server.shutdown()
-        print('COMBINED_UI_OK',len(results),'responsive scroll scenarios; 3 heater and 3 program forms',flush=True)
+        print('COMBINED_UI_OK',len(results),'responsive scenarios; 3 heater, 3 program and 3 program-selection forms',flush=True)
     finally:
         execute_sudo(client,'systemctl stop '+shlex.quote(unit),config['REMOTE_PASSWORD'],30)
         client.close()

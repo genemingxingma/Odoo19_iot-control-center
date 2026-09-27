@@ -1,8 +1,8 @@
 """Upload a verified TJC TFT through the RAM-only ESP32 USB bridge.
 
 Dry-run is the default and does not open a serial port. A matching ESP32 image
-must be installed and held in ROM before --execute. Never boot the legacy app
-with the V3 screen. Protocol: TJC HMI download protocol, whmi-wri/4096-byte ACK.
+must be installed and held in ROM before --execute. Never boot a mismatched app
+and screen pair. Protocol: TJC HMI download protocol, whmi-wri/4096-byte ACK.
 """
 import argparse
 import contextlib
@@ -111,7 +111,7 @@ def main():
     a.receipt.parent.mkdir(parents=True, exist_ok=True)
     result = {"model": MODEL, "sha256": a.sha256.lower(), "bytes": len(raw),
               "transfer_attempted": False, "acknowledged_bytes": 0,
-              "v3_heartbeat_verified": False, "returned_to_rom": False,
+              "v4_heartbeat_verified": False, "returned_to_rom": False,
               "esp32_flash_written": False}
 
     def save():
@@ -119,12 +119,14 @@ def main():
 
     save()
     sys.path.insert(0, str(a.esptool_dir))
+    from esptool.reset import ClassicReset
     from esptool.targets.esp32 import ESP32ROM
     esp = ESP32ROM(a.port, BAUD)
     launched = False
     try:
         with contextlib.redirect_stdout(io.StringIO()):
-            esp.connect(mode="default_reset", attempts=2)
+            ClassicReset(esp._port, reset_delay=0.2)()
+            esp.connect(mode="no_reset", attempts=2)
             if not esp.get_chip_description().startswith("ESP32-D0WD-V3"):
                 raise RuntimeError("Unexpected ESP32 model")
             if bytes(esp.read_mac()).hex() != a.expected_mac.replace(":", "").lower():
@@ -165,9 +167,9 @@ def main():
 
         transfer(port, raw, progress)
         # Final block acknowledgement is not proof that the project booted.
-        read_until(port, b"UI|HELLO|3\n", timeout=90)
-        read_until(port, b"UI|HELLO|3\n", timeout=5)
-        result["v3_heartbeat_verified"] = True
+        read_until(port, b"UI|HELLO|4\n", timeout=90)
+        read_until(port, b"UI|HELLO|4\n", timeout=5)
+        result["v4_heartbeat_verified"] = True
         save()
     except Exception as exc:
         result["error_type"] = type(exc).__name__
@@ -177,7 +179,8 @@ def main():
             if launched:
                 with contextlib.redirect_stdout(io.StringIO()):
                     esp = ESP32ROM(esp._port, BAUD)
-                    esp.connect(mode="default_reset", attempts=2)
+                    ClassicReset(esp._port, reset_delay=0.2)()
+                    esp.connect(mode="no_reset", attempts=2)
                     result["returned_to_rom"] = esp.get_chip_description().startswith("ESP32-D0WD-V3")
         finally:
             esp._port.close()

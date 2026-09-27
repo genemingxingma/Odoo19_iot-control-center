@@ -2,6 +2,9 @@
 
 ## 中文
 
+19.0.2.4.0 新增可选的每台洗脱仪下发范围；默认仍同步公司全部程序。
+新入口和确认方法见 [2.4.0 操作说明](IOT_19_0_2_4_0_USER_GUIDE.md)。
+
 - IoT 平台是程序列表的唯一维护入口。设备不编辑或单独删除程序。
 - 发布新程序后加入设备列表；修改时使用“创建新版本”，发布后替换同一程序的旧版本。草稿不影响设备。
 - 归档最新已发布版本，将该程序从设备列表移除，不恢复更早的版本。平台保留版本记录用于追溯。
@@ -14,6 +17,9 @@
 - 更新保留当前选中的程序身份；若该程序已移除，只更新选择，不自动开始其他程序。启动、人工等待后继续仍需在设备上确认。
 
 ## English
+
+Version 19.0.2.4.0 adds optional per-washer program selection while preserving
+the all-company-programs default. See the [updated guide](IOT_19_0_2_4_0_USER_GUIDE.md).
 
 The company platform owns the full list. Publish to add, create and publish a
 new revision to replace, and archive the latest released revision to remove.

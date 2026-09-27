@@ -3,158 +3,123 @@
 #include <fstream>
 #include <iostream>
 
-int touch(tjc::Display& display, unsigned x, unsigned y, bool press, uint32_t now) {
-    uint8_t data[] = {0x67, uint8_t(x>>8), uint8_t(x), uint8_t(y>>8), uint8_t(y), uint8_t(press),255,255,255};
-    int result = -1;
-    for(auto byte:data) { int r=display.touch(byte,now); if(r>=0)result=r; }
-    return result;
-}
-int main(int argc, char** argv) {
-    tjc::Display display;
-    assert(!display.acceptsAction(1000));
-    assert(touch(display,100,420,true,100)==-1);
-    assert(touch(display,100,420,false,300)==0);
-    assert(touch(display,650,420,true,400)==2);
-    assert(touch(display,650,420,false,500)==-1);
-    assert(touch(display,100,420,true,600)==-1);
-    assert(touch(display,400,420,false,700)==-1);
-    assert(touch(display,400,420,true,800)==-1);
-    assert(touch(display,400,420,false,5900)==-1);
-    assert(touch(display,900,420,true,6000)==-1);
-    display.touch(0x67,7000); display.touch(0,7200);
-    assert(!display.receivingTouch());
-    tjc::View view;
-    view.state="RUNNING"; view.program="Array Wash A / r2";
-    view.step="4/8  Wash"; view.temperature="37.2 C"; view.remaining="Step 01:24";
-    view.notice="Run in progress. Keep the lid closed."; view.progress=42;
-    view.ready=true; view.running=true; view.door=true;
-    display.render(view);
-    assert(!display.acceptsAction(1000));
+std::string flush(tjc::Display& display, uint32_t now) {
     HardwareSerial serial;
-    unsigned ticks=0;
-    while(display.busy()) { display.tick(serial,100); assert(++ticks<40); }
-    assert(!display.acceptsAction(849));
-    assert(display.acceptsAction(850));
-    assert(serial.output.find("t_state") == std::string::npos);
-    assert(serial.output.find("STOP") != std::string::npos);
-    assert(serial.output.find("Array Wash A / r2") != std::string::npos);
-    assert(serial.output.find("fill 0,0,800,62,"+std::to_string(tjc::Header)) != std::string::npos);
-    assert(serial.output.find("fill 0,62,800,4,"+std::to_string(tjc::Blue)) != std::string::npos);
-    assert(serial.output.find("xstr 24,10,472,42,"+std::to_string(tjc::Font)) != std::string::npos);
-    assert(serial.output.find(","+std::to_string(tjc::Button)+",1,1,1,\"PROGRAMS\"") != std::string::npos);
-    assert(serial.output.find("Lid closed") == std::string::npos);
-    assert(serial.output.find("read only") == std::string::npos);
-    if(argc>1) {
+    unsigned ticks = 0;
+    while (display.busy()) {
+        display.tick(serial, now);
+        assert(++ticks < 40);
+    }
+    return serial.output;
+}
+
+int main(int argc, char** argv) {
+    unsigned checks = 0;
+    tjc::Display display;
+    tjc::View view;
+    view.program = "General Microarray V1.0 / r3";
+    view.notice = "Choose a program, then review before starting.";
+    display.render(view);
+    std::string home = flush(display, 1000);
+    assert(home.find("page page1") != std::string::npos); ++checks;
+    assert(home.find("t1.txt=\"General Microarray V1.0 / r3\"") != std::string::npos); ++checks;
+    assert(home.find("cls ") == std::string::npos && home.find("fill ") == std::string::npos &&
+           home.find("xstr ") == std::string::npos); ++checks;
+    assert(!display.acceptsAction(1149) && display.acceptsAction(1150)); ++checks;
+    display.render(view);
+    assert(!display.busy()); ++checks;
+
+    view.notice = "Program synchronized.";
+    display.dirty = true;
+    display.render(view);
+    std::string update = flush(display, 1200);
+    assert(update.find("page page1") == std::string::npos); ++checks;
+    assert(update.find("t2.txt=\"Program synchronized.\"") != std::string::npos); ++checks;
+    assert(update.find("t1.txt") == std::string::npos); ++checks;
+
+    view.startup = true; view.step = "Starting automatic preparation";
+    view.notice = "Keep hands clear. STOP cancels initialization."; view.remaining = "Starting now";
+    display.dirty = true; display.render(view);
+    std::string startup = flush(display, 1300);
+    assert(startup.find("page page4") != std::string::npos); ++checks;
+    assert(startup.find("Starting automatic preparation") != std::string::npos); ++checks;
+    view.startup = false;
+
+    display.page = tjc::Programs;
+    view.programCount = 12; view.selectedProgram = 4;
+    view.programChoice = "Program 5 / r2";
+    display.dirty = true; display.render(view);
+    std::string programs = flush(display, 2000);
+    assert(programs.find("page page3") != std::string::npos); ++checks;
+    assert(programs.find("t1.txt=\"Program 5 / r2\"") != std::string::npos); ++checks;
+    assert(programs.find("Program 5 of 12\\rUse Previous and Next") != std::string::npos); ++checks;
+    assert(programs.find("b1.bco=" + std::to_string(tjc::Blue)) != std::string::npos); ++checks;
+
+    display.page = tjc::Review; view.ready = true; view.notice = "Fill A: 10 s / B: 12 s";
+    display.dirty = true; display.render(view);
+    std::string ready = flush(display, 3000);
+    assert(ready.find("page page5") != std::string::npos); ++checks;
+    assert(ready.find("b0.bco=" + std::to_string(tjc::Blue)) != std::string::npos); ++checks;
+
+    view.running = true; view.step = "Step 4 of 9 - Wash"; view.cycle = "Cycle 2 of 5";
+    view.remaining = "Left 0:24"; view.temperature = "25.4 C";
+    display.dirty = true; display.render(view);
+    std::string running = flush(display, 4000);
+    assert(running.find("page page6") != std::string::npos); ++checks;
+    assert(running.find("Step 4 of 9 - Wash\\rCycle 2 of 5\\rLeft 0:24\\rTemperature 25.4 C") != std::string::npos); ++checks;
+
+    view.waiting = true; view.loadingReady = true; view.moving = false;
+    view.slot = 0; view.targetSlot = 3; view.loadingDegrees = 180;
+    view.notice = "Load an opposite pair, then continue.";
+    display.dirty = true; display.render(view);
+    std::string loading = flush(display, 5000);
+    assert(loading.find("page page7") != std::string::npos); ++checks;
+    assert(loading.find("b0.txt=\"Next Position\"") != std::string::npos); ++checks;
+    assert(loading.find("Current slot 1 | Next 4 (180 deg)\\rLoad an opposite pair") != std::string::npos); ++checks;
+
+    view.running = false; view.waiting = false; view.completed = false;
+    display.page = tjc::Wifi; view.wifiSsid = "Laboratory WiFi"; view.wifiPassword = "secretpass";
+    display.dirty = true; display.render(view);
+    std::string wifi = flush(display, 6000);
+    assert(wifi.find("page page8") != std::string::npos); ++checks;
+    assert(wifi.find("t1.txt=\"Laboratory WiFi\"") != std::string::npos); ++checks;
+    assert(wifi.find("t2.txt=\"secretpass\"") != std::string::npos); ++checks;
+
+    display.page = tjc::PumpTimes; view.pumpA = 10; view.pumpB = 12;
+    display.dirty = true; display.render(view);
+    std::string pumps = flush(display, 7000);
+    assert(pumps.find("page page9") != std::string::npos); ++checks;
+    assert(pumps.find("t1.txt=\"Buffer A\\r10 s\"") != std::string::npos); ++checks;
+    assert(pumps.find("t2.txt=\"Buffer B\\r12 s\"") != std::string::npos); ++checks;
+
+    view.fault = true; view.notice = "Homing timed out. Check the home sensor.";
+    display.dirty = true; display.render(view);
+    std::string fault = flush(display, 8000);
+    assert(fault.find("page page11") != std::string::npos); ++checks;
+    assert(fault.find("Homing timed out") != std::string::npos); ++checks;
+
+    view.fault = false; view.completed = true; display.page = tjc::Overview;
+    display.dirty = true; display.render(view);
+    std::string finished = flush(display, 9000);
+    assert(finished.find("page page12") != std::string::npos); ++checks;
+    assert(finished.find("Program finished") != std::string::npos); ++checks;
+
+    assert(display.touch(0x67, 9100) == -1 && !display.receivingTouch()); ++checks;
+    display.invalidate(); display.render(view);
+    std::string reconnect = flush(display, 10000);
+    assert(reconnect.find("page page12") != std::string::npos); ++checks;
+
+    view.completed = false; view.program = "Quote \" and slash \\";
+    display.page = tjc::Overview; display.dirty = true; display.render(view);
+    std::string escaped = flush(display, 11000);
+    assert(escaped.find("Quote ' and slash /") != std::string::npos); ++checks;
+
+    if (argc > 1) {
         std::ofstream out(argv[1]);
-        std::string commands=serial.output;
+        std::string commands = home + startup + programs + ready + running + loading + wifi + pumps + fault + finished;
         size_t found;
-        while((found=commands.find("\xff\xff\xff"))!=std::string::npos) commands.replace(found,3,"\n");
+        while ((found = commands.find("\xff\xff\xff")) != std::string::npos) commands.replace(found, 3, "\n");
         out << commands;
     }
-    display.page=1;
-    assert(!display.acceptsAction(1600));
-    display.render(view);
-    assert(!display.acceptsAction(1600));
-    while(display.busy()) display.tick(serial,1000);
-    assert(!display.acceptsAction(1749));
-    assert(display.acceptsAction(1750));
-    unsigned checks=24;
-    assert(touch(display,100,180,true,1900)==-1 && touch(display,100,180,false,1950)==-1); ++checks;
-    display.page=4; display.dirty=true;
-    view.state="WAITING"; view.waiting=true; view.openRotor=true; view.door=false;
-    view.loadingReady=true; view.slot=0; view.targetSlot=3; view.loadingDegrees=180;
-    view.notice="Check stopped, then load. Tap NEXT once to index. Check balance before CONTINUE.";
-    HardwareSerial loading;
-    display.render(view);
-    assert(!display.acceptsAction(2000)); ++checks;
-    while(display.busy()) display.tick(loading,2000);
-    assert(!display.acceptsAction(2749) && display.acceptsAction(2750)); ++checks;
-    assert(loading.output.find("PAUSED / LOAD SLIDES")!=std::string::npos); ++checks;
-    assert(loading.output.find("Pumps remain OFF")!=std::string::npos); ++checks;
-    assert(loading.output.find("Check balance before CONTINUE")!=std::string::npos); ++checks;
-    assert(loading.output.find("NEXT +180")!=std::string::npos && loading.output.find("HOLD TO MOVE")==std::string::npos); ++checks;
-    for(unsigned slot=0;slot<6;++slot) {
-        unsigned x=100+(slot%3)*256, y=180+(slot/3)*72;
-        assert(touch(display,x,y,true,2800)==-1); ++checks;
-        assert(touch(display,x,y,false,2900)==-1); ++checks;
-        assert(loading.output.find("SLOT "+std::to_string(slot+1))!=std::string::npos); ++checks;
-    }
-    assert(touch(display,270,180,true,3000)==-1 && touch(display,270,180,false,3050)==-1); ++checks;
-    assert(touch(display,400,420,true,3100)==-1); ++checks;
-    assert(touch(display,400,420,true,3200)==-1); ++checks;
-    assert(touch(display,400,420,false,3300)==1); ++checks;
-    assert(touch(display,400,420,false,3400)==-1); ++checks;
-    assert(touch(display,650,420,true,3500)==2); ++checks;
-    assert(touch(display,650,420,false,3600)==-1); ++checks;
-    assert(touch(display,100,420,true,3700)==-1 && touch(display,100,420,false,3800)==0); ++checks;
-    view.moving=true;
-    display.render(view); while(display.busy()) display.tick(loading,4000);
-    assert(touch(display,400,420,true,4800)==-1 && touch(display,400,420,false,4900)==-1); ++checks;
-    assert(touch(display,100,420,true,4800)==-1 && touch(display,100,420,false,4900)==-1); ++checks;
-    assert(touch(display,650,420,true,4800)==2); ++checks;
-    touch(display,400,420,true,4950);
-    view.moving=false; view.slot=3; view.targetSlot=4; view.loadingDegrees=60;
-    display.render(view); while(display.busy()) display.tick(loading,5000);
-    assert(touch(display,400,420,false,5800)==-1); ++checks;
-    assert(touch(display,400,420,true,5900)==-1 && touch(display,400,420,false,5950)==1); ++checks;
-    assert(loading.output.find("NEXT +60")!=std::string::npos); ++checks;
-    touch(display,400,420,true,6000); // Do not replay this press after a disabled frame.
-    view.loadingReady=false;
-    display.render(view); while(display.busy()) display.tick(loading,6100);
-    assert(touch(display,400,420,false,7000)==-1); ++checks;
-    assert(touch(display,400,420,true,7100)==-1 && touch(display,400,420,false,7150)==-1); ++checks;
-    assert(loading.output.find("NOT CALIBRATED")!=std::string::npos); ++checks;
-    view.loadingReady=true; view.slot=instrument::BalancedLoading::Unknown;
-    display.render(view); while(display.busy()) display.tick(loading,7200);
-    assert(loading.output.find("ALIGN START")!=std::string::npos); ++checks;
-    // A finger held across a page transition must not activate its new action.
-    touch(display,100,420,true,8100);
-    display.page=0; display.render(view);
-    assert(touch(display,100,420,false,8200)==-1); ++checks;
-    if(argc>1) {
-        std::ofstream out(std::string(argv[1])+".loading.txt");
-        std::string commands=loading.output;
-        size_t found;
-        while((found=commands.find("\xff\xff\xff"))!=std::string::npos) commands.replace(found,3,"\n");
-        out << commands;
-    }
-    while(display.busy()) display.tick(loading,8300);
-    tjc::Display simple;
-    HardwareSerial overview;
-    simple.render(view); while(simple.busy()) simple.tick(overview,8400);
-    assert(overview.output.find("Open rotor")==std::string::npos); ++checks;
-    assert(overview.output.find("Lid open")==std::string::npos); ++checks;
-    simple.page=2; simple.dirty=true;
-    HardwareSerial care;
-    simple.render(view); while(simple.busy()) simple.tick(care,8500);
-    assert(care.output.find("no PSRAM")==std::string::npos); ++checks;
-    assert(care.output.find("RESET FAULT")!=std::string::npos); ++checks;
-    display.page=5; view.programCount=2; view.selectedProgram=1;
-    view.programs[0]="Program 7"; view.programs[1]="Program 8";
-    view.libraryPage=2; view.libraryPages=3;
-    HardwareSerial library;
-    display.render(view); while(display.busy()) display.tick(library,9000);
-    assert(library.output.find("Program 8")!=std::string::npos); ++checks;
-    assert(library.output.find("3 / 3")!=std::string::npos); ++checks;
-    assert(library.output.find("REMOVE")==std::string::npos); ++checks;
-    for (unsigned i=0;i<3;++i) {
-        assert(touch(display,100,140+i*76,true,9200)==-1); ++checks;
-        assert(touch(display,100,140+i*76,false,9250)==int(10+i)); ++checks;
-    }
-    assert(touch(display,100,370,true,9300)==-1 && touch(display,100,370,false,9350)==3); ++checks;
-    assert(touch(display,600,370,true,9400)==-1 && touch(display,600,370,false,9450)==4); ++checks;
-    display.page=7; view.passwordField=true; view.wifiEntry="********";
-    HardwareSerial keyboard;
-    display.render(view); while(display.busy()) display.tick(keyboard,10000);
-    assert(!display.acceptsAction(10119) && display.acceptsAction(10120)); ++checks;
-    assert(keyboard.output.find("ENTER WI-FI PASSWORD")!=std::string::npos); ++checks;
-    for (unsigned i=0;i<40;++i) {
-        unsigned x=40+(i%10)*75, y=160+(i/10)*50;
-        assert(touch(display,x,y,true,10200)==-1); ++checks;
-        assert(touch(display,x,y,false,10250)==int(10+i)); ++checks;
-    }
-    assert(touch(display,775,160,true,10300)==-1 && touch(display,775,160,false,10350)==-1); ++checks;
-    assert(touch(display,650,420,true,10400)==2); ++checks;
-    assert(touch(display,650,420,false,10450)==-1); ++checks;
-    std::cout << "INSTRUMENT_UI_CHECKS_OK " << checks << "\n";
+    std::cout << "NATIVE_UI_CHECKS_OK " << checks << "\n";
 }

@@ -4,7 +4,7 @@
 
 namespace instrument {
 inline bool parseProgram(JsonVariantConst value, Recipe& result) {
-    if (!value["schema"].is<unsigned>() || value["schema"].as<unsigned>() != 1 ||
+    if (!value["schema"].is<unsigned>() || (value["schema"].as<unsigned>() != 1 && value["schema"].as<unsigned>() != 2) ||
         !value["id"].is<const char*>() || !value["revision"].is<uint32_t>()) return false;
     const char* id = value["id"];
     size_t idLength = strlen(id);
@@ -20,6 +20,7 @@ inline bool parseProgram(JsonVariantConst value, Recipe& result) {
         if (!((*c >= 'A' && *c <= 'Z') || (*c >= 'a' && *c <= 'z') ||
               (*c >= '0' && *c <= '9') || strchr(" _./()-", *c))) return false;
     Recipe p;
+    p.schema = value["schema"].as<unsigned>();
     memcpy(p.id, id, idLength + 1); memcpy(p.label, label, labelLength + 1);
     p.revision = value["revision"];
     JsonArrayConst steps = value["steps"].as<JsonArrayConst>();
@@ -30,7 +31,8 @@ inline bool parseProgram(JsonVariantConst value, Recipe& result) {
         const char* kind = obj["kind"] | "";
         const char* names[] = {"home", "fill_a", "fill_b", "wash", "drain", "dry", "wait"};
         unsigned k = 0; while (k < 7 && strcmp(kind, names[k])) ++k;
-        if (k == 7 || !obj["duration_s"].is<uint32_t>() || obj["duration_s"].as<uint32_t>() > 3600 ||
+        bool localFill = p.schema == 2 && (k == 1 || k == 2);
+        if (k == 7 || (localFill ? obj.containsKey("duration_s") : (!obj["duration_s"].is<uint32_t>() || obj["duration_s"].as<uint32_t>() > 3600)) ||
             (obj.containsKey("rps") && !obj["rps"].is<float>()) ||
             (obj.containsKey("reverse_s") && !obj["reverse_s"].is<uint16_t>()) ||
             (obj.containsKey("cycles") && !obj["cycles"].is<uint16_t>())) return false;

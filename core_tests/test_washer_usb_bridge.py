@@ -113,5 +113,31 @@ class ArtifactTests(unittest.TestCase):
             self.load()
 
 
+class MaintenanceSourceContractTests(unittest.TestCase):
+    def test_backup_utility_is_read_only(self):
+        source = (ROOT / "tools/backup_washer_usb.py").read_text()
+        self.assertIn("chip.read_flash(0, FLASH_BYTES", source)
+        self.assertIn("chip.flash_md5sum(0, FLASH_BYTES)", source)
+        for operation in ("chip.flash_begin(", "chip.flash_block(",
+                          "erase_flash(", "write_flash("):
+            self.assertNotIn(operation, source)
+
+    def test_application_update_verifies_backup_before_writing(self):
+        source = (ROOT / "tools/update_washer_usb_app.py").read_text()
+        backup_check = source.index("chip.flash_md5sum(0, len(raw))")
+        writing_receipt = source.index("result['phase'] = 'writing'")
+        flash_begin = source.index("chip.flash_begin(len(image), 0x10000)")
+        self.assertLess(backup_check, writing_receipt)
+        self.assertLess(writing_receipt, flash_begin)
+        self.assertIn("('preserved-prefix.bin', 0, 0x10000)", source)
+        self.assertIn("('preserved-data.bin', 0x1c0000, 0x400000)", source)
+
+    def test_screen_receipt_uses_v4_heartbeat(self):
+        source = (ROOT / "tools/update_washer_usb_screen.py").read_text()
+        self.assertIn('"v4_heartbeat_verified": False', source)
+        self.assertIn('result["v4_heartbeat_verified"] = True', source)
+        self.assertNotIn('"v3_heartbeat_verified"', source)
+
+
 if __name__ == "__main__":
     unittest.main()

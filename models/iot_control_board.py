@@ -138,8 +138,21 @@ class IoTControlBoard(models.Model):
                 "secondary_label": _("Recent contact"), "secondary_count": total - silent,
                 "secondary_action": action(_("Recent contact"), "iot.instrument", scope + ["!"] + offline),
                 "detail_label": _("Device inventory"), "detail_action": item_action})
+            if silent:
+                priorities.append({"key": kind, "title": title, "count": silent,
+                    "action": action(_("No recent contact"), "iot.instrument", scope + offline)})
+        programs_action = action(_("Washer Programs"), "iot.instrument.recipe", [])
+        washer_card = next(card for card in cards if card["key"] == "washer")
+        washer_card.update(detail_label=_("Program Library"), detail_action=programs_action)
+        by_key = {card["key"]: card for card in cards}
+        shortcuts = [
+            {"key": "programs", "title": _("Write Washer Programs"), "icon": "fa-list-ol", "action": programs_action},
+            {"key": "select", "title": _("Select Programs for a Washer"), "icon": "fa-download", "action": washer_card["action"]},
+            {"key": "temperatures", "title": _("Set Buffer Temperature"), "icon": "fa-thermometer-half", "action": by_key["heater"]["action"]},
+        ]
         return {"generated_at": fields.Datetime.to_string(now), "companies": self.env.companies.mapped("name"),
-                "cards": cards, "priorities": priorities}
+                "cards": [by_key[key] for key in ("washer", "heater", "relay", "environment", "attendance", "network")],
+                "priorities": priorities, "shortcuts": shortcuts}
 
     @api.model
     def _cleanup_legacy_records(self):

@@ -1,7 +1,7 @@
 {
     "name": "IoT Control Center",
     "summary": "Company-isolated device control and immutable environmental monitoring",
-    "version": "19.0.2.3.0",
+    "version": "19.0.2.6.0",
     "category": "IoT",
     "author": "mamingxing",
     "maintainer": "mamingxing",
@@ -41,6 +41,7 @@
         "views/iot_openwrt_ap_views.xml",
         "views/res_config_settings_views.xml",
         "wizard/iot_device_bind_wizard_views.xml",
+        "wizard/iot_instrument_bind_wizard_views.xml",
         "wizard/iot_th_sensor_bind_wizard_views.xml",
         "wizard/iot_firmware_push_wizard_views.xml",
         "wizard/iot_reset_uptime_wizard_views.xml",
@@ -48,6 +49,7 @@
         "data/visibility_binding_fix.xml",
         "data/menu_groups_fix.xml",
         "data/legacy_cleanup.xml",
+        "views/iot_navigation_views.xml",
     ],
     "assets": {
         "web.assets_backend": [

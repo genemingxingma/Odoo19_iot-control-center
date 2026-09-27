@@ -42,7 +42,11 @@ if not env['iot.device'].sudo().search_count([('serial','=','UI-LOCKED')]):
     env['iot.device'].sudo().create({'name':'Synthetic Locked Relay','serial':'UI-LOCKED','location_detail':'Schedule test',
         'last_seen':fields.Datetime.now(),'runtime_reported_at':fields.Datetime.now(),'control_inhibited':True,
         'device_time_synced':True,'reported_schedule_count':14,'relay_state':'off'})
+if program.state == 'draft':
+    program.action_release()
+washer = env['iot.instrument'].sudo().search([('name','=','Synthetic Array Washer')],limit=1)
+washer.write({'program_scope':'all','assigned_program_ids':[Command.clear()]})
 actions = {name:env.ref('iot_control_center.'+name).id for name in
            ('action_iot_operations_overview','action_buffer_heaters','action_array_washers','action_washer_programs','action_iot_device')}
 env.cr.commit()
-print('COMBINED_UI_FIXTURE',json.dumps({'actions':actions,'heater':heater.id,'program':program.id}))
+print('COMBINED_UI_FIXTURE',json.dumps({'actions':actions,'heater':heater.id,'washer':washer.id,'program':program.id}))

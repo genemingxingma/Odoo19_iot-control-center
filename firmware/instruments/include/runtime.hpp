@@ -1,4 +1,5 @@
 #pragma once
+#include "program_catalog.hpp"
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <LittleFS.h>
@@ -51,6 +52,15 @@ inline String randomId() {
     }
     return out;
 }
+inline String deviceIdentity(const char* prefix) {
+    uint8_t mac[6] = {};
+    WiFi.mode(WIFI_STA);
+    WiFi.macAddress(mac);
+    char value[21];
+    snprintf(value, sizeof(value), "%s-%02X%02X%02X%02X%02X%02X", prefix,
+        mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+    return value;
+}
 inline bool safeId(const String& value) {
     if (!value.length() || value.length() > 64) return false;
     for (char c : value) if (!isalnum(static_cast<unsigned char>(c)) && c != '_' && c != '-') return false;
@@ -58,11 +68,20 @@ inline bool safeId(const String& value) {
 }
 struct Network {
     String url, uid, token, ca, ssid, password;
-    bool load(bool allowWifiOnly = false) {
+    bool bindingRequired = false, bindingConfirmed = false;
+    bool load(bool allowWifiOnly = false, const String& expectedDeviceId = String()) {
         DynamicJsonDocument doc(4096);
         if (deserializeJson(doc, readFile("/network.json", 4096)) && !allowWifiOnly) return false;
         url = doc["url"] | ""; uid = doc["uid"] | ""; token = doc["token"] | "";
         ssid = doc["ssid"] | ""; password = doc["password"] | "";
+        bindingRequired = doc["binding_required"] == true;
+        bindingConfirmed = !bindingRequired;
+        if (bindingRequired && expectedDeviceId.length() && uid != expectedDeviceId) return false;
+        if (bindingRequired && LittleFS.exists("/binding.json")) {
+            DynamicJsonDocument binding(128);
+            bindingConfirmed = !deserializeJson(binding, readFile("/binding.json", 128)) &&
+                binding["device_id"].as<String>() == expectedDeviceId;
+        }
         if (allowWifiOnly && LittleFS.exists("/wifi.json")) {
             DynamicJsonDocument wifi(512);
             if (deserializeJson(wifi, readFile("/wifi.json", 512))) return false;
@@ -80,6 +99,11 @@ struct Network {
         return serverReady;
     }
     String endpoint() const { return url + "/iot_control_center/instrument/" + uid; }
+    bool confirmBinding(const String& deviceId) {
+        if (!bindingRequired) { bindingConfirmed = true; return true; }
+        if (deviceId != uid || !atomicFile("/binding.json", "{\"device_id\":\"" + deviceId + "\"}")) return false;
+        bindingConfirmed = true; return true;
+    }
 };
 #ifdef ESP8266
 using SecureClient = BearSSL::WiFiClientSecure;
@@ -105,14 +129,14 @@ public:
 #endif
         client.setTimeout(3000);
 #ifndef ESP8266
-        client.setHandshakeTimeout(3);
+        client.setHandshakeTimeout(12);
 #endif
         http.setTimeout(3000);
         http.setFollowRedirects(HTTPC_DISABLE_FOLLOW_REDIRECTS);
     }
     ~Https() { http.end(); }
     bool begin(const Network& config, const String& url) {
-        if (!url.startsWith(config.endpoint() + "/") || !http.begin(client, url)) return false;
+        if (!url.startsWith(config.url + "/") || !http.begin(client, url)) return false;
         http.addHeader("X-Instrument-Token", config.token);
         return true;
     }
@@ -122,8 +146,25 @@ public:
         return result.length() <= limit ? result : String();
     }
 };
+inline int discover(Network& net, const String& deviceId, const char* kind, const char* hardware) {
+    if (WiFi.status() != WL_CONNECTED || time(nullptr) < 1700000000 || !safeId(deviceId)) return -1;
+    Https req(net);
+    if (!req.begin(net, net.url + "/iot_control_center/instrument/discover")) return -1;
+    StaticJsonDocument<384> request;
+    request["schema"] = 1; request["device_id"] = deviceId; request["kind"] = kind;
+    request["hardware"] = hardware; request["firmware"] = version;
+    String body; serializeJson(request, body);
+    req.http.addHeader("Content-Type", "application/json");
+    int code = req.http.POST(body);
+    if (code != 200) return code == 409 ? -2 : -1;
+    DynamicJsonDocument response(384);
+    if (deserializeJson(response, req.body(384)) || response["ok"] != true) return -1;
+    if (response["bound"] != true) return 0;
+    if (response["device_id"].as<String>() != deviceId || !net.confirmBinding(deviceId)) return -1;
+    return 1;
+}
 inline String exchange(const Network& net, const String& body) {
-    if (WiFi.status() != WL_CONNECTED || time(nullptr) < 1700000000) return "";
+    if (!net.bindingConfirmed || WiFi.status() != WL_CONNECTED || time(nullptr) < 1700000000) return "";
     Https req(net);
     if (!req.begin(net, net.endpoint() + "/exchange")) return "";
     req.http.addHeader("Content-Type", "application/json");
@@ -247,23 +288,7 @@ public:
 };
 
 inline bool parseRecipe(JsonVariantConst value, instrument::Recipe& p) {
-    if (value["schema"] != 1 || !safeId(value["id"].as<String>()) || !value["revision"].is<uint32_t>()) return false;
-    strlcpy(p.id, value["id"] | "", sizeof(p.id)); p.revision = value["revision"];
-    strlcpy(p.label, value["label"] | p.id, sizeof(p.label));
-    JsonArrayConst steps = value["steps"].as<JsonArrayConst>();
-    if (steps.size() < 2 || steps.size() > 32) return false;
-    p.count = steps.size(); uint8_t i = 0;
-    for (JsonObjectConst obj : steps) {
-        const char* kind = obj["kind"] | "";
-        const char* names[] = {"home", "fill_a", "fill_b", "wash", "drain", "dry", "wait"};
-        unsigned k = 0; while (k < 7 && strcmp(kind, names[k])) ++k;
-        if (k == 7 || !obj["duration_s"].is<uint32_t>() || obj["duration_s"].as<uint32_t>() > 3600 ||
-            (obj.containsKey("rps") && !obj["rps"].is<float>()) ||
-            (obj.containsKey("reverse_s") && !obj["reverse_s"].is<uint16_t>())) return false;
-        if (obj.containsKey("cycles") && !obj["cycles"].is<uint16_t>()) return false;
-        p.steps[i++] = {static_cast<instrument::StepKind>(k), obj["duration_s"].as<uint32_t>() * 1000u, obj["rps"] | 0.0f, obj["reverse_s"] | uint16_t(5), obj["cycles"] | uint16_t(0)};
-    }
-    return instrument::validRecipe(p);
+    return instrument::parseProgram(value, p);
 }
 
 class Digest {

@@ -11,6 +11,39 @@ def program():
 
 
 class InstrumentContractTests(unittest.TestCase):
+    def test_visible_device_identity_is_type_scoped(self):
+        self.assertEqual(c.device_identity("HTR-C82B962D09D7", "heater"), "HTR-C82B962D09D7")
+        self.assertEqual(c.device_kind("WSH-001122AABBCC"), "washer")
+        for value in ("HTR-2D09D7", "htr-C82B962D09D7", "WSH-001122AABBZZ"):
+            with self.assertRaises(ValueError):
+                c.device_identity(value)
+        with self.assertRaises(ValueError):
+            c.device_identity("HTR-C82B962D09D7", "washer")
+
+    def test_discovery_contract_contains_no_company_or_country(self):
+        value = c.discovery({"schema": 1, "device_id": "HTR-C82B962D09D7", "kind": "heater",
+            "hardware": c.HEATER_HARDWARE, "firmware": "3.2.0-rc4", "company_id": 99, "country": "TH"})
+        self.assertEqual(set(value), {"device_id", "kind", "hardware", "firmware"})
+        self.assertNotIn("company_id", value)
+        self.assertNotIn("country", value)
+
+    def test_device_local_fill_schema(self):
+        p = program()
+        p["schema"] = 2
+        for step in p["steps"]:
+            if step["kind"].startswith("fill"):
+                del step["duration_s"]
+        normalized = c.recipe(p)
+        self.assertEqual(c.recipe(normalized), normalized)
+        self.assertEqual(normalized["schema"], 2)
+        self.assertTrue(all("duration_s" not in s for s in normalized["steps"] if s["kind"].startswith("fill")))
+        self.assertEqual(json.loads(c.program_catalog("device", [p])[0])["programs"][0], normalized)
+        p["steps"][0]["duration_s"] = 15
+        with self.assertRaises(ValueError): c.recipe(p)
+        for bad in (True, 3, "2"):
+            p["schema"] = bad
+            with self.assertRaises(ValueError): c.recipe(p)
+
     def test_catalog_more_than_three_and_authoritative_empty(self):
         programs=[dict(program(),id=f"program_{i}") for i in range(8)]
         body, digest=c.program_catalog("device_fixture",programs)

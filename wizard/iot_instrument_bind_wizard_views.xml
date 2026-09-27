@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_iot_instrument_bind_wizard_form" model="ir.ui.view">
+        <field name="name">iot.instrument.bind.wizard.form</field>
+        <field name="model">iot.instrument.bind.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Add Instrument by Device ID">
+                <group>
+                    <field name="validated" invisible="1"/>
+                    <field name="device_id" placeholder="HTR-C82B962D09D7"/>
+                    <field name="kind" invisible="kind == False"/>
+                    <field name="name" invisible="not validated" required="validated"/>
+                    <field name="company_id" groups="base.group_multi_company"/>
+                    <field name="location_detail" invisible="not validated" placeholder="Room and equipment location"/>
+                </group>
+                <div class="alert alert-info" invisible="status_message == False"><field name="status_message" nolabel="1" readonly="1"/></div>
+                <group string="Existing Registration" invisible="existing_instrument_id == False">
+                    <field name="existing_instrument_id"/>
+                </group>
+                <p>Find the Device ID on the instrument screen. Company and country settings remain in IoT Control Center and are never taken from the device.</p>
+                <p invisible="not validated">After adding it, keep the instrument online. It will securely claim this registration using its private device token.</p>
+                <footer>
+                    <button string="Search Device ID" type="object" name="action_search_id" class="btn-secondary"/>
+                    <button string="Add Instrument" type="object" name="action_confirm_bind" class="btn-primary" invisible="not validated"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+    <record id="action_iot_instrument_bind" model="ir.actions.act_window">
+        <field name="name">Add Instrument by Device ID</field>
+        <field name="res_model">iot.instrument.bind.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+    <menuitem id="menu_iot_instrument_bind" name="Add Instrument by Device ID" parent="menu_iot_mode_detailed"
+        action="action_iot_instrument_bind" sequence="30" groups="iot_control_center.group_iot_manager"/>
+</odoo>

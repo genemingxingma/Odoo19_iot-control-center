@@ -15,6 +15,7 @@ Adafruit_SSD1306 oled(128, 64, &Wire, -1);
 OneWire wire(ONE_WIRE);
 DallasTemperature sensors(&wire);
 DeviceAddress sensorAddress;
+DeviceAddress detectedSensorAddress;
 HeaterChannel heater;
 Probe probe;
 HeaterPanel panel;
@@ -26,8 +27,11 @@ volatile uint32_t safetyTick = 0;
 volatile bool stalled = false, stopRequested = false, irqHeatEnabled = false;
 bool commissioned = false, storage = false, networkReady = false, displayReady = false;
 bool settingsReady = false, sensorConfigured = false, converting = false, resampleAfterNetwork = false;
+bool detectedSensorAddressValid = false;
+uint8_t detectedSensorCount = 0;
 uint32_t conversionAt = 0, lastSample = 0, lastPoll = 0, lastPaint = 0, pollDelay = 5000;
-String recordedFault;
+uint32_t lastDiscovery = 0;
+String recordedFault, deviceId;
 
 void IRAM_ATTR heatKeyInterrupt() {
     if (irqHeatEnabled) { digitalWrite(HEAT, LOW); stopRequested = true; }
@@ -51,6 +55,11 @@ bool readAddress(const String& value) {
         sensorAddress[i] = strtoul(value.substring(2*i, 2*i+2).c_str(), nullptr, 16);
     }
     return sensorAddress[0] == 0x28 && OneWire::crc8(sensorAddress, 7) == sensorAddress[7];
+}
+String addressText(const DeviceAddress& address) {
+    char value[17];
+    for (uint8_t i = 0; i < 8; ++i) snprintf(value + i * 2, sizeof(value) - i * 2, "%02X", address[i]);
+    return value;
 }
 const char* faultCode() {
     if (!journal.healthy) return "storage";
@@ -78,6 +87,7 @@ void snapshot(JsonDocument& d, bool observation) {
     JsonObject s = d.createNestedObject("status");
     s["state"] = !commissioned ? "uncommissioned" : strcmp(faultCode(), "none") ? "fault" : heater.enabled ? "heating" : "idle";
     s["firmware"] = runtime::version; s["hardware"] = HARDWARE;
+    s["device_id"] = deviceId;
     s["control_interface"] = CONTROL_INTERFACE; s["local_enable"] = true; s["remote_start"] = false;
     s["build"] = "IMYTESTFW1:heater:heater-esp12s-ds18b20-v1:" INSTRUMENT_STRING_VALUE(INSTRUMENT_FIRMWARE_VERSION) ":END";
     char chip[7]; snprintf(chip, sizeof(chip), "%06X", ESP.getChipId()); s["chip_id"] = chip;
@@ -148,16 +158,17 @@ void handleCommand(JsonObjectConst c) {
 }
 void paint() {
     if (!displayReady) return;
-    char value[12], target[12], chip[7];
+    char value[12], target[12];
     if (probe.valid && elapsed(millis(), probe.sampled) <= 3000) snprintf(value, sizeof(value), "%.1f", probe.value);
     else strcpy(value, "--.-");
     if (settingsReady) snprintf(target, sizeof(target), "%.2f C", heater.target);
     else strcpy(target, "NOT SET");
-    snprintf(chip, sizeof(chip), "%06X", ESP.getChipId());
     String ip = WiFi.status() == WL_CONNECTED ? WiFi.localIP().toString() : "NOT CONNECTED";
-    HeaterView v; v.state = !commissioned ? "SETUP" : strcmp(faultCode(), "none") ? "ALARM" : heater.enabled ? "ENABLED" : "OFF";
-    v.temperature = value; v.target = target; v.chip = chip; v.ip = ip.c_str(); v.version = runtime::version;
+    const char* code = faultCode();
+    HeaterView v; v.state = !commissioned ? "SETUP" : !settingsReady ? "SET TEMP" : heater.enabled ? "READY" : "OFF";
+    v.temperature = value; v.target = target; v.deviceId = deviceId.c_str(); v.ip = ip.c_str(); v.version = runtime::version;
     v.online = WiFi.status() == WL_CONNECTED; v.output = digitalRead(HEAT) == HIGH;
+    v.fault = strcmp(code, "none") && strcmp(code, "configuration");
     v.alarm = alarmText(); v.page = panel.page;
     drawHeater(oled, v);
 }
@@ -186,9 +197,12 @@ void usbDiagnostics() {
         lastReply = millis();
         StaticJsonDocument<1024> d;
         d["firmware"] = runtime::version; d["hardware"] = HARDWARE;
+        d["device_id"] = deviceId;
         d["control_interface"] = CONTROL_INTERFACE; d["local_enable"] = true; d["remote_start"] = false;
         d["commissioned"] = commissioned; d["storage"] = storage; d["journal_healthy"] = journal.healthy;
         d["display_ready"] = displayReady; d["wifi_connected"] = WiFi.status() == WL_CONNECTED;
+        d["detected_sensor_count"] = detectedSensorCount;
+        if (detectedSensorAddressValid) d["detected_sensor_rom"] = addressText(detectedSensorAddress);
         if (WiFi.status() == WL_CONNECTED) { d["ip"] = WiFi.localIP().toString(); d["rssi"] = WiFi.RSSI(); }
         d["platform_configured"] = networkReady; d["settings_ready"] = settingsReady;
         d["enabled"] = heater.enabled; d["output"] = digitalRead(HEAT) == HIGH; d["fault"] = faultCode();
@@ -204,6 +218,7 @@ void setup() {
     for (uint8_t pin : {SW1, SW2, SW3}) pinMode(pin, INPUT_PULLUP);
     attachInterrupt(digitalPinToInterrupt(SW2), heatKeyInterrupt, FALLING);
     Serial.begin(115200);
+    deviceId = runtime::deviceIdentity("HTR");
     Wire.begin(4, 5); Wire.setClock(100000); Wire.setClockStretchLimit(1000);
     Wire.beginTransmission(0x3C);
     displayReady = Wire.endTransmission() == 0 && oled.begin(SSD1306_SWITCHCAPVCC, 0x3C);
@@ -222,10 +237,13 @@ void setup() {
             uint32_t seq=d["_command"]["seq"]; String id=d["_command"]["id"];
             if (seq==journal.lastCommand && journal.ackId==id && journal.ackResult=="rejected") journal.remember(seq,id,"applied");
         }
-        loadFault(); networkReady = network.load();
+        loadFault(); networkReady = network.load(false, deviceId);
     } else journal.healthy = false;
     commissioned = commissioned && displayReady && ESP.getFlashChipRealSize() == 4194304;
     sensors.begin(); sensors.setResolution(11); sensors.setWaitForConversion(false);
+    detectedSensorCount = sensors.getDeviceCount();
+    detectedSensorAddressValid = detectedSensorCount == 1 && sensors.getAddress(detectedSensorAddress, 0) &&
+        detectedSensorAddress[0] == 0x28 && OneWire::crc8(detectedSensorAddress, 7) == detectedSensorAddress[7];
     // This build requires powered, three-wire probes; no strong pull-up driver.
     if (sensors.isParasitePowerMode()) commissioned = false;
     attachWatchdog(); paint();
@@ -258,6 +276,15 @@ void loop() {
         lastSample = now; DynamicJsonDocument d(1536); snapshot(d, true); if (!journal.save(d, true)) stopHeat();
     }
     if (networkReady && WiFi.status() == WL_CONNECTED && time(nullptr) >= 1700000000 && elapsed(now, lastPoll) >= pollDelay && !keys && !resampleAfterNetwork) {
+        if (network.bindingRequired && !network.bindingConfirmed) {
+            if (lastDiscovery && elapsed(now, lastDiscovery) < 10000) { delay(1); return; }
+            lastDiscovery = now ? now : 1;
+            heater.pause(now); outputsOff(); watchdog.detach();
+            int result = runtime::discover(network, deviceId, "heater", HARDWARE);
+            pollDelay = result == 1 ? 5000 : min(pollDelay * 2, 60000u);
+            resampleAfterNetwork = true; converting = false; attachWatchdog();
+            delay(1); return;
+        }
         lastPoll = now;
         String path = journal.oldestPath(), text;
         if (!exchangeSchedule.useBacklog(path.length() != 0)) path = "";

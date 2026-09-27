@@ -82,6 +82,7 @@ struct HeaterChannel {
 enum class StepKind : uint8_t { Home, FillA, FillB, Wash, Drain, Dry, Wait };
 struct Step { StepKind kind = StepKind::Home; uint32_t duration = 10000; float rps = 0; uint16_t reverseSeconds = 5; uint16_t cycles = 0; };
 struct Recipe {
+    uint8_t schema = 1;
     char id[65] = "";
     char label[49] = "";
     uint32_t revision = 0;
@@ -89,12 +90,13 @@ struct Recipe {
 };
 inline bool validRecipe(const Recipe& p) {
     // Platform snapshots include the automatic pre-run home as step zero.
-    if (!p.id[0] || !p.revision || p.count < 2 || p.count > 32 || p.steps[0].kind != StepKind::Home) return false;
+    if ((p.schema != 1 && p.schema != 2) || !p.id[0] || !p.revision || p.count < 2 || p.count > 32 || p.steps[0].kind != StepKind::Home) return false;
     // Logical recipe ordering only; no physical liquid-level sensor is present.
     bool liquid = false; uint32_t total = 0;
     for (uint8_t i = 0; i < p.count; ++i) {
         const Step& s = p.steps[i];
-        if (static_cast<uint8_t>(s.kind) > 6 || s.duration < 1000 || s.duration > ((s.kind == StepKind::Wash || s.kind == StepKind::Wait) ? 3600000u : 300000u)) return false;
+        bool localFill = p.schema == 2 && (s.kind == StepKind::FillA || s.kind == StepKind::FillB);
+        if (static_cast<uint8_t>(s.kind) > 6 || (localFill ? s.duration != 0 : (s.duration < 1000 || s.duration > ((s.kind == StepKind::Wash || s.kind == StepKind::Wait) ? 3600000u : 300000u)))) return false;
         if (!std::isfinite(s.rps) || s.rps < 0 || s.rps > 10 || s.reverseSeconds < 1 || s.reverseSeconds > 60) return false;
         if (s.cycles && (s.kind != StepKind::Wash || s.cycles > 1800 || s.duration != uint32_t(s.cycles) * 2u * s.reverseSeconds * 1000u)) return false;
         bool motion = s.kind == StepKind::Wash || s.kind == StepKind::Dry;
@@ -103,7 +105,7 @@ inline bool validRecipe(const Recipe& p) {
         if (s.kind == StepKind::Wash && !liquid) return false;
         if (s.kind == StepKind::Drain) liquid = false;
         if (s.kind == StepKind::Dry && liquid) return false;
-        if (s.kind != StepKind::Wait) total += s.duration;
+        if (s.kind != StepKind::Wait) total += localFill ? 300000u : s.duration;
     }
     return !liquid && total <= 14400000u;
 }
@@ -189,6 +191,8 @@ public:
     }
     bool start(uint32_t now, bool commissioned, bool doorClosed) {
         if (running || !validRecipe(program) || !commissioned || !doorClosed || fault != None) return false;
+        // Symbolic programs must be resolved against a device-local snapshot first.
+        for (uint8_t i=0; i<program.count; ++i) if (!program.steps[i].duration) return false;
         running = true; completed = waiting = finishing = finishingDrain = false; index = 0; lastTick = started = entered = now; activeMs = 0; outputs = {};
         return true;
     }

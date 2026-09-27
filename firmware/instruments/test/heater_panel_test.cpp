@@ -52,10 +52,10 @@ int main() {
     Display d;
     for (auto page : {HeaterPage::Live,HeaterPage::Identity,HeaterPage::Target}) {
         HeaterView v; v.page=page; v.temperature="-20.0"; v.target="50.00 C";
-        v.chip="ABC123"; v.ip="255.255.255.255"; v.version="3.1.0-dev"; v.state="ENABLED";
-        v.alarm="SENSOR: HEAT OFF";
-        drawHeater(d,v); assert(d.lines.back()==v.alarm);
-        v.alarm=""; drawHeater(d,v);
+        v.deviceId="HTR-ABC123DEF456"; v.ip="255.255.255.255"; v.version="3.1.0-dev"; v.state="READY";
+        v.alarm="SENSOR: HEAT OFF"; v.fault=true;
+        drawHeater(d,v); assert(d.lines.back()=="HEAT OFF");
+        v.alarm=""; v.fault=false; drawHeater(d,v);
     }
     std::puts("HEATER_PANEL_TESTS_OK");
 }

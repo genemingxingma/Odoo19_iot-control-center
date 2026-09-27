@@ -7,7 +7,6 @@
                     <div>
                         <div class="iot_eyebrow">IoT Control Center</div>
                         <h1>Operations Overview</h1>
-                        <p>See what needs attention, then open the right workspace.</p>
                         <div t-if="state.data" class="iot_company_scope">
                             <span>Selected companies</span>
                             <strong t-esc="state.data.companies.join(' / ')"/>
@@ -25,12 +24,12 @@
                 </div>
                 <div t-if="!state.data and state.loading" class="iot_loading" role="status">Loading device status...</div>
                 <t t-if="state.data">
-                    <section class="iot_attention_panel" aria-labelledby="iot_attention_title">
-                        <div class="iot_section_heading">
-                            <h2 id="iot_attention_title">Needs Attention</h2>
-                            <span>Click an item to review its records.</span>
-                        </div>
-                        <div t-if="state.data.priorities.length" class="iot_attention_grid">
+                    <nav class="iot_quick_actions" aria-label="Common tasks">
+                        <button t-foreach="state.data.shortcuts" t-as="item" t-key="item.key" class="btn" t-on-click="() => this.open(item.action)"><i t-attf-class="fa #{item.icon}" aria-hidden="true"/><span t-esc="item.title"/><i class="fa fa-angle-right" aria-hidden="true"/></button>
+                    </nav>
+                    <details t-if="state.data.priorities.length" class="iot_attention_panel">
+                        <summary class="iot_attention_summary"><span>Needs Attention</span><strong t-esc="number(attentionCount)"/><i class="fa fa-angle-down" aria-hidden="true"/></summary>
+                        <div class="iot_attention_grid">
                             <button t-foreach="state.data.priorities" t-as="item" t-key="item.key"
                                 class="iot_attention_item" t-on-click="() => this.open(item.action)">
                                 <strong t-esc="number(item.count)"/>
@@ -38,16 +37,16 @@
                                 <i class="fa fa-angle-right" aria-hidden="true"/>
                             </button>
                         </div>
+                    </details>
                         <div t-else="" class="iot_quiet_state">
                             <i class="fa fa-check-circle" aria-hidden="true"/>
                             <div><strong>No pending issues in this overview</strong><p>Device contact is not proof of physical operation. Use device confirmation for control checks.</p></div>
                         </div>
-                    </section>
                     <section class="iot_modules_grid" aria-label="IoT workspaces">
                         <article t-foreach="state.data.cards" t-as="card" t-key="card.key" t-attf-class="iot_module_card iot_module_#{card.key}">
                             <div class="iot_module_header">
                                 <span class="iot_module_icon"><i t-attf-class="fa #{card.icon}" aria-hidden="true"/></span>
-                                <div><h2 t-esc="card.title"/><p t-esc="card.description"/></div>
+                                <div class="iot_module_heading"><h2 t-esc="card.title"/><p t-esc="card.description" t-att-title="card.description"/></div>
                             </div>
                             <div class="iot_module_metrics">
                                 <button t-on-click="() => this.open(card.action)"><strong t-esc="number(card.total)"/><span t-esc="card.total_label"/></button>

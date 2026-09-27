@@ -10,6 +10,8 @@ MAX_STEPS = 32
 MAX_PROGRAMS = 64
 KINDS = {"heater", "washer"}
 HEATER_HARDWARE = "heater-esp12s-ds18b20-v1"
+WASHER_HARDWARE = "washer-esp32-4m-v1"
+DEVICE_PREFIXES = {"heater": "HTR", "washer": "WSH"}
 STEP_KINDS = {"home", "fill_a", "fill_b", "wash", "drain", "dry", "wait"}
 HEATER_FAULTS = {"none", "sensor", "no_rise", "over_temperature", "storage", "loop_stalled", "configuration"}
 
@@ -35,6 +37,39 @@ def identifier(value):
     return value
 
 
+def device_identity(value, kind=None):
+    """Validate the operator-visible identity derived from the station MAC."""
+    if not isinstance(value, str) or not re.fullmatch(r"(?:HTR|WSH)-[0-9A-F]{12}", value):
+        raise ValueError("invalid device identity")
+    if kind not in (None, *KINDS) or (kind and not value.startswith(DEVICE_PREFIXES[kind] + "-")):
+        raise ValueError("device identity does not match instrument type")
+    return value
+
+
+def device_kind(value):
+    identity = device_identity(value)
+    return "heater" if identity.startswith("HTR-") else "washer"
+
+
+def discovery(value):
+    if not isinstance(value, dict) or value.get("schema") != 1 or value.get("kind") not in KINDS:
+        raise ValueError("invalid discovery request")
+    kind = value["kind"]
+    hardware = value.get("hardware")
+    expected = HEATER_HARDWARE if kind == "heater" else WASHER_HARDWARE
+    if hardware != expected:
+        raise ValueError("unsupported instrument hardware")
+    firmware = value.get("firmware")
+    if not isinstance(firmware, str) or not re.fullmatch(r"[A-Za-z0-9_.-]{1,64}", firmware):
+        raise ValueError("invalid firmware version")
+    return {
+        "device_id": device_identity(value.get("device_id"), kind),
+        "kind": kind,
+        "hardware": hardware,
+        "firmware": firmware,
+    }
+
+
 def canonical(value):
     return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True, allow_nan=False)
 
@@ -49,7 +84,7 @@ def washer_speed_default(kind):
 
 
 def recipe(value):
-    if not isinstance(value, dict) or value.get("schema") != PROTOCOL:
+    if not isinstance(value, dict) or type(value.get("schema")) is not int or value["schema"] not in (1, 2):
         raise ValueError("unsupported recipe schema")
     identifier(value.get("id"))
     label = value.get("label", value["id"][:48])
@@ -74,7 +109,10 @@ def recipe(value):
         if not isinstance(step, dict) or step.get("kind") not in STEP_KINDS:
             raise ValueError("unsupported step")
         kind = step["kind"]
-        duration = integer(step.get("duration_s"), 1, 3600 if kind in {"wash", "wait"} else 300)
+        local_fill = value["schema"] == 2 and kind in {"fill_a", "fill_b"}
+        if local_fill and "duration_s" in step:
+            raise ValueError("fill duration belongs to device settings, not the program")
+        duration = 300 if local_fill else integer(step.get("duration_s"), 1, 3600 if kind in {"wash", "wait"} else 300)
         speed = number(step.get("rps", 0), 0, 10)
         reverse = integer(step.get("reverse_s", 5), 1, 60)
         cycles = integer(step.get("cycles", 0), 0, 1800)
@@ -99,12 +137,14 @@ def recipe(value):
         if kind != "wait":
             total += duration
         item = dict(kind=kind, duration_s=duration, rps=speed, reverse_s=reverse)
+        if local_fill:
+            del item["duration_s"]
         if cycles:
             item["cycles"] = cycles
         clean.append(item)
     if liquid or total > 14400:
         raise ValueError("recipe must finish drained and within four hours")
-    return dict(schema=PROTOCOL, id=value["id"], label=label, revision=value["revision"], steps=clean)
+    return dict(schema=value["schema"], id=value["id"], label=label, revision=value["revision"], steps=clean)
 
 
 def program_catalog(device_uid, programs):
@@ -163,6 +203,8 @@ def event(value, kind):
         raise ValueError("boolean observation flag required")
     if not isinstance(status, dict):
         raise ValueError("status required")
+    if "device_id" in status:
+        device_identity(status["device_id"], kind)
     if status.get("state") not in {"idle", "heating", "running", "waiting", "fault", "updating", "uncommissioned"}:
         raise ValueError("invalid state")
     if not isinstance(status.get("firmware"), str) or not re.fullmatch(r"[A-Za-z0-9_.-]{1,64}", status["firmware"]):
@@ -209,6 +251,13 @@ def event(value, kind):
             integer(status.get("rise_window_s"), 30, 3600)
             number(status.get("minimum_rise_c"), 0.125, 5)
     else:
+        if "pump_timing" in status:
+            timing = status["pump_timing"]
+            if not isinstance(timing, dict):
+                raise ValueError("pump timing object required")
+            integer(timing.get("revision"), 0, 2147483647)
+            for channel in ("a_s", "b_s"):
+                integer(timing.get(channel), 0, 300)
         if "temperature_valid" in status:
             if type(status["temperature_valid"]) is not bool:
                 raise ValueError("boolean temperature quality required")
@@ -218,6 +267,13 @@ def event(value, kind):
         if log is not None:
             if not isinstance(log, dict):
                 raise ValueError("log object required")
+            if "pump_timing" in log:
+                timing = log["pump_timing"]
+                if not isinstance(timing, dict):
+                    raise ValueError("run pump timing object required")
+                integer(timing.get("revision"), 0, 2147483647)
+                for channel in ("a_s", "b_s"):
+                    integer(timing.get(channel), 0, 300)
             identifier(log.get("run_id"))
             identifier(log.get("recipe_id"))
             integer(log.get("revision"), 1, 2147483647)

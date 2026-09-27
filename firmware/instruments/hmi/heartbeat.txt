@@ -1,2 +1,2 @@
-prints "UI|HELLO|3",0
+prints "UI|HELLO|4",0
 printh 0A

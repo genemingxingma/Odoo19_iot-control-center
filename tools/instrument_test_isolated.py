@@ -27,7 +27,7 @@ def main():
             raise RuntimeError("Refusing a non-test host")
         archive = io.BytesIO()
         with tarfile.open(fileobj=archive, mode="w:gz") as tar:
-            for folder in ("controllers", "core", "data", "i18n", "migrations", "models", "security", "services", "static", "tests", "views", "wizard"):
+            for folder in ("controllers", "core", "data", "deploy", "i18n", "migrations", "models", "security", "services", "static", "tests", "views", "wizard"):
                 for path in (ROOT / folder).rglob("*"):
                     if path.is_file() and "__pycache__" not in path.parts and path.suffix != ".pyc":
                         tar.add(path, arcname="iot_control_center/" + path.relative_to(ROOT).as_posix())

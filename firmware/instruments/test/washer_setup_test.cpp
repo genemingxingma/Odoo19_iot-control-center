@@ -8,6 +8,19 @@ Recipe program(unsigned i) {
     p.revision=1; p.count=2; p.steps[0].kind=p.steps[1].kind=StepKind::Home; return p;
 }
 int main() {
+    WasherAuthorization authorization;
+    assert(!authorization.configured() && !authorization.allowed());
+    authorization.configure(false, true, true);
+    assert(!authorization.configured() && !authorization.allowed());
+    authorization.configure(true, false, true);
+    assert(authorization.fieldTest && !authorization.commissioned);
+    assert(authorization.allowed());
+    authorization.configure(true, false, true);
+    assert(authorization.allowed());
+    authorization.configure(true, true, true);
+    assert(authorization.allowed());
+    assert(!authorization.fieldTest);
+
     ProgramLibrary library;
     for (unsigned i=0;i<8;++i) assert(library.put(program(i)));
     assert(library.count==8 && library.select(7) && !library.select(8));
@@ -24,6 +37,14 @@ int main() {
     assert(!library.put(program(200)) && library.count==ProgramLibrary::Capacity);
 
     Startup startup;
+    assert(startup.readyToStart(true,true,true,true));
+    assert(!startup.readyToStart(false,true,true,true));
+    assert(!startup.readyToStart(true,false,true,true));
+    assert(!startup.readyToStart(true,true,false,true));
+    assert(!startup.readyToStart(true,true,true,false));
+    startup.stop();
+    assert(!startup.readyToStart(true,true,true,true));
+    startup = Startup();
     assert(!startup.start(0,false) && startup.phase==Startup::Pending);
     assert(startup.start(100,true) && startup.drain()==0);
     assert(!startup.start(200,true));
@@ -57,6 +78,12 @@ int main() {
     wifi.clear(); assert(!wifi.valid() && !wifi.password[0] && !wifi.passwordField);
     for (unsigned i=0;i<32;++i) assert(wifi.append('s'));
     assert(!wifi.append('s') && !wifi.append('\n'));
+    wifi.beginEdit(false); wifi.backspace(); wifi.endEdit(false);
+    assert(strlen(wifi.ssid)==32 && !wifi.previousField[0]);
+    wifi.beginEdit(false); wifi.backspace(); wifi.endEdit(true);
+    assert(strlen(wifi.ssid)==31 && !wifi.previousField[0]);
+    wifi.beginEdit(true); assert(wifi.append('x')); wifi.endEdit(false);
+    assert(!wifi.password[0] && strlen(wifi.ssid)==31 && !wifi.previousField[0]);
 
     Recipe cycles=program(0); cycles.count=5;
     cycles.steps[1]={StepKind::FillA,1000,0,5};

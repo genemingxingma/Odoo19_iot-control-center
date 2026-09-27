@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Keep existing action IDs and permissions; remove duplicate navigation layers. -->
+    <menuitem id="menu_iot_instruments" name="Laboratory Instruments" parent="menu_iot_root" sequence="20" groups="iot_control_center.group_iot_user"/>
+    <menuitem id="menu_iot_administration" name="Administration" parent="menu_iot_root" sequence="90" groups="iot_control_center.group_iot_manager"/>
+    <record id="menu_iot_control_board" model="ir.ui.menu"><field name="parent_id" ref="menu_iot_root"/><field name="sequence">5</field></record>
+    <record id="menu_array_washers" model="ir.ui.menu"><field name="parent_id" ref="menu_iot_instruments"/><field name="sequence">10</field></record>
+    <record id="menu_washer_programs" model="ir.ui.menu"><field name="parent_id" ref="menu_iot_instruments"/><field name="name">Washer Program Library</field><field name="sequence">20</field></record>
+    <record id="menu_buffer_heaters" model="ir.ui.menu"><field name="parent_id" ref="menu_iot_instruments"/><field name="sequence">30</field></record>
+    <record id="menu_instrument_firmware" model="ir.ui.menu"><field name="parent_id" ref="menu_iot_administration"/></record>
+    <record id="menu_iot_switch_root" model="ir.ui.menu"><field name="parent_id" ref="menu_iot_root"/><field name="name">Relay Control</field><field name="sequence">30</field></record>
+    <record id="menu_iot_switch_cards" model="ir.ui.menu"><field name="parent_id" ref="menu_iot_switch_root"/><field name="name">Control Cards</field><field name="sequence">5</field></record>
+    <record id="menu_iot_device" model="ir.ui.menu"><field name="name">Device Inventory</field></record>
+    <record id="menu_iot_environment_root" model="ir.ui.menu"><field name="parent_id" ref="menu_iot_root"/><field name="sequence">40</field></record>
+    <record id="menu_iot_attendance_root" model="ir.ui.menu"><field name="parent_id" ref="menu_iot_root"/><field name="sequence">50</field></record>
+    <record id="menu_iot_openwrt_root" model="ir.ui.menu"><field name="parent_id" ref="menu_iot_root"/><field name="name">Network</field><field name="sequence">60</field></record>
+    <record id="menu_iot_command" model="ir.ui.menu"><field name="parent_id" ref="menu_iot_administration"/></record>
+    <record id="menu_iot_openwrt_cards" model="ir.ui.menu"><field name="active" eval="False"/></record>
+    <record id="menu_iot_mode_cards" model="ir.ui.menu"><field name="active" eval="False"/></record>
+    <record id="menu_iot_mode_detailed" model="ir.ui.menu"><field name="active" eval="False"/></record>
+</odoo>

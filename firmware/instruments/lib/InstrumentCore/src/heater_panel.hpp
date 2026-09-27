@@ -42,35 +42,39 @@ struct HeaterView {
     const char* state = "SETUP";
     const char* temperature = "--.-";
     const char* target = "NOT SET";
-    const char* chip = "------";
+    const char* deviceId = "HTR------------";
     const char* ip = "NOT CONNECTED";
     const char* version = "";
     const char* alarm = "";
-    bool online = false, output = false;
+    bool online = false, output = false, fault = false;
     HeaterPage page = HeaterPage::Live;
 };
 
 // Uses common Adafruit GFX primitives; exercised with a host display double.
 template<class Display> void drawHeater(Display& d, const HeaterView& v) {
     d.clearDisplay(); d.setTextColor(1); d.setTextWrap(false); d.setTextSize(1);
-    d.setCursor(0, 0); d.print(v.state);
-    d.setCursor(80, 0); d.print(v.online ? "ONLINE" : "OFFLINE");
-    d.drawLine(0, 9, 127, 9, 1);
-    if (v.page == HeaterPage::Identity) {
-        d.setCursor(0, 14); d.print("ID "); d.print(v.chip);
-        d.setCursor(0, 26); d.print(v.ip);
-        d.setCursor(0, 38); d.print("FW "); d.print(v.version);
+    if (v.fault) {
+        d.setTextSize(2); d.setCursor(0, 3); d.print("ALARM");
+        d.drawLine(0, 22, 127, 22, 1);
+        d.setTextSize(1); d.setCursor(0, 30); d.print(v.alarm);
+        d.setCursor(0, 48); d.print("HEAT OFF");
+    } else if (v.page == HeaterPage::Identity) {
+        d.setCursor(0, 0); d.print("DEVICE ID");
+        char first[9] = {};
+        for (uint8_t i = 0; i < 8 && v.deviceId[i]; ++i) first[i] = v.deviceId[i];
+        d.setTextSize(2); d.setCursor(0, 13); d.print(first);
+        d.setCursor(0, 32); d.print(v.deviceId + 8);
+        d.setTextSize(1); d.setCursor(0, 54); d.print(v.ip);
     } else if (v.page == HeaterPage::Target) {
-        d.setCursor(0, 14); d.print("STORED SETPOINT");
-        d.setTextSize(2); d.setCursor(0, 27); d.print(v.target);
+        d.setCursor(0, 0); d.print("TARGET");
+        d.setTextSize(3); d.setCursor(0, 19); d.print(v.target);
+        d.setTextSize(1); d.setCursor(0, 54); d.print("SAVED ON DEVICE");
     } else {
-        d.setTextSize(3); d.setCursor(0, 13); d.print(v.temperature);
-        d.setTextSize(1); d.setCursor(113, 26); d.print("C");
-        d.setCursor(0, 39); d.print("SET "); d.print(v.target);
-        d.setCursor(86, 39); d.print(v.output ? "OUT ON" : "OUT OFF");
+        d.setCursor(0, 0); d.print(v.output ? "HEATING" : v.state);
+        d.setCursor(120, 0); d.print("C");
+        d.setTextSize(4); d.setCursor(0, 13); d.print(v.temperature);
+        d.setTextSize(1); d.setCursor(0, 54); d.print("TARGET "); d.print(v.target);
     }
-    d.setTextSize(1); d.drawLine(0, 48, 127, 48, 1); d.setCursor(0, 54);
-    d.print(v.alarm[0] ? v.alarm : "1:ID  2:HEAT  3:SET");
     d.display();
 }
 }

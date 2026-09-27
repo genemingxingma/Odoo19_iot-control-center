@@ -7,6 +7,7 @@
 #include <esp_task_wdt.h>
 #include "tjc_ui.hpp"
 #include "program_catalog.hpp"
+#include "pump_timing.hpp"
 
 using namespace instrument;
 constexpr const char* HARDWARE = "washer-esp32-4m-v1";
@@ -15,7 +16,9 @@ constexpr uint8_t IN_A = 33, IN_B = 25, DRAIN = 27, OVERFLOW = 26, BUZZER = 21, 
 constexpr uint32_t STEPS_PER_REV = WasherMotorProfile::StepsPerRevolution;
 Washer washer; Probe temperature;
 ProgramLibrary programLibrary;
+PumpTiming pumpTiming, pumpDraft, runPumpTiming;
 Startup startup;
+WasherAuthorization authorization;
 WifiDraft wifiDraft;
 uint8_t librarySelection = 0;
 uint8_t libraryPage = 0;
@@ -24,15 +27,18 @@ String pendingCatalog, reviewedProgramId, reviewedCatalogDigest;
 uint32_t reviewedRevision = 0;
 uint32_t catalogCheckedAt = 0;
 bool catalogInFlight = false;
-uint32_t startupAwaitAt = 0;
+bool discoveryInFlight = false;
 runtime::Network network; runtime::Journal journal;
 ExchangeSchedule exchangeSchedule;
 OneWire oneWire(32); DallasTemperature sensors(&oneWire); DeviceAddress probeAddress;
 FastAccelStepperEngine motion; FastAccelStepper* motor = nullptr;
 QueueHandle_t requests = nullptr, responses = nullptr;
+TaskHandle_t networkTaskHandle = nullptr;
+volatile int catalogHttpStatus = 0;
 bool commissioned = false, storage = false, networkReady = false, sdReady = false;
 bool cleanupRequired = true;
 bool inFlight = false, conversion = false, homeComplete = false, screenReady = false;
+bool nativeScreenConfirmed = false;
 bool probeAttached = false;
 enum class RotorMode { Unconfigured, Open, Interlocked };
 RotorMode rotorMode = RotorMode::Unconfigured;
@@ -42,25 +48,26 @@ bool rotorHomed = false, loadingCalibrated = false;
 uint8_t loadingIndex = 255;
 int32_t loadingOffset = 0;
 uint32_t loadingHz = 0;
-uint32_t conversionAt = 0, lastPoll = 0, lastUi = 0, serialAt = 0;
-String inFlightPath, inFlightId, runId;
+uint32_t conversionAt = 0, lastPoll = 0, lastDiscovery = 0, lastUi = 0, serialAt = 0;
+String inFlightPath, inFlightId, runId, deviceId;
 uint8_t homeIndex = 255, homePhase = 0, fillIndex = 255;
 uint8_t fillPhase = 0;
 uint32_t fillMoveAt = 0;
 int32_t homeOffset = 0;
 float lastSpeed = 0;
-char serialLine[80]; uint8_t serialLength = 0; bool serialOverflow = false;
+char serialLine[96]; uint8_t serialLength = 0; bool serialOverflow = false;
 tjc::Display display;
 uint32_t screenSeen = 0;
 String uiMessage;
 
 void encodeRecipe(JsonObject doc, const Recipe& p) {
-    doc["schema"] = 1; doc["id"] = p.id; doc["label"] = p.label; doc["revision"] = p.revision;
+    doc["schema"] = p.schema; doc["id"] = p.id; doc["label"] = p.label; doc["revision"] = p.revision;
     JsonArray steps = doc.createNestedArray("steps");
     const char* names[] = {"home", "fill_a", "fill_b", "wash", "drain", "dry", "wait"};
     for (uint8_t i=0; i<p.count; ++i) {
         const Step& s=p.steps[i]; JsonObject step=steps.createNestedObject();
-        step["kind"]=names[static_cast<unsigned>(s.kind)]; step["duration_s"]=s.duration/1000;
+        step["kind"]=names[static_cast<unsigned>(s.kind)];
+        if (!(p.schema == 2 && (s.kind == StepKind::FillA || s.kind == StepKind::FillB))) step["duration_s"]=s.duration/1000;
         step["rps"]=s.rps; step["reverse_s"]=s.reverseSeconds;
         if (s.cycles) step["cycles"]=s.cycles;
     }
@@ -105,6 +112,35 @@ bool loadLibrary() {
     return storeLibrary(candidate); // Preserve the original single-program file.
 }
 bool idleForSettings() { return !washer.running && !startup.active() && (!motor || !motor->isRunning()); }
+void encodePumpTiming(JsonObject value, const PumpTiming& timing) {
+    value["revision"] = timing.revision; value["a_s"] = timing.a; value["b_s"] = timing.b;
+}
+bool decodePumpTiming(JsonVariantConst value, PumpTiming& result) {
+    if (!value["revision"].is<uint32_t>() || !value["a_s"].is<uint16_t>() || !value["b_s"].is<uint16_t>()) return false;
+    PumpTiming candidate{value["revision"], value["a_s"], value["b_s"]};
+    if (!candidate.valid()) return false;
+    result = candidate; return true;
+}
+void loadPumpTiming() {
+    DynamicJsonDocument d(256);
+    if (LittleFS.exists("/pump-timing.json") &&
+        (deserializeJson(d, runtime::readFile("/pump-timing.json", 256)) || d["schema"] != 1 ||
+         !decodePumpTiming(d.as<JsonVariantConst>(), pumpTiming))) {
+        pumpTiming = {}; uiMessage = "Fill-time settings are invalid. Set Buffer A and B again.";
+    }
+}
+void savePumpTiming() {
+    if (pumpTiming.valid() && pumpTiming.a == pumpDraft.a && pumpTiming.b == pumpDraft.b) {
+        uiMessage = "Already saved. Pumps remain off."; return;
+    }
+    if (!storage || !idleForSettings() || pumpTiming.revision >= 2147483647u) { uiMessage = "Cannot save pump settings now."; return; }
+    PumpTiming candidate = pumpDraft; candidate.revision = pumpTiming.revision + 1;
+    if (!candidate.valid()) { uiMessage = "Set at least one pump: 1 to 300 seconds."; return; }
+    DynamicJsonDocument d(256); encodePumpTiming(d.to<JsonObject>(), candidate); d["schema"] = 1;
+    String text; serializeJson(d, text);
+    if (d.overflowed() || !runtime::atomicFile("/pump-timing.json", text)) { uiMessage = "Save failed. Previous pump settings kept."; return; }
+    pumpTiming = pumpDraft = candidate; uiMessage = "Saved on this device. Pumps remain off.";
+}
 bool setCleanupRequired(bool required) {
     if (!storage) return false;
     if (required) {
@@ -121,7 +157,7 @@ void openWifi() {
     wifiDraft.clear();
     strlcpy(wifiDraft.ssid,network.ssid.c_str(),sizeof(wifiDraft.ssid));
     strlcpy(wifiDraft.password,network.password.c_str(),sizeof(wifiDraft.password));
-    display.page=6; uiMessage="Settings are saved locally for offline use.";
+    display.page=6; uiMessage="Tap fields to edit, then SAVE / CONNECT. Blank password: open network.";
 }
 void saveWifi() {
     if (!storage || !idleForSettings() || inFlight) { uiMessage="Busy. Wait, then retry."; return; }
@@ -152,14 +188,19 @@ void hmi(const String& command) {
     Serial2.print(command); Serial2.write(0xff); Serial2.write(0xff); Serial2.write(0xff);
 }
 const char* stateName() {
-    if (!commissioned) return "uncommissioned";
     if (washer.fault != None || !journal.healthy) return "fault";
+    if (!authorization.allowed()) return "uncommissioned";
     return startup.active() ? "running" : washer.waiting ? "waiting" : washer.running ? "running" : "idle";
 }
 void snapshot(JsonDocument& d) {
     journal.envelope(d);
     JsonObject s = d.createNestedObject("status");
     s["state"] = stateName(); s["firmware"] = runtime::version; s["hardware"] = HARDWARE;
+    s["device_id"] = deviceId;
+    s["commissioned"] = commissioned; s["field_test"] = authorization.fieldTest;
+    s["loading_calibrated"] = loadingCalibrated;
+    s["recipe_schema"] = 2;
+    encodePumpTiming(s.createNestedObject("pump_timing"), pumpTiming);
     s["build"] = "IMYTESTFW1:washer:washer-esp32-4m-v1:" INSTRUMENT_STRING_VALUE(INSTRUMENT_FIRMWARE_VERSION) ":END";
     s["step"] = washer.index; s["steps"] = washer.program.count;
     s["remaining_s"] = washer.running && !washer.waiting ? max(0L, static_cast<long>(washer.program.steps[washer.index].duration - min(washer.program.steps[washer.index].duration, elapsed(millis(), washer.entered))) / 1000) : 0;
@@ -180,11 +221,12 @@ void snapshot(JsonDocument& d) {
 }
 bool logEvent(const char* event, const char* message = "") {
     if (!runId.length()) return true;
-    DynamicJsonDocument d(2048); snapshot(d);
+    DynamicJsonDocument d(3072); snapshot(d);
     JsonObject log = d.createNestedObject("log");
     log["run_id"] = runId; log["recipe_id"] = washer.program.id;
     log["revision"] = washer.program.revision; log["step"] = washer.index;
     log["event"] = event; log["message"] = message;
+    encodePumpTiming(log.createNestedObject("pump_timing"), runPumpTiming);
     bool terminal=!strcmp(event,"completed") || !strcmp(event,"aborted") || !strcmp(event,"fault") || !strcmp(event,"power_loss");
     if (!journal.save(d,false,terminal)) { washer.stop(Storage); outputsOff(); return false; }
     return true;
@@ -199,24 +241,32 @@ void stopRun(Fault fault, const char* reason) {
     }
 }
 bool saveRunMarker() {
-    DynamicJsonDocument d(256); d["run_id"] = runId; d["recipe_id"] = washer.program.id; d["revision"] = washer.program.revision;
+    DynamicJsonDocument d(512); d["run_id"] = runId; d["recipe_id"] = washer.program.id; d["revision"] = washer.program.revision;
+    encodePumpTiming(d.createNestedObject("pump_timing"), runPumpTiming);
     String text; serializeJson(d, text); return runtime::atomicFile("/run.json", text);
 }
 void startRun() {
-    if (startup.phase != Startup::Ready) { uiMessage="Initialize the instrument in Device Care first."; return; }
+    if (!idleForSettings() || !programLibrary.count) { uiMessage="Select a program first."; return; }
+    const Recipe& source = programLibrary.items[programLibrary.selected];
+    Recipe resolved;
+    if (source.schema != 2) { uiMessage="Legacy program. Sync from IoT Center."; return; }
+    if (!pumpTiming.resolve(source, resolved)) { uiMessage="Set Buffer A and B fill times in Settings."; return; }
+    if (startup.phase != Startup::Ready) { uiMessage="Wait for automatic startup preparation to finish."; return; }
     if (cleanupRequired) { uiMessage="Initialization cleanup is required before starting."; return; }
-    if (!screenReady || !commissioned || !journal.healthy || !motor) { uiMessage = "Start blocked: check setup and log storage."; return; }
+    if (!screenReady || !authorization.allowed() || !journal.healthy || !motor) { uiMessage = "Start blocked: check setup and log storage."; return; }
     unsigned waits=0; for (uint8_t i=0;i<washer.program.count;++i) if (washer.program.steps[i].kind==StepKind::Wait) ++waits;
     if (!journal.reserveCritical(unsigned(washer.program.count)+waits*2+6)) { uiMessage="Start blocked: upload or service the full event log."; return; }
+    if (!washer.load(resolved)) { uiMessage="Program could not be prepared."; return; }
+    runPumpTiming = pumpTiming;
     if (!setCleanupRequired(true)) { uiMessage="Start blocked: cleanup state could not be saved."; return; }
-    if (motor->isRunning() || !washer.start(millis(), commissioned, motionAllowed())) { uiMessage = "Start blocked: check setup, program and active fault."; return; }
+    if (motor->isRunning() || !washer.start(millis(), authorization.allowed(), motionAllowed())) { uiMessage = "Start blocked: check setup, program and active fault."; return; }
     uiMessage = "";
     runId = runtime::randomId(); homeIndex = fillIndex = 255; homeComplete = rotorHomed = false;
     if (!saveRunMarker() || !logEvent("started")) { washer.stop(Storage); outputsOff(); }
     else if (!temperature.valid) logEvent("sensor_warning", "Liquid temperature unavailable; timed program continues");
 }
 void sdUpdate() {
-    if (!commissioned || !idleForSettings() || inFlight) { uiMessage = "Update blocked. Stop first; wait and retry."; return; }
+    if (!authorization.configured() || !idleForSettings() || inFlight) { uiMessage = "Update blocked. Stop first; wait and retry."; return; }
     outputsOff();
     if (!sdReady) sdReady = SD.begin(SD_CS);
     if (!sdReady) { uiMessage = "SD card unavailable. Insert the ESP32 SD card."; return; }
@@ -234,7 +284,7 @@ void sdUpdate() {
     uiMessage = "Update rejected; firmware unchanged";
 }
 void nextLoadingPosition() {
-    if (!screenReady || !commissioned || !journal.healthy || !motionAllowed() || !motor || display.page != 4) return;
+    if (!screenReady || !authorization.allowed() || !journal.healthy || !motionAllowed() || !motor || display.page != 4) return;
     if (!washer.running || !washer.waiting || loading.active || motor->isRunning() || !loadingCalibrated || !rotorHomed || loadingIndex != washer.index) return;
     digitalWrite(IN_A, LOW); digitalWrite(IN_B, LOW); setDrainOutputs(0, 0);
     int32_t position = motor->getCurrentPosition() % static_cast<int32_t>(STEPS_PER_REV);
@@ -250,28 +300,186 @@ void nextLoadingPosition() {
     motor->setSpeedInHz(loadingHz); motor->setAcceleration(WasherMotorProfile::LoadingAcceleration); lastSpeed = 0;
     if (motor->move(loading.distance) != MOVE_OK) stopRun(RunTimeout, "Loading position command rejected");
 }
+void saveLoadingReference();
+bool commandSeconds(const char* command, const char* prefix, uint16_t& result) {
+    const size_t length = strlen(prefix);
+    if (strncmp(command, prefix, length)) return false;
+    const char* value = command + length;
+    char* end = nullptr;
+    unsigned long parsed = strtoul(value, &end, 10);
+    if (!value[0] || !end || *end || parsed > 300) return true;
+    result = static_cast<uint16_t>(parsed);
+    return true;
+}
 void localCommand(const char* command) {
-    if (!strcmp(command, "UI|HELLO|3")) {
-        if (!screenReady) { display.dirty = true; if (startup.phase==Startup::Pending) startupAwaitAt=millis(); }
-        screenReady = true; screenSeen = millis(); return;
+    if (!strcmp(command, "UI|BOOT|4")) {
+        if (washer.running || startup.active()) stopRun(Storage, "Operator screen restarted");
+        nativeScreenConfirmed = true;
+        display.invalidate();
+        screenReady = true;
+        screenSeen = millis();
+        return;
     }
-    if (!strcmp(command, "UI|STOP")) { stopRun(None, "Stopped locally"); return; }
-    if (!screenReady) return;
-    if (!strcmp(command, "UI|START")) {
-        if (reviewedProgramStillCurrent()) startRun();
-        else uiMessage="Program changed. Review it again before starting.";
+    if (!strcmp(command, "UI|HELLO|4")) {
+        // During a paired upgrade the screen can finish booting while the
+        // controller is still held in ROM, so its one-shot BOOT frame is lost.
+        // Accept the versioned heartbeat only during a short, idle controller
+        // startup window. Independent screen restarts during operation still
+        // arrive as BOOT and take the fail-safe stop path above.
+        if (!nativeScreenConfirmed) {
+            if (millis() > 30000 || washer.running || startup.active()) return;
+            nativeScreenConfirmed = true;
+            display.invalidate();
+        }
+        if (!screenReady) {
+            display.invalidate();
+        }
+        screenReady = true;
+        screenSeen = millis();
+        return;
     }
-    else if (!strcmp(command, "UI|CONTINUE") && motionAllowed()) {
-        if (!loading.active && motor && washer.resume(millis(), !motor->isRunning())) { loading.reset(); loadingIndex = 255; logEvent("continued"); display.page = 0; }
+    // STOP remains the only command accepted independently of the current page.
+    if (!strcmp(command, "UI|STOP") && nativeScreenConfirmed) {
+        stopRun(None, "Stopped locally");
+        display.page = tjc::Overview;
+        display.dirty = true;
+        return;
     }
-    else if (!strcmp(command, "UI|RESET") && !washer.running && motionAllowed()) washer.fault = None;
-    else if (!strcmp(command, "UI|UPDATE_SD")) sdUpdate();
+    if (!screenReady || !nativeScreenConfirmed) return;
+    screenSeen = millis();
+
+    if (!strcmp(command, "UI|HOME")) {
+        if (idleForSettings()) {
+            // A completed run remains visible until the operator explicitly
+            // acknowledges it by returning home.
+            washer.completed = false;
+            display.page = tjc::Overview;
+            uiMessage = "";
+        }
+    } else if (!strcmp(command, "UI|SETTINGS")) {
+        if (idleForSettings()) display.page = tjc::Settings;
+    } else if (!strcmp(command, "UI|PROGRAMS")) {
+        if (idleForSettings()) {
+            librarySelection = programLibrary.selected;
+            libraryPage = librarySelection / 3;
+            display.page = tjc::Programs;
+        }
+    } else if (!strncmp(command, "UI|PROGRAM|", 11) && idleForSettings()) {
+        int choice = command[11] - '0';
+        if (command[11] >= '0' && command[11] <= '2' && !command[12] &&
+            libraryPage * 3 + choice < programLibrary.count)
+            librarySelection = libraryPage * 3 + choice;
+    } else if (!strcmp(command, "UI|PROGRAM_PREV") && idleForSettings()) {
+        if (programLibrary.count)
+            librarySelection = librarySelection ? librarySelection - 1 : programLibrary.count - 1;
+        libraryPage = librarySelection / 3;
+    } else if (!strcmp(command, "UI|PROGRAM_NEXT") && idleForSettings()) {
+        if (programLibrary.count)
+            librarySelection = (librarySelection + 1) % programLibrary.count;
+        libraryPage = librarySelection / 3;
+    } else if (!strcmp(command, "UI|PROGRAM_SELECT") && idleForSettings()) {
+        if (librarySelection < programLibrary.count) {
+            ProgramLibrary copy = programLibrary;
+            if (copy.select(librarySelection) && storeLibrary(copy)) {
+                display.page = tjc::Overview;
+                uiMessage = "Program selected. Review before starting.";
+            } else {
+                journal.healthy = false;
+                uiMessage = "Program selection could not be saved.";
+            }
+        }
+    } else if (!strcmp(command, "UI|REVIEW") && idleForSettings()) {
+        uiMessage = "";
+        reviewedProgramId = washer.program.id;
+        reviewedRevision = washer.program.revision;
+        reviewedCatalogDigest = catalogDigest;
+        display.page = tjc::Review;
+    } else if (!strcmp(command, "UI|START")) {
+        if (display.page != tjc::Review) uiMessage = "Review the selected program before starting.";
+        else if (reviewedProgramStillCurrent()) {
+            startRun();
+            if (washer.running) display.page = tjc::Overview;
+        } else uiMessage = "Program changed. Review it again before starting.";
+    } else if (!strcmp(command, "UI|CONTINUE") && motionAllowed()) {
+        if (!loading.active && motor && washer.resume(millis(), !motor->isRunning())) {
+            loading.reset(); loadingIndex = 255; logEvent("continued"); display.page = tjc::Overview;
+        }
+    } else if (!strcmp(command, "UI|LOAD_ACTION")) {
+        if (loadingCalibrated) nextLoadingPosition();
+        else saveLoadingReference();
+    } else if (!strcmp(command, "UI|WIFI") && idleForSettings()) {
+        openWifi();
+    } else if (!strncmp(command, "UI|WIFI_SSID|", 13) && idleForSettings()) {
+        strlcpy(wifiDraft.ssid, command + 13, sizeof(wifiDraft.ssid));
+    } else if (!strncmp(command, "UI|WIFI_PASS|", 13) && idleForSettings()) {
+        strlcpy(wifiDraft.password, command + 13, sizeof(wifiDraft.password));
+    } else if (!strcmp(command, "UI|WIFI_SAVE") && idleForSettings()) {
+        saveWifi();
+    } else if (!strcmp(command, "UI|WIFI_CANCEL") && idleForSettings()) {
+        wifiDraft.clear(); uiMessage = ""; display.page = tjc::Settings;
+    } else if (!strcmp(command, "UI|PUMP") && idleForSettings()) {
+        pumpDraft = pumpTiming; display.page = tjc::PumpTimes;
+        uiMessage = "Tap left for A, right for B. Zero means not set.";
+    } else if (commandSeconds(command, "UI|PUMP_A|", pumpDraft.a) && idleForSettings()) {
+        uiMessage = "Unsaved device-local calibration.";
+    } else if (commandSeconds(command, "UI|PUMP_B|", pumpDraft.b) && idleForSettings()) {
+        uiMessage = "Unsaved device-local calibration.";
+    } else if (!strcmp(command, "UI|PUMP_SAVE") && idleForSettings()) {
+        savePumpTiming();
+    } else if (!strcmp(command, "UI|PUMP_CANCEL") && idleForSettings()) {
+        pumpDraft = pumpTiming; uiMessage = ""; display.page = tjc::Settings;
+    } else if (!strcmp(command, "UI|MAINTENANCE") && idleForSettings()) {
+        display.page = tjc::Maintenance;
+    } else if (!strcmp(command, "UI|RESET") && !washer.running && motionAllowed()) {
+        bool hadFault = washer.fault != None;
+        washer.fault = None;
+        uiMessage = hadFault ? "Fault reset. Inspect the machine before starting." : "No active fault.";
+    } else if (!strcmp(command, "UI|SD_CONFIRM") && idleForSettings()) {
+        display.page = tjc::SdConfirm;
+    } else if (!strcmp(command, "UI|UPDATE_SD") && idleForSettings()) {
+        sdUpdate(); display.page = tjc::Overview;
+    } else if (!strcmp(command, "UI|BACK") && idleForSettings()) {
+        if (display.page == tjc::SdConfirm)
+            display.page = tjc::Maintenance;
+        else if (display.page == tjc::Wifi || display.page == tjc::PumpTimes ||
+                 display.page == tjc::Maintenance)
+            display.page = tjc::Settings;
+        else display.page = tjc::Overview;
+        uiMessage = "";
+    }
+    display.dirty = true;
+}
+void saveLoadingReference() {
+    if (!authorization.allowed() || !screenReady || !journal.healthy || !washer.running || !washer.waiting ||
+        !rotorHomed || washer.fault != None || !motor || motor->isRunning() || loading.active ||
+        !motionAllowed() || digitalRead(IN_A) || digitalRead(IN_B) ||
+        ledcRead(0) || ledcRead(1)) {
+        uiMessage = "Pause at a loading step first. Rotor and pumps must be stopped.";
+        return;
+    }
+    DynamicJsonDocument config(1024);
+    if (deserializeJson(config, runtime::readFile("/hardware.json", 1024))) {
+        uiMessage = "Hardware settings could not be read."; return;
+    }
+    int32_t position = motor->getCurrentPosition() % static_cast<int32_t>(STEPS_PER_REV);
+    if (position < 0) position += STEPS_PER_REV;
+    config["loading_offset_steps"] = position;
+    config["loading_index_hz"] = WasherMotorProfile::LoadingHz;
+    config["loading_calibrated"] = true;
+    String text; serializeJson(config, text);
+    if (config.overflowed() || !runtime::atomicFile("/hardware.json", text)) {
+        uiMessage = "Could not save loading reference. Previous settings kept."; return;
+    }
+    loadingOffset = position; loadingHz = WasherMotorProfile::LoadingHz;
+    loadingCalibrated = true; loading.reset();
+    logEvent("waiting", "Loading slot 1 confirmed locally and saved");
+    uiMessage = "Loading slot 1 saved. Check opposite-pair positioning during a wait.";
 }
 void touchCommand(int button) {
     if (button == 2) { stopRun(None, "Stopped locally"); wifiDraft.clear(); display.page = 0; }
     else if (!screenReady || button < 0 || !display.acceptsAction(millis())) return;
     else if (display.page >= 5) {
-        if (!idleForSettings()) return;
+        if (!idleForSettings() && !(display.page == 8 && washer.running && washer.waiting && motor && !motor->isRunning() && !loading.active)) return;
         if (display.page == 5) {
             if (button>=10 && button<13 && libraryPage*3+button-10<programLibrary.count) librarySelection=libraryPage*3+button-10;
             else if (button==0 && librarySelection<programLibrary.count) {
@@ -281,24 +489,32 @@ void touchCommand(int button) {
             } else if (button==1) display.page=0;
             else if (button==3 && libraryPage) --libraryPage;
             else if (button==4 && (libraryPage+1)*3<programLibrary.count) ++libraryPage;
-        } else if (display.page == 9) {
-            if (button==0) {
-                if (commissioned && journal.healthy && washer.fault==None && motionAllowed() && motor) {
-                    startup.phase=Startup::Pending; startupAwaitAt=millis()-10000;
-                }
-                display.page=0;
-            } else if (button==1) display.page=2;
+        } else if (display.page == 8) {
+            if (button == 0) { saveLoadingReference(); if (loadingCalibrated) display.page = 4; }
+            else if (button == 1) display.page = 4;
+        } else if (display.page == 10) {
+            if (button == 0) savePumpTiming();
+            else if (button == 1) { display.page=2; uiMessage=""; }
+            else if (button >= 10 && button < 18) {
+                uint16_t& seconds = button < 14 ? pumpDraft.a : pumpDraft.b;
+                const int changes[] = {-10, -1, 1, 10};
+                seconds = max(0, min(300, int(seconds) + changes[(button-10)%4]));
+                uiMessage="Unsaved A/B times. Save Fill Times stores both on this washer.";
+            }
         } else if (display.page == 6) {
             if (button==0) saveWifi();
-            else if (button==1) { wifiDraft.clear(); display.page=2; }
-            else if (button==3 || button==4) { wifiDraft.passwordField=button==4; display.page=7; }
+            else if (button==1) { wifiDraft.clear(); uiMessage=""; display.page=2; }
+            else if (button==3 || button==4) { wifiDraft.beginEdit(button==4); display.page=7; }
         } else if (display.page == 7) {
             if (button>=10 && button<50) wifiDraft.append(WifiDraft::keys(wifiDraft.keyboard)[button-10]);
             else if (button==50) wifiDraft.backspace();
             else if (button==51) wifiDraft.keyboard=wifiDraft.keyboard==1?0:1;
             else if (button==52) wifiDraft.keyboard=wifiDraft.keyboard==2?0:2;
             else if (button==53) wifiDraft.append(' ');
-            else if (button==0 || button==1) display.page=6;
+            else if (button==0 || button==1) {
+                wifiDraft.endEdit(button==0); display.page=6;
+                uiMessage=button==0?"Edit kept. Tap SAVE / CONNECT to apply.":"Edit cancelled. Wi-Fi settings unchanged.";
+            }
         }
     }
     else if (button==3 && idleForSettings()) {
@@ -307,19 +523,28 @@ void touchCommand(int button) {
     }
     else if (button==4 && display.page==2 && idleForSettings()) display.page=9;
     else if (button==5 && display.page==2 && idleForSettings()) display.page=0;
+    else if (button==6 && display.page==2 && idleForSettings()) { pumpDraft=pumpTiming; display.page=10; uiMessage="Set measured fill times. Zero = NOT SET."; }
     else if (button == 0) {
         if ((display.page == 0 || display.page == 4) && washer.waiting) localCommand("UI|CONTINUE");
         else if (display.page == 0 && idleForSettings()) {
+            uiMessage="";
             reviewedProgramId=washer.program.id; reviewedRevision=washer.program.revision; reviewedCatalogDigest=catalogDigest; display.page = 1;
         }
         else if (display.page == 1) {
             if (!reviewedProgramStillCurrent()) uiMessage="Program changed. Return and review the current version.";
             else { startRun(); if (washer.running) display.page = 0; }
         }
-        else if (display.page == 2) { localCommand("UI|RESET"); display.page = 0; }
+        else if (display.page == 2) {
+            bool hadFault=washer.fault!=None;
+            localCommand("UI|RESET");
+            uiMessage=washer.fault!=None?"Fault remains. Check device before resetting.":hadFault?"Fault reset. Inspect the machine before starting.":"No fault to reset.";
+        }
         else if (display.page == 3) { sdUpdate(); display.page = 0; }
     } else if (button == 1) {
-        if (display.page == 4) nextLoadingPosition();
+        if (display.page == 4) {
+            if (!loadingCalibrated && authorization.allowed() && rotorHomed && washer.running && washer.waiting && motor && !motor->isRunning() && !loading.active) display.page = 8;
+            else nextLoadingPosition();
+        }
         else if (display.page == 0 && idleForSettings()) { librarySelection=programLibrary.selected; libraryPage=librarySelection/3; display.page = 5; }
         else if (display.page == 2) display.page = 3;
         else if (display.page != 4) display.page = 0;
@@ -331,10 +556,10 @@ void serialTick() {
     unsigned budget = 128;
     while (Serial2.available() && budget--) {
         char c = Serial2.read(); serialAt = millis();
-        if (display.receivingTouch() || static_cast<uint8_t>(c) == 0x67) {
-            int button = display.touch(static_cast<uint8_t>(c), serialAt);
-            if (button >= 0) touchCommand(button);
-            continue;
+        // Native pages send newline-delimited ASCII commands. Ignore all binary
+        // bytes, including legacy coordinate packets, before line assembly.
+        if (static_cast<uint8_t>(c) < 32 && c != '\n' && c != '\r') {
+            serialLength = 0; serialOverflow = false; continue;
         }
         if (c == '\n') {
             if (!serialOverflow) { serialLine[serialLength] = 0; localCommand(serialLine); }
@@ -365,10 +590,16 @@ void usbDiagnostics() {
         if (!requested || elapsed(millis(),lastReply) < 1000) continue;
         lastReply = millis();
         // Read-only USB diagnostics: no credentials, provisioning or motion commands.
-        StaticJsonDocument<1536> d;
+        StaticJsonDocument<2560> d;
         d["firmware"] = runtime::version; d["hardware"] = HARDWARE;
+        d["device_id"] = deviceId;
         d["boot"] = journal.boot; d["uptime_ms"] = millis(); d["epoch"] = time(nullptr);
         d["commissioned"] = commissioned; d["state"] = stateName();
+        d["field_test"] = authorization.fieldTest;
+        d["loading_calibrated"] = loadingCalibrated; d["home_input"] = digitalRead(HOME);
+        d["recipe_schema"] = 2; encodePumpTiming(d.createNestedObject("pump_timing"), pumpTiming);
+        d["rotor_homed"] = rotorHomed; d["home_offset_steps"] = homeOffset;
+        d["loading_offset_steps"] = loadingOffset; d["initialization"] = static_cast<unsigned>(startup.phase);
         d["open_rotor"] = openRotorLayout;
         d["storage"] = storage; d["journal_healthy"] = journal.healthy;
         d["screen_ready"] = screenReady; d["screen_age_ms"] = elapsed(millis(),screenSeen);
@@ -376,6 +607,9 @@ void usbDiagnostics() {
         d["wifi_connected"] = WiFi.status() == WL_CONNECTED;
         if (WiFi.status() == WL_CONNECTED) { d["ip"] = WiFi.localIP().toString(); d["rssi"] = WiFi.RSSI(); }
         d["platform_configured"] = networkReady; d["sync_in_flight"] = catalogInFlight;
+        d["catalog_http_status"] = catalogHttpStatus;
+        d["free_heap"] = ESP.getFreeHeap(); d["minimum_heap"] = ESP.getMinFreeHeap();
+        if (networkTaskHandle) d["network_stack_free"] = uxTaskGetStackHighWaterMark(networkTaskHandle);
         d["catalog_digest"] = catalogDigest; d["program_count"] = programLibrary.count;
         d["cleanup_required"] = cleanupRequired; d["journal_pending"] = journal.pending(); d["journal_free"] = journal.criticalFree();
         d["selected_program"] = washer.program.id; d["selected_revision"] = washer.program.revision;
@@ -398,7 +632,7 @@ void remoteCommand(JsonObjectConst c) {
         // V3.4 has one authoritative source: an atomic full catalog, not patches.
         catalogCheckedAt=0;
         uiMessage="Legacy single-program command rejected. Waiting for full platform sync.";
-    } else if (name == "ota" && idleForSettings() && commissioned) {
+    } else if (name == "ota" && idleForSettings() && authorization.configured()) {
         outputsOff(); esp_task_wdt_delete(nullptr);
         ok = runtime::ota(network, c["payload"]["release"] | "", "washer", HARDWARE);
         esp_task_wdt_add(nullptr);
@@ -412,7 +646,8 @@ String fetchCatalog(const String& knownDigest) {
     if (!req.begin(network,network.endpoint()+"/programs")) return "";
     const char* headers[]={"X-Catalog-SHA256"}; req.http.collectHeaders(headers,1);
     if (knownDigest.length()==64) req.http.addHeader("If-None-Match","\""+knownDigest+"\"");
-    int code=req.http.GET(); String hash=req.http.header("X-Catalog-SHA256");
+    int code=req.http.GET(); catalogHttpStatus=code;
+    String hash=req.http.header("X-Catalog-SHA256");
     if (code==304 && knownDigest.length()==64 && hash==knownDigest) return "UNCHANGED";
     if (code!=200 || hash.length()!=64) return "";
     String body=req.body(24576);
@@ -449,7 +684,11 @@ void networkTask(void*) {
     for (;;) {
         String* outgoing = nullptr;
         if (xQueueReceive(requests, &outgoing, portMAX_DELAY) == pdTRUE) {
-            String* reply = new String(outgoing->startsWith("CATALOG|")?fetchCatalog(outgoing->substring(8)):runtime::exchange(network, *outgoing)); delete outgoing;
+            String* reply;
+            if (outgoing->startsWith("DISCOVER|")) reply = new String(String(runtime::discover(network, deviceId, "washer", HARDWARE)));
+            else if (outgoing->startsWith("CATALOG|")) reply = new String(fetchCatalog(outgoing->substring(8)));
+            else reply = new String(runtime::exchange(network, *outgoing));
+            delete outgoing;
             if (xQueueSend(responses, &reply, pdMS_TO_TICKS(1000)) != pdTRUE) delete reply;
         }
     }
@@ -466,7 +705,11 @@ void networkTick(uint32_t now) {
     }
     String* text = nullptr;
     if (xQueueReceive(responses, &text, 0) == pdTRUE) {
-        if (catalogInFlight) {
+        if (discoveryInFlight) {
+            if (*text == "1") uiMessage = "Instrument registered with IoT Center.";
+            else if (*text == "-2") uiMessage = "Device ID security conflict. Contact an IoT manager.";
+            discoveryInFlight=false;
+        } else if (catalogInFlight) {
             if (display.page==1) pendingCatalog=*text;
             else if (!applyCatalog(*text)) uiMessage="Sync unavailable. Local programs unchanged.";
             catalogInFlight=false;
@@ -477,8 +720,17 @@ void networkTick(uint32_t now) {
                 if (reply["command"].is<JsonObject>()) remoteCommand(reply["command"]);
             }
         }
-        delete text; inFlight = false;
+        delete text; inFlight = false; lastPoll = now;
     }
+    if (!inFlight && network.bindingRequired && !network.bindingConfirmed && online &&
+        (!lastDiscovery || elapsed(now,lastDiscovery)>=10000)) {
+        lastDiscovery=now?now:1;
+        String* outgoing=new String("DISCOVER|");
+        if (xQueueSend(requests,&outgoing,0)==pdTRUE) { inFlight=true; discoveryInFlight=true; }
+        else delete outgoing;
+        return;
+    }
+    if (network.bindingRequired && !network.bindingConfirmed) return;
     if (!inFlight && !pendingCatalog.length() && idleForSettings() && display.page!=1 && display.page<6 && (catalogCheckedAt==0 || elapsed(now,catalogCheckedAt)>=30000)) {
         catalogCheckedAt=now?now:1;
         String* outgoing=new String("CATALOG|"+catalogDigest);
@@ -489,7 +741,7 @@ void networkTick(uint32_t now) {
         lastPoll = now;
         inFlightPath = journal.oldestPath();
         if (!exchangeSchedule.useBacklog(inFlightPath.length() != 0)) inFlightPath = "";
-        DynamicJsonDocument doc(2048); String body;
+        DynamicJsonDocument doc(3072); String body;
         if (inFlightPath.length()) { body = runtime::readFile(inFlightPath.c_str()); deserializeJson(doc, body); }
         else { snapshot(doc); serializeJson(doc, body); }
         inFlightId = doc["event_id"] | "";
@@ -526,8 +778,8 @@ void homeMotion() {
     } else if (homePhase == 4 && !motor->isRunning()) { motor->setCurrentPosition(0); homeComplete = rotorHomed = true; }
 }
 void startupTick(uint32_t now) {
-    bool permitted=commissioned && journal.healthy && screenReady && motionAllowed() && washer.fault==None && motor;
-    if (startup.phase==Startup::Pending && permitted && idleForSettings() && display.page==0 && !inFlight && elapsed(now,startupAwaitAt)>=10000 && display.acceptsAction(now)) {
+    bool permitted=authorization.allowed() && journal.healthy && screenReady && motionAllowed() && washer.fault==None && motor;
+    if (startup.readyToStart(permitted,idleForSettings(),display.page==0,display.acceptsAction(now))) {
         if (startup.start(now,true)) { beginHome(); display.dirty=true; }
     }
     Startup::Phase previous=startup.phase;
@@ -536,7 +788,7 @@ void startupTick(uint32_t now) {
     if (startup.phase!=previous) display.dirty=true;
     if (previous==Startup::Draining && startup.phase==Startup::Ready) {
         outputsOff();
-        if (setCleanupRequired(false)) uiMessage="Initialization complete. Select a stored program.";
+        if (setCleanupRequired(false)) uiMessage="Startup preparation complete. Select a program.";
         else stopRun(Storage,"Initialization state could not be saved");
     }
 }
@@ -607,44 +859,78 @@ void paint(uint32_t now) {
     if (!screenReady || display.busy() || (!display.dirty && elapsed(now, lastUi) < 1000)) return;
     lastUi = now;
     tjc::View view;
-    view.state = !commissioned ? "SETUP REQUIRED" : washer.completed ? "COMPLETE" : stateName();
+    view.state = washer.fault != None || !journal.healthy ? "FAULT" : washer.completed ? "COMPLETE" : !authorization.configured() ? "SETUP REQUIRED" : startup.phase == Startup::Pending ? "STARTING" : stateName();
     view.program = washer.program.count ? String(washer.program.label) + " / r" + String(washer.program.revision) : "No program: download from IoT Center";
     const char* steps[] = {"Home rotor", "Fill buffer A", "Fill buffer B", "Wash", "Drain", "Spin dry", "Wait for operator"};
-    view.step = washer.running ? String(washer.index+1)+"/"+String(washer.program.count)+"  "+steps[static_cast<unsigned>(washer.program.steps[washer.index].kind)] : "";
+    view.step = washer.running ? "STEP " + String(washer.index+1)+" / "+String(washer.program.count)+"  "+steps[static_cast<unsigned>(washer.program.steps[washer.index].kind)] : String(washer.program.count)+" steps";
     view.temperature = temperature.valid ? String(temperature.value,1)+" C" : "Sensor unavailable";
     uint32_t remaining = washer.running ? (washer.program.steps[washer.index].duration - min(washer.program.steps[washer.index].duration, elapsed(now, washer.entered))) / 1000 : 0;
-    view.remaining = washer.waiting ? "Press CONTINUE" : washer.running ? "Step " + String(remaining/60)+":"+(remaining%60<10?"0":"")+String(remaining%60) : "";
+    view.remaining = washer.waiting ? "Awaiting operator" : washer.running ? "Left " + String(remaining/60)+":"+(remaining%60<10?"0":"")+String(remaining%60) : "";
     view.progress = washer.program.count ? (washer.completed ? 100 : washer.index*100/washer.program.count) : 0;
-    view.notice = !commissioned ? "Complete device setup before starting." : !journal.healthy ? "Log storage unavailable. Service required." : washer.fault != None ? "Stopped: check instrument, then reset." : washer.completed ? "Run complete. Confirm rotor is stationary." : !temperature.valid ? "Check temperature sensor." : washer.running ? "Keep hands clear of the rotor." : uiMessage;
-    view.detail = WiFi.status()==WL_CONNECTED ? "IP: " + WiFi.localIP().toString() + (networkReady?" / IoT configured":" / IoT registration required") : "Wi-Fi offline. Saved programs remain available.";
-    view.ready = commissioned && journal.healthy && washer.fault == None && startup.phase==Startup::Ready;
-    view.running = washer.running || startup.active(); view.waiting = washer.waiting;
-    view.programCount=max(0,min(3, int(programLibrary.count)-libraryPage*3)); view.selectedProgram=librarySelection>=libraryPage*3 && librarySelection<libraryPage*3+3?librarySelection%3:255;
-    view.libraryPage=libraryPage; view.libraryPages=max(1,(programLibrary.count+2)/3);
-    for (uint8_t i=0;i<view.programCount;++i) view.programs[i]=String(programLibrary.items[libraryPage*3+i].label)+" / r"+String(programLibrary.items[libraryPage*3+i].revision);
-    view.wifiSsid=wifiDraft.ssid; view.keyboard=wifiDraft.keyboard; view.passwordField=wifiDraft.passwordField;
-    for (size_t i=0;i<strlen(wifiDraft.password);++i) view.wifiMasked+='*';
-    view.wifiEntry=wifiDraft.passwordField?view.wifiMasked:view.wifiSsid;
-    if (display.page==6) view.notice=uiMessage;
-    if (startup.active()) {
-        view.state="INITIALIZING"; view.step=startup.phase==Startup::Homing?"Homing rotor":"Draining both outlets";
-        view.program="Startup / residual liquid removal";
+    view.notice = !authorization.configured() ? "Complete device setup before starting." : !journal.healthy ? "Log storage unavailable. Service required." : washer.fault != None ? "Stopped: check instrument, then reset." : washer.completed ? "Run complete. Confirm rotor is stationary." : !temperature.valid ? "Check temperature sensor." : washer.running ? "Keep hands clear of the rotor." : uiMessage;
+    view.detail = WiFi.status()==WL_CONNECTED ? "Device LAN IP: " + WiFi.localIP().toString() + " (DHCP)" : "Wi-Fi offline. Using saved programs.";
+    view.deviceId = deviceId;
+    view.networkStatus = !networkReady ? "IoT server settings required." :
+        network.bindingRequired && !network.bindingConfirmed ? "Add this Device ID in IoT Center." : "IoT Center connected.";
+    view.fault = washer.fault!=None || !journal.healthy;
+    if (washer.fault == HomeTimeout) view.notice="Homing timed out. Check home sensor and rotor.";
+    else if (washer.fault == RunTimeout) view.notice="Motion timed out. Check rotor and motor drive.";
+    else if (washer.fault == DoorOpen) view.notice="Interlock open. Check safety input before reset.";
+    else if (washer.fault == Storage) view.notice="Run interrupted or storage fault. Check logs, then reset.";
+    view.ready = authorization.allowed() && journal.healthy && washer.fault == None && startup.phase==Startup::Ready;
+    view.pumpA = pumpDraft.a; view.pumpB = pumpDraft.b;
+    if (!washer.running && uiMessage.length() && journal.healthy && washer.fault == None) view.notice = uiMessage;
+    if (display.page == 1) {
+        Recipe resolved;
+        bool pumpReady = programLibrary.count && pumpTiming.resolve(programLibrary.items[programLibrary.selected], resolved);
+        if (!view.ready && !view.fault && authorization.configured()) view.notice="Automatic startup preparation is not complete.";
+        view.notice = uiMessage.length() ? uiMessage : !view.ready ? view.notice : pumpReady ? "Fill A: " + String(pumpTiming.a) + " s / B: " + String(pumpTiming.b) + " s" : "Set pump times and sync the program first.";
+        view.ready = view.ready && pumpReady;
+    }
+    view.startup = authorization.allowed() && (startup.phase == Startup::Pending || startup.active());
+    view.running = washer.running; view.waiting = washer.waiting; view.completed = washer.completed;
+    view.programCount=programLibrary.count;
+    view.selectedProgram=programLibrary.count ? min<uint8_t>(librarySelection, programLibrary.count-1) : 0;
+    if (view.programCount)
+        view.programChoice=String(programLibrary.items[view.selectedProgram].label)+" / r"+
+            String(programLibrary.items[view.selectedProgram].revision);
+    view.wifiSsid=wifiDraft.ssid; view.wifiPassword=wifiDraft.password;
+    if (display.page==6 || display.page==10) view.notice=uiMessage;
+    view.unsaved = display.page==10 ? pumpDraft.a!=pumpTiming.a || pumpDraft.b!=pumpTiming.b :
+        display.page==6 && (network.ssid!=wifiDraft.ssid || network.password!=wifiDraft.password);
+    if (view.startup) {
+        view.state="INITIALIZING";
+        view.step=startup.phase==Startup::Pending?"Starting automatic preparation":
+            startup.phase==Startup::Homing?"Homing rotor":"Draining both outlets";
+        view.program="Power-on preparation";
         view.notice="Keep hands clear. STOP cancels initialization.";
-        view.remaining=startup.phase==Startup::Draining?String((20000-min(20000u,elapsed(now,startup.entered)))/1000)+" s":"Home timeout: 10 s";
-    } else if (commissioned && display.page==0 && startup.phase==Startup::Pending) view.notice="Startup: clear rotor and drain tubing. Initializing shortly. STOP cancels.";
-    else if (commissioned && display.page==0 && startup.phase==Startup::Stopped) view.notice="Initialization stopped. Reset fault and initialize in Device Care.";
+        view.remaining=startup.phase==Startup::Pending?"Starting now":
+            startup.phase==Startup::Draining?String((20000-min(20000u,elapsed(now,startup.entered)))/1000)+" s":"Home timeout: 10 s";
+    } else if (authorization.allowed() && display.page==0 && startup.phase==Startup::Stopped) view.notice="Startup preparation stopped.\nPower cycle the washer when it is safe to retry.";
     if (washer.running && washer.program.steps[washer.index].cycles) {
         const Step& step=washer.program.steps[washer.index];
         unsigned cycle=min(unsigned(step.cycles),unsigned(elapsed(now,washer.entered)/(2u*step.reverseSeconds*1000u)+1));
-        view.step+=" / cycle "+String(cycle)+" of "+String(step.cycles);
+        view.cycle="Cycle "+String(cycle)+" / "+String(step.cycles);
+    }
+    if (washer.running && !washer.waiting) {
+        const StepKind kind=washer.program.steps[washer.index].kind;
+        if (washer.finishing) { view.cycle="Stopping rotor"; view.remaining="Wait for stop"; }
+        else if (kind==StepKind::FillA || kind==StepKind::FillB) {
+            bool positioning=fillIndex!=washer.index || fillPhase==0;
+            if (positioning || fillPhase==2) {
+                view.cycle=positioning?"Positioning rotor":"Returning rotor"; view.remaining="Please wait";
+            }
+        }
     }
     view.openRotor = openRotorLayout; view.door = rotorMode == RotorMode::Interlocked && digitalRead(DOOR)==LOW;
     view.slot = loading.currentSlot(); view.targetSlot = loading.nextSlot(); view.loadingDegrees = loading.nextDegrees();
     view.loadingReady = loadingCalibrated && rotorHomed && view.ready;
     view.moving = loading.active || (motor && motor->isRunning());
     if (washer.waiting) {
-        display.page = 4;
-        view.notice = !view.loadingReady ? "Loading alignment needs calibration. No automatic continue." : view.moving ? "MOVING: keep hands clear. STOP aborts the run." : view.slot == BalancedLoading::Unknown ? "Tap ALIGN START before loading. It moves only to slot 1." : "Check stopped, then load. Tap NEXT once to index. Check balance before CONTINUE.";
+        if (display.page != 8) display.page = 4;
+        view.canCalibrate = authorization.allowed() && rotorHomed && motor && !motor->isRunning() && !loading.active && journal.healthy && washer.fault == None;
+        view.notice = !view.loadingReady ? "Confirm slot 1 using SET SLOT 1. No auto-continue." : view.moving ? "Moving. Keep hands clear; wait for stop." : view.slot == BalancedLoading::Unknown ? "ALIGN START moves the rotor to slot 1." : "NEXT rotates to the next slot. Check balance before CONTINUE.";
+        if (display.page==8 && uiMessage.length()) view.notice=uiMessage;
     } else if (display.page == 4) display.page = 0;
     display.render(view);
 }
@@ -653,6 +939,7 @@ void setup() {
     pinMode(HOME, INPUT); pinMode(DOOR, INPUT);
     ledcSetup(0, 5000, 8); ledcSetup(1, 5000, 8); ledcAttachPin(DRAIN, 0); ledcAttachPin(OVERFLOW, 1); outputsOff();
     Serial.begin(115200); Serial2.begin(115200, SERIAL_8N1, 16, 17);
+    deviceId = runtime::deviceIdentity("WSH");
     // Arduino-ESP32 defaults to a partition named "spiffs", not our table label.
     storage = LittleFS.begin(false, "/littlefs", 10, "littlefs"); sdReady = SD.begin(SD_CS);
     if (storage) {
@@ -660,36 +947,47 @@ void setup() {
         DynamicJsonDocument config(1024);
         if (!deserializeJson(config, runtime::readFile("/hardware.json", 1024))) {
             openRotorLayout = config["rotor_mode"].as<String>() == "open";
-            if (config["rotor_mode"].as<String>() == "open" && config["open_rotor_commissioned"] == true) rotorMode = RotorMode::Open;
+            bool fieldTest = config["field_test"] == true;
+            if (openRotorLayout && (config["open_rotor_commissioned"] == true || (fieldTest && config["open_rotor_test_acknowledged"] == true))) rotorMode = RotorMode::Open;
             else if (config["door_interlock"] == true && config["rotor_mode"].as<String>() != "open") rotorMode = RotorMode::Interlocked;
-            commissioned = config["commissioned"] == true && config["profile"].as<String>() == HARDWARE && rotorMode != RotorMode::Unconfigured;
+            commissioned = config["commissioned"] == true && config["profile"].as<String>() == HARDWARE && rotorMode != RotorMode::Unconfigured &&
+                (!openRotorLayout || config["open_rotor_commissioned"] == true);
             homeOffset = config["home_offset_steps"] | 0;
-            if (homeOffset < -400 || homeOffset > 400 || ESP.getFlashChipSize() != 4194304) commissioned = false;
+            bool validHardware = config["profile"].as<String>() == HARDWARE && rotorMode != RotorMode::Unconfigured &&
+                config["home_offset_steps"].is<int32_t>() && homeOffset >= -400 && homeOffset <= 400 && ESP.getFlashChipSize() == 4194304;
+            // A field-test authorization is not a claim of physical acceptance.
+            authorization.configure(validHardware, commissioned, fieldTest);
+            commissioned = authorization.commissioned;
             loadingOffset = config["loading_offset_steps"] | -1;
             // Do not reuse an old one-second jog calibration for full-angle moves.
             loadingHz = config["loading_index_hz"] | 0u;
             loadingCalibrated = config["loading_calibrated"] == true && loadingOffset >= 0 && loadingOffset < static_cast<int32_t>(STEPS_PER_REV) && loadingHz >= WasherMotorProfile::LoadingMinHz && loadingHz <= WasherMotorProfile::LoadingMaxHz;
         }
+        loadPumpTiming();
         if (!loadLibrary()) journal.healthy=false;
         String marker = runtime::readFile("/run.json", 512);
         if (marker.length()) {
             DynamicJsonDocument d(512);
             if (!deserializeJson(d, marker)) {
                 runId = d["run_id"] | ""; strlcpy(washer.program.id, d["recipe_id"] | "", sizeof(washer.program.id)); washer.program.revision = d["revision"] | 0;
+                decodePumpTiming(d["pump_timing"], runPumpTiming);
                 if (logEvent("power_loss", "Interrupted run; automatic resume prohibited")) { LittleFS.remove("/run.json"); runId = ""; }
             } else journal.healthy = false;
             washer.fault = Storage;
         }
-        networkReady = network.load(true);
+        networkReady = network.load(true, deviceId);
     } else journal.healthy = false;
     motion.init(); motor = motion.stepperConnectToPin(STEP);
     if (motor) { motor->setDirectionPin(DIRECTION); motor->setAcceleration(WasherMotorProfile::MotionAcceleration); }
-    else commissioned = false;
+    else { commissioned = false; authorization.configure(false, false, false); }
     sensors.begin(); sensors.setResolution(11); sensors.setWaitForConversion(false);
     probeAttached = sensors.getDeviceCount() == 1 && sensors.getAddress(probeAddress, 0);
     if (probeAttached) sensors.setResolution(probeAddress,11);
     requests = xQueueCreate(1, sizeof(String*)); responses = xQueueCreate(1, sizeof(String*));
-    if (networkReady && requests && responses) xTaskCreatePinnedToCore(networkTask, "instrument_net", 8192, nullptr, 1, nullptr, 0);
+    // TLS certificate verification can occupy the CPU for seconds. Share priority
+    // with IDLE0 so it can still feed its watchdog; keep motion on the other core.
+    if (networkReady && requests && responses)
+        networkReady = xTaskCreatePinnedToCore(networkTask, "instrument_net", 12288, nullptr, tskIDLE_PRIORITY, &networkTaskHandle, 0) == pdPASS;
     else networkReady = false;
     esp_task_wdt_init(3, true); esp_task_wdt_add(nullptr);
 }

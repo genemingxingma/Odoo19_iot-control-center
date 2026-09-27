@@ -3,6 +3,17 @@
 #include <vector>
 
 namespace instrument {
+class WasherAuthorization {
+public:
+    bool commissioned = false, fieldTest = false;
+    void configure(bool validHardware, bool accepted, bool testing) {
+        commissioned = validHardware && accepted;
+        fieldTest = validHardware && !accepted && testing;
+    }
+    bool configured() const { return commissioned || fieldTest; }
+    bool allowed() const { return configured(); }
+};
+
 class ProgramLibrary {
 public:
     static constexpr size_t MaximumPrograms = 64;
@@ -23,7 +34,7 @@ public:
         if (index >= 0 && p.revision < items[index].revision) return false;
         if (index >= 0 && p.revision == items[index].revision) {
             const Recipe& old = items[index];
-            if (strcmp(old.label, p.label) || old.count != p.count) return false;
+            if (old.schema != p.schema || strcmp(old.label, p.label) || old.count != p.count) return false;
             for (uint8_t i=0; i<p.count; ++i) {
                 const Step& a=old.steps[i]; const Step& b=p.steps[i];
                 if (a.kind!=b.kind || a.duration!=b.duration || a.rps!=b.rps || a.reverseSeconds!=b.reverseSeconds || a.cycles!=b.cycles) return false;
@@ -51,6 +62,10 @@ public:
     Phase phase = Pending;
     uint32_t entered = 0;
     bool active() const { return phase == Homing || phase == Draining; }
+    bool readyToStart(bool permitted, bool idle, bool overview, bool screenSettled) const {
+        // Network requests run independently and must never gate local homing.
+        return phase == Pending && permitted && idle && overview && screenSettled;
+    }
     bool start(uint32_t now, bool permitted) {
         if (!permitted || active() || phase == Ready) return false;
         phase = Homing; entered = now; return true;
@@ -72,8 +87,17 @@ public:
 
 struct WifiDraft {
     char ssid[33] = {}, password[65] = {};
+    char previousField[65] = {};
     bool passwordField = false;
     uint8_t keyboard = 0;
+    void beginEdit(bool isPassword) {
+        passwordField = isPassword;
+        strcpy(previousField, passwordField ? password : ssid);
+    }
+    void endEdit(bool keep) {
+        if (!keep) strcpy(passwordField ? password : ssid, previousField);
+        memset(previousField, 0, sizeof(previousField));
+    }
     static const char* keys(uint8_t mode) {
         if (mode == 1) return "1234567890QWERTYUIOPASDFGHJKL-ZXCVBNM_./";
         if (mode == 2) return "!@#$%^&*()[]{}<>?=+|\"'\\:;,`~_-0123456789";
@@ -97,6 +121,6 @@ struct WifiDraft {
         }
         return true;
     }
-    void clear() { memset(ssid, 0, sizeof(ssid)); memset(password, 0, sizeof(password)); passwordField = false; keyboard = 0; }
+    void clear() { memset(ssid, 0, sizeof(ssid)); memset(password, 0, sizeof(password)); memset(previousField, 0, sizeof(previousField)); passwordField = false; keyboard = 0; }
 };
 }

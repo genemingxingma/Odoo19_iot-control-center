@@ -46,6 +46,10 @@ export class IoTOperationsOverview extends Component {
         const value = this.state.data?.generated_at;
         return value ? formatDateTime(deserializeDateTime(value)) : "";
     }
+
+    get attentionCount() {
+        return this.state.data?.priorities.reduce((total, item) => total + item.count, 0) || 0;
+    }
 }
 
 registry.category("actions").add("iot_control_center.operations_overview", IoTOperationsOverview);

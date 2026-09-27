@@ -26,6 +26,24 @@ class TestInstrumentHTTP(HttpCase):
         return self.url_open("/iot_control_center/instrument/"+self.device.uid+"/exchange",
             data=json.dumps(value), headers={"Content-Type": "application/json", "X-Instrument-Token": self.token if token is None else token})
 
+    def discover(self, device_id, token=None, kind="heater"):
+        hardware = "heater-esp12s-ds18b20-v1" if kind == "heater" else "washer-esp32-4m-v1"
+        return self.url_open("/iot_control_center/instrument/discover", data=json.dumps({
+            "schema": 1, "device_id": device_id, "kind": kind, "hardware": hardware, "firmware": "3.2.0-rc4"}),
+            headers={"Content-Type": "application/json", "X-Instrument-Token": token or self.token})
+
+    def test_discovery_only_claims_an_explicitly_reserved_id(self):
+        device_id = "HTR-C82B962D09D7"
+        self.assertEqual(self.discover(device_id).status_code, 200)
+        self.assertFalse(self.discover(device_id).json()["bound"])
+        reserved = self.env["iot.instrument"].sudo().create({"name": "Reserved heater", "kind": "heater",
+            "uid": device_id, "device_id": device_id})
+        claimed = self.discover(device_id)
+        self.assertEqual(claimed.status_code, 200)
+        self.assertTrue(claimed.json()["bound"])
+        self.assertTrue(reserved.token_hash)
+        self.assertEqual(self.discover(device_id, secrets.token_hex(32)).status_code, 409)
+
     def test_authentication_and_bounded_request(self):
         self.assertEqual(self.post(self.event(), "wrong").status_code, 401)
         body = self.event(); body["padding"] = "x"*32768

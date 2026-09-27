@@ -23,6 +23,8 @@ class Instrument(models.Model):
 
     name = fields.Char(required=True)
     uid = fields.Char(required=True, default=lambda self: uuid.uuid4().hex, readonly=True, copy=False, index=True)
+    device_id = fields.Char(readonly=True, copy=False, index=True, string="Device ID",
+        help="Unique ID shown on the physical instrument. Use it to add the instrument to IoT Control Center.")
     kind = fields.Selection([("heater", "Buffer Heater"), ("washer", "Array Washer")], required=True)
     company_id = fields.Many2one("res.company", required=True, default=lambda self: self.env.company, index=True)
     location_detail = fields.Char()
@@ -64,15 +66,80 @@ class Instrument(models.Model):
     fault_a = fields.Selection(HEATER_FAULT_SELECTION, readonly=True, string="Heater Alarm")
     washer_temperature = fields.Float(readonly=True, string="Measured Liquid Temperature")
     washer_temperature_valid = fields.Boolean(readonly=True, string="Liquid Temperature Available")
+    pump_a_seconds = fields.Integer(compute="_compute_pump_timing", string="Device Fill A (s)")
+    pump_b_seconds = fields.Integer(compute="_compute_pump_timing", string="Device Fill B (s)")
+    pump_settings_revision = fields.Integer(compute="_compute_pump_timing", string="Pump Settings Revision")
     recipe_id = fields.Many2one("iot.instrument.recipe", check_company=True, domain="[('state','=','released')]")
+    program_scope = fields.Selection([("all", "All company programs"), ("selected", "Selected programs")],
+        default="all", required=True, string="Programs to Sync")
+    assigned_program_ids = fields.Many2many("iot.instrument.recipe", "iot_instrument_program_rel",
+        "instrument_id", "recipe_id", check_company=True, string="Select Programs",
+        help="Select program names once. New released revisions follow automatically.")
+    effective_program_ids = fields.Many2many("iot.instrument.recipe", compute="_compute_program_status",
+        string="Programs for This Washer")
+    program_count = fields.Integer(compute="_compute_program_status", string="Program Count")
+    program_sync_state = fields.Selection([
+        ("unconnected", "Device not connected yet"), ("offline", "Waiting for device contact"),
+        ("unsupported", "Automatic sync not reported"), ("pending", "Waiting for device sync"),
+        ("synced", "Device confirmed current list"), ("invalid", "Program list needs review")],
+        compute="_compute_program_status", string="Program Sync")
     release_id = fields.Many2one("iot.instrument.release", check_company=True)
     command_ids = fields.One2many("iot.instrument.command", "instrument_id")
     _uid_unique = models.Constraint("UNIQUE(uid)", "Instrument identity must be unique.")
+    _device_id_unique = models.Constraint("UNIQUE(device_id)", "Device ID must be unique.")
+
+    @api.constrains("device_id", "kind")
+    def _check_device_id(self):
+        for rec in self.filtered("device_id"):
+            try:
+                contract.device_identity(rec.device_id, rec.kind)
+            except ValueError as exc:
+                raise ValidationError(_("Use the Device ID shown by the instrument, for example HTR-C82B962D09D7.")) from exc
+
+    @api.depends("kind", "status_json")
+    def _compute_pump_timing(self):
+        for rec in self:
+            timing = (rec.status_json or {}).get("pump_timing", {}) if rec.kind == "washer" else {}
+            rec.pump_a_seconds = timing.get("a_s", 0)
+            rec.pump_b_seconds = timing.get("b_s", 0)
+            rec.pump_settings_revision = timing.get("revision", 0)
 
     @api.depends("kind", "status_json")
     def _compute_catalog_sync(self):
         for rec in self:
             rec.catalog_sync_enabled = rec.kind == "washer" and (rec.status_json or {}).get("catalog_sync") == 1
+
+    @api.depends("kind", "company_id", "program_scope", "assigned_program_ids", "status_json",
+                 "last_seen", "status_sampled_at")
+    def _compute_program_status(self):
+        for rec in self:
+            programs = rec._catalog_programs() if rec.kind == "washer" else self.env["iot.instrument.recipe"]
+            rec.effective_program_ids = programs
+            rec.program_count = len(programs)
+            rec.program_sync_state = False
+            if rec.kind != "washer":
+                continue
+            try:
+                _, expected = contract.program_catalog(rec.uid, [dict(p.snapshot) for p in programs])
+            except ValueError:
+                rec.program_sync_state = "invalid"
+                continue
+            if not rec.last_seen:
+                rec.program_sync_state = "unconnected"
+            elif not rec.online or not rec.status_fresh:
+                rec.program_sync_state = "offline"
+            elif not rec.catalog_sync_enabled:
+                rec.program_sync_state = "unsupported"
+            else:
+                rec.program_sync_state = "synced" if (rec.status_json or {}).get("catalog_digest") == expected else "pending"
+
+    @api.constrains("program_scope", "assigned_program_ids", "kind", "company_id")
+    def _check_program_selection(self):
+        for rec in self:
+            if rec.program_scope == "selected" and (rec.kind != "washer" or not rec.assigned_program_ids):
+                raise ValidationError(_("Select at least one released program, or choose all company programs."))
+            if any(p.company_id != rec.company_id or p.state != "released" for p in rec.assigned_program_ids):
+                raise ValidationError(_("Select released programs belonging to this device's company."))
 
     @api.depends("last_seen", "status_sampled_at")
     def _compute_online(self):
@@ -110,14 +177,14 @@ class Instrument(models.Model):
         if not self.env.su and not self.env.user.has_group("iot_control_center.group_iot_manager"):
             raise AccessError(_("Only IoT managers can register instruments."))
         for vals in vals_list:
-            if not self.env.su and set(vals) - {"name", "kind", "company_id", "location_detail", "target_a", "rise_window_s", "minimum_rise_c", "active"}:
+            if not self.env.su and set(vals) - {"name", "kind", "company_id", "location_detail", "target_a", "rise_window_s", "minimum_rise_c", "active", "program_scope", "assigned_program_ids"}:
                 raise AccessError(_("Device-reported fields cannot be changed manually."))
         return super().create(vals_list)
 
     def write(self, vals):
         if not self.env.su:
-            self._check_iot_access(manage=bool(set(vals) - {"target_a", "recipe_id"}))
-            if set(vals) - {"name", "active", "location_detail", "target_a", "rise_window_s", "minimum_rise_c", "recipe_id", "release_id"}:
+            self._check_iot_access(manage=bool(set(vals) - {"target_a", "recipe_id", "program_scope", "assigned_program_ids"}))
+            if set(vals) - {"name", "active", "location_detail", "target_a", "rise_window_s", "minimum_rise_c", "recipe_id", "release_id", "program_scope", "assigned_program_ids"}:
                 raise AccessError(_("Identity and device-reported fields cannot be changed manually."))
         return super().write(vals)
 
@@ -155,28 +222,62 @@ class Instrument(models.Model):
         self.ensure_one()
         self._check_iot_access()
         if self.catalog_sync_enabled:
-            return {"type": "ir.actions.client", "tag": "display_notification", "params": {
-                "title": _("Automatic program synchronization"),
-                "message": _("This washer synchronizes all current released company programs while idle. Publish a revision or archive a program to update its local list."), "type": "info"}}
+            return self.action_apply_programs()
         self.recipe_id.check_access("read")
         if not self.recipe_id or self.recipe_id.state != "released" or self.recipe_id.company_id != self.company_id:
             raise UserError(_("Select a released program belonging to this company."))
         self._enqueue("load_recipe", dict(self.recipe_id.snapshot))
         return self._queued_notice()
 
-    def _program_catalog(self):
+    def action_open_program_selection(self):
         self.ensure_one()
-        records = self.env["iot.instrument.recipe"].sudo().with_context(active_test=False).search([
-            ("company_id", "=", self.company_id.id), ("state", "=", "released")], order="uid,revision desc,id desc")
-        seen, programs = set(), []
+        self.check_access("read")
+        return {"type": "ir.actions.act_window", "name": _("Select Programs"),
+            "res_model": self._name, "res_id": self.id, "view_mode": "form", "target": "current"}
+
+    def action_open_program_library(self):
+        self.ensure_one()
+        self.check_access("read")
+        return {"type": "ir.actions.act_window", "name": _("Washer Programs"),
+            "res_model": "iot.instrument.recipe", "view_mode": "list,form",
+            "domain": [("company_id", "=", self.company_id.id)],
+            "context": {"default_company_id": self.company_id.id}}
+
+    def action_apply_programs(self):
+        self.ensure_one()
+        self._check_iot_access()
+        if self.kind != "washer" or not self.active:
+            raise UserError(_("Select an active washer."))
+        self._check_program_selection()
+        try:
+            self._program_catalog()
+        except ValueError as exc:
+            raise UserError(_("Program list needs review")) from exc
+        return {"type": "ir.actions.client", "tag": "display_notification", "params": {
+            "title": _("Program selection saved"),
+            "message": _("The washer will download this list when connected and idle. This does not start a run. Check Program Sync for device confirmation."),
+            "type": "info", "sticky": True}}
+
+    def _catalog_programs(self):
+        self.ensure_one()
+        model = self.env["iot.instrument.recipe"].sudo().with_context(active_test=False)
+        domain = [("company_id", "=", self.company_id.id), ("state", "=", "released")]
+        if self.program_scope == "selected":
+            domain.append(("uid", "in", self.with_context(active_test=False).assigned_program_ids.mapped("uid")))
+        records = model.search(domain, order="uid,revision desc,id desc")
+        seen, programs = set(), model.browse()
         for program in records:
             if program.uid in seen:
                 continue
             seen.add(program.uid)
             # Archiving the latest revision removes it; do not resurrect an older one.
             if program.active:
-                programs.append(dict(program.snapshot))
-        return contract.program_catalog(self.uid, programs)
+                programs |= program
+        return programs
+
+    def _program_catalog(self):
+        self.ensure_one()
+        return contract.program_catalog(self.uid, [dict(p.snapshot) for p in self._catalog_programs()])
 
     def action_ota(self):
         self.ensure_one()
@@ -213,6 +314,14 @@ class Instrument(models.Model):
     def _exchange(self, data):
         self.ensure_one()
         contract.event(data, self.kind)
+        reported_id = data["status"].get("device_id")
+        if reported_id and self.device_id and reported_id != self.device_id:
+            raise ValueError("device identity changed")
+        if reported_id and not self.device_id:
+            duplicate = self.sudo().search([("device_id", "=", reported_id), ("id", "!=", self.id)], limit=1)
+            if duplicate:
+                raise ValueError("device identity already registered")
+            self.sudo().write({"device_id": reported_id})
         self.env.cr.execute("SELECT id FROM iot_instrument WHERE id=%s FOR UPDATE", [self.id])
         self.invalidate_recordset()
         now = fields.Datetime.now()
@@ -286,6 +395,7 @@ class Instrument(models.Model):
                     "event_id": key, "sampled_at": sampled, "received_at": now, "run_id": log["run_id"],
                     "device_boot_id": data["boot_id"], "device_seq": data["seq"], "device_uptime_ms": data["uptime_ms"], "time_quality": time_quality,
                     "recipe_uid": log["recipe_id"], "revision": log["revision"], "step": log["step"],
+                    "pump_timing": log.get("pump_timing") or False,
                     "event": log["event"], "message": log.get("message", ""), "temperature_valid": status.get("temperature_valid", False),
                     "temperature": status.get("temperature", 0) if status.get("temperature_valid") else 0})
             if data.get("ack"):
@@ -395,6 +505,7 @@ class InstrumentRunLog(models.Model):
     step = fields.Integer()
     event = fields.Char(required=True)
     message = fields.Char()
+    pump_timing = fields.Json(readonly=True, string="Run Pump Settings")
     temperature = fields.Float(string="Measured Liquid Temperature")
     temperature_valid = fields.Boolean(string="Liquid Temperature Available")
     _event_unique = models.Constraint("UNIQUE(event_id)", "Run event already received.")
@@ -408,7 +519,7 @@ class InstrumentRecipe(models.Model):
     name = fields.Char(required=True)
     active = fields.Boolean(default=True)
     device_label = fields.Char(required=True, default="Array wash", string="Screen Label",
-        help="A short Latin-character label for the GB2312 instrument screen. The program name in Odoo may use any language.")
+        help="A short English label for the instrument screen. The program name in Odoo may use any language.")
     uid = fields.Char(required=True, default=lambda self: uuid.uuid4().hex, copy=False)
     revision = fields.Integer(default=1, required=True)
     company_id = fields.Many2one("res.company", required=True, default=lambda self: self.env.company)
@@ -417,6 +528,19 @@ class InstrumentRecipe(models.Model):
     snapshot = fields.Json(readonly=True, copy=False)
     checksum = fields.Char(readonly=True, copy=False)
     _revision_unique = models.Constraint("UNIQUE(company_id,uid,revision)", "Program revision already exists.")
+
+    @api.depends("name", "revision")
+    def _compute_display_name(self):
+        for rec in self:
+            rec.display_name = _("%(name)s / r%(revision)s", name=rec.name, revision=rec.revision)
+
+    def action_open_washers(self):
+        self.ensure_one()
+        self.check_access("read")
+        return {"type": "ir.actions.act_window", "name": _("Array Washers"),
+            "res_model": "iot.instrument", "view_mode": "kanban,list,form",
+            "domain": [("kind", "=", "washer"), ("company_id", "=", self.company_id.id)],
+            "context": {"default_kind": "washer", "default_company_id": self.company_id.id}}
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -462,8 +586,8 @@ class InstrumentRecipe(models.Model):
             if rec.uid not in current and len(current) >= contract.MAX_PROGRAMS:
                 raise ValidationError(_("A company can publish at most %s washer programs. Archive one before adding another.", contract.MAX_PROGRAMS))
             try:
-                body = contract.recipe({"schema": 1, "id": rec.uid, "label": rec.device_label, "revision": rec.revision,
-                    "steps": [{"kind": s.kind, "duration_s": s.duration_s, "rps": s.rps, "reverse_s": s.reverse_s, "cycles": s.cycles}
+                body = contract.recipe({"schema": 2, "id": rec.uid, "label": rec.device_label, "revision": rec.revision,
+                    "steps": [{"kind": s.kind, **({} if s.kind in ("fill_a", "fill_b") else {"duration_s": s.duration_s}), "rps": s.rps, "reverse_s": s.reverse_s, "cycles": s.cycles}
                         for s in rec.step_ids.sorted("sequence")]})
             except (ValueError, TypeError, AttributeError) as exc:
                 raise ValidationError(_("Invalid program: %s", str(exc))) from exc

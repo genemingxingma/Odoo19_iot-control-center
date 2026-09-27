@@ -4,7 +4,7 @@ import uuid
 from datetime import timedelta, timezone
 
 from odoo import fields
-from odoo.exceptions import AccessError, UserError
+from odoo.exceptions import AccessError, UserError, ValidationError
 from odoo.tests import tagged
 from odoo.tests.common import TransactionCase, new_test_user
 
@@ -23,6 +23,32 @@ class TestInstruments(TransactionCase):
                 "control_interface":"heater-control-v1","local_enable":True,"remote_start":False,
                 "rise_window_s":600,"minimum_rise_c":1,"enabled":False,
                 "a": {"valid": valid, "temperature": 37, "target": 37, "fault": "none", "output": False}}}
+
+    def test_reported_device_id_is_adopted_once_and_cannot_change(self):
+        first = self.event()
+        first["status"]["device_id"] = "HTR-C82B962D09D7"
+        self.device._exchange(first)
+        self.assertEqual(self.device.device_id, "HTR-C82B962D09D7")
+        changed = self.event(seq=2)
+        changed["status"]["device_id"] = "HTR-001122AABBCC"
+        with self.assertRaises(ValueError):
+            self.device._exchange(changed)
+
+    def test_binding_wizard_reserves_visible_id_in_selected_company(self):
+        company = self.env["res.company"].create({"name": "Instrument binding fixture"})
+        manager = new_test_user(self.env, login="instrument_bind_" + uuid.uuid4().hex,
+            groups="base.group_user,iot_control_center.group_iot_manager", company_ids=[(6, 0, [company.id])], company_id=company.id)
+        wizard = self.env["iot.instrument.bind.wizard"].with_user(manager).create({
+            "device_id": "WSH-001122AABBCC", "company_id": company.id})
+        wizard.action_search_id()
+        self.assertTrue(wizard.validated)
+        wizard.name = "Bound washer"
+        action = wizard.action_confirm_bind()
+        instrument = self.env["iot.instrument"].browse(action["res_id"])
+        self.assertEqual(instrument.device_id, "WSH-001122AABBCC")
+        self.assertEqual(instrument.uid, instrument.device_id)
+        self.assertEqual(instrument.company_id, company)
+        self.assertFalse(instrument.token_hash)
 
     def test_measurements_are_idempotent(self):
         event = self.event()
@@ -176,8 +202,22 @@ class TestInstruments(TransactionCase):
                 for index, kind in enumerate(kinds, 1)]})
         program.action_release()
         self.assertEqual([step["kind"] for step in program.snapshot["steps"]], ["home", *kinds])
+        self.assertEqual(program.snapshot["schema"], 2)
+        self.assertNotIn("duration_s", program.snapshot["steps"][1])
+        self.assertNotIn("duration_s", program.snapshot["steps"][5])
         self.assertEqual(program.snapshot["steps"][3]["duration_s"], 18)
         self.assertEqual(program.snapshot["steps"][6]["duration_s"], 18)
+
+    def test_washer_pump_feedback_and_run_snapshot_are_distinct(self):
+        washer = self.env["iot.instrument"].sudo().create({"name": "Local pump fixture", "kind": "washer"})
+        event = self.event()
+        event["status"] = {"state": "idle", "firmware": "3.5.0-rc1", "pump_timing": {"revision": 2, "a_s": 14, "b_s": 23}}
+        event["log"] = {"run_id": "fixture", "recipe_id": "sample", "revision": 2, "step": 1,
+            "event": "completed", "pump_timing": {"revision": 1, "a_s": 12, "b_s": 22}}
+        washer._exchange(event)
+        self.assertEqual((washer.pump_a_seconds, washer.pump_b_seconds, washer.pump_settings_revision), (14, 23, 2))
+        log = self.env["iot.instrument.run.log"].search([("instrument_id", "=", washer.id)])
+        self.assertEqual(log.pump_timing, event["log"]["pump_timing"])
 
     def test_original_motor_defaults_do_not_replace_explicit_speeds(self):
         manager = new_test_user(self.env, login="motor_defaults_" + uuid.uuid4().hex,
@@ -200,7 +240,8 @@ class TestInstruments(TransactionCase):
         self.assertEqual(draft.rps, 10)
 
     def test_authoritative_catalog_revision_archive_and_company(self):
-        self.device.kind = "washer"
+        company = self.env["res.company"].sudo().create({"name": "Catalog lifecycle fixture"})
+        self.device.write({"kind": "washer", "company_id": company.id})
         programs=self.env["iot.instrument.recipe"].sudo()
         created=programs.browse()
         for i in range(5):
@@ -231,3 +272,85 @@ class TestInstruments(TransactionCase):
         empty=json.loads(self.device._program_catalog()[0])
         self.assertEqual(empty["programs"],[])
         self.assertTrue(empty["complete"])
+
+    def _released_program(self, name="Selection fixture", company=None):
+        program = self.env["iot.instrument.recipe"].sudo().create({"name": name,
+            "company_id": (company or self.device.company_id).id,
+            "step_ids": [(0, 0, {"kind": "home", "sequence": 1}), (0, 0, {"kind": "home", "sequence": 2})]})
+        program.action_release()
+        return program
+
+    def test_selected_catalog_follows_revisions_and_removals(self):
+        self.device.kind = "washer"
+        selected = self._released_program()
+        self._released_program("Not selected")
+        self.device.write({"program_scope": "selected", "assigned_program_ids": [(6, 0, selected.ids)]})
+        self.assertEqual([p["id"] for p in json.loads(self.device._program_catalog()[0])["programs"]], [selected.uid])
+        revision = self.env["iot.instrument.recipe"].browse(selected.action_new_revision()["res_id"])
+        revision.action_release()
+        self.assertEqual(json.loads(self.device._program_catalog()[0])["programs"][0]["revision"], 2)
+        self.device.assigned_program_ids = revision
+        revision.active = False
+        self.assertEqual(json.loads(self.device._program_catalog()[0])["programs"], [])
+        restored = self.env["iot.instrument.recipe"].browse(revision.action_new_revision()["res_id"])
+        restored.write({"active": True})
+        restored.action_release()
+        self.assertEqual(json.loads(self.device._program_catalog()[0])["programs"][0]["revision"], 3)
+
+    def test_program_selection_rejects_empty_draft_and_other_company(self):
+        self.device.kind = "washer"
+        with self.assertRaises(ValidationError), self.env.cr.savepoint():
+            self.device.write({"program_scope": "selected"})
+        draft = self.env["iot.instrument.recipe"].sudo().create({"name": "Draft"})
+        with self.assertRaises(ValidationError), self.env.cr.savepoint():
+            self.device.write({"program_scope": "selected", "assigned_program_ids": [(6, 0, draft.ids)]})
+        other = self.env["res.company"].sudo().create({"name": "Other selection company"})
+        foreign = self._released_program(company=other)
+        with self.assertRaises(UserError), self.env.cr.savepoint():
+            self.device.write({"program_scope": "selected", "assigned_program_ids": [(6, 0, foreign.ids)]})
+
+    def test_program_sync_requires_fresh_device_digest(self):
+        self.device.kind = "washer"
+        self._released_program()
+        _, digest = self.device._program_catalog()
+        self.assertEqual(self.device.program_sync_state, "unconnected")
+        now = fields.Datetime.now()
+        self.device.write({"last_seen": now, "status_sampled_at": now, "status_json": {"catalog_sync": 1}})
+        self.assertEqual(self.device.program_sync_state, "pending")
+        self.device.status_json = {"catalog_sync": 1, "catalog_digest": digest}
+        self.assertEqual(self.device.program_sync_state, "synced")
+        self.device.status_sampled_at = now - timedelta(minutes=5)
+        self.assertEqual(self.device.program_sync_state, "offline")
+        self.device.write({"status_sampled_at": now, "status_json": {}})
+        self.assertEqual(self.device.program_sync_state, "unsupported")
+
+    def test_selecting_programs_never_starts_or_queues_device_commands(self):
+        self.device.kind = "washer"
+        program = self._released_program()
+        operator = new_test_user(self.env, login="program_operator_" + uuid.uuid4().hex,
+            groups="base.group_user,iot_control_center.group_iot_operator")
+        viewer = new_test_user(self.env, login="program_viewer_" + uuid.uuid4().hex,
+            groups="base.group_user,iot_control_center.group_iot_user")
+        self.device.with_user(operator).write({"program_scope": "selected", "assigned_program_ids": [(6, 0, program.ids)]})
+        notice = self.device.with_user(operator).action_apply_programs()
+        self.assertEqual(notice["params"]["type"], "info")
+        self.assertFalse(self.device.command_ids)
+        self.assertEqual(self.device.state, "uncommissioned")
+        with self.assertRaises(AccessError):
+            self.device.with_user(viewer).action_apply_programs()
+        with self.assertRaises(AccessError):
+            self.device.with_user(viewer).write({"program_scope": "all"})
+
+    def test_navigation_and_overview_expose_program_workflow(self):
+        root = self.env.ref("iot_control_center.menu_iot_root")
+        instruments = self.env.ref("iot_control_center.menu_iot_instruments")
+        self.assertEqual(instruments.parent_id, root)
+        for name in ("menu_array_washers", "menu_washer_programs", "menu_buffer_heaters"):
+            self.assertEqual(self.env.ref("iot_control_center." + name).parent_id, instruments)
+        for name in ("menu_iot_mode_cards", "menu_iot_mode_detailed", "menu_iot_openwrt_cards"):
+            self.assertFalse(self.env.ref("iot_control_center." + name).active)
+        data = self.env["iot.control.board"].get_overview()
+        self.assertEqual(len(data["cards"]), 6)
+        self.assertEqual([s["key"] for s in data["shortcuts"]], ["programs", "select", "temperatures"])
+        for shortcut in data["shortcuts"]:
+            self.assertIn(("company_id", "in", self.env.companies.ids), shortcut["action"]["domain"])
