@@ -147,6 +147,9 @@ class InstrumentContractTests(unittest.TestCase):
                            "control_interface":"heater-control-v1","local_enable":True,"remote_start":False,
                            "a":{"valid":True,"temperature":37,"target":37,"fault":"none","output":False}}}
         self.assertEqual(c.event(value,"heater"), value)
+        value["status"]["control_method"] = "pi_fixed"
+        value["status"]["a"]["power_percent"] = 20
+        self.assertEqual(c.event(value,"heater"), value)
         for invalid in [True, -127, float("nan"), 100]:
             bad=copy.deepcopy(value); bad["status"]["a"]["temperature"]=invalid
             with self.assertRaises(ValueError): c.event(bad,"heater")

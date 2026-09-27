@@ -88,7 +88,7 @@ int main() {
     HeaterChannel defaults; heaterDefaults(defaults);
     assert(defaults.target == 42 && defaults.riseWindowMs == 600000 && defaults.minimumRise == 1);
     probe = {41, 0, true}; assert(defaults.arm(probe, 0)); defaults.tick(probe, 0); assert(defaults.output);
-    probe = {42.5f, 1000, true}; defaults.tick(probe, 1000); assert(defaults.output);
+    probe = {42.5f, 1000, true}; defaults.tick(probe, 1000); assert(!defaults.output);
     probe = {43, 2000, true}; defaults.tick(probe, 2000); assert(!defaults.output);
     probe = {41.5f, 3000, true}; defaults.tick(probe, 3000); assert(!defaults.output);
     probe = {41, 4000, true}; defaults.tick(probe, 4000); assert(defaults.output);

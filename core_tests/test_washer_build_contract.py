@@ -165,4 +165,14 @@ class WasherBuildContract(unittest.TestCase):
         self.assertIn('outputsOff(); loopGuard.powered = false;', pause)
         self.assertNotIn('probe.valid = false', pause)
 
+    def test_heater_pi_is_fixed_not_a_platform_setting(self):
+        source=(ROOT/'src/heater.cpp').read_text()
+        core=(ROOT/'lib/InstrumentCore/src/control.hpp').read_text()
+        settings=source.split('bool parseSettings(',1)[1].split('bool readAddress(',1)[0]
+        self.assertIn('static constexpr float Kp = 20.0f, Ki = Kp / 600.0f;', core)
+        self.assertIn('ControlMs = 1000, WindowMs = 2000', core)
+        self.assertIn('s["control_method"] = "pi_fixed";', source)
+        for parameter in ('"kp"', '"ki"', '"kd"', '"control_period"', '"volume"'):
+            self.assertNotIn(parameter, settings)
+
 if __name__=='__main__': unittest.main()

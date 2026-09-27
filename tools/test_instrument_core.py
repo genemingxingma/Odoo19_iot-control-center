@@ -33,6 +33,11 @@ with tempfile.TemporaryDirectory(prefix="imytest-instrument-test-") as tmp:
         "-I", str(ROOT / "firmware/instruments/lib/InstrumentCore/src"),
         str(ROOT / "firmware/instruments/test/heater_runtime_test.cpp"), "-o", str(heater_runtime)], check=True)
     subprocess.run([str(heater_runtime)], check=True)
+    heater_pi = pathlib.Path(tmp) / "heater_pi_test.exe"
+    subprocess.run([compiler, "-std=c++17", "-Wall", "-Wextra", "-Werror",
+        "-I", str(ROOT / "firmware/instruments/lib/InstrumentCore/src"),
+        str(ROOT / "firmware/instruments/test/heater_pi_test.cpp"), "-o", str(heater_pi)], check=True)
+    subprocess.run([str(heater_pi)], check=True)
     setup = pathlib.Path(tmp) / "washer_setup_test.exe"
     subprocess.run([compiler, "-std=c++17", "-Wall", "-Wextra", "-Werror",
         "-I", str(ROOT / "firmware/instruments/lib/InstrumentCore/src"),

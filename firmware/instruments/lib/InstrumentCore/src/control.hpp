@@ -26,6 +26,15 @@ struct Probe {
     bool valid = false;
 };
 struct HeaterChannel {
+private:
+    static constexpr float Kp = 20.0f, Ki = Kp / 600.0f;
+    static constexpr uint32_t ControlMs = 1000, WindowMs = 2000, MinPulseMs = 20;
+    float integral = 0, power = 0;
+    uint32_t lastControl = 0, windowStarted = 0;
+    bool controlReady = false;
+    static float clampPower(float value) { return value < 0 ? 0 : value > 100 ? 100 : value; }
+    void resetControl() { integral = power = 0; controlReady = output = demand = false; }
+public:
     float target = 42;
     bool enabled = false, output = false, demand = false;
     Fault fault = None;
@@ -39,10 +48,12 @@ struct HeaterChannel {
     }
     bool setTarget(float value) {
         if (!std::isfinite(value) || value < 10 || value > 50 || std::round(value * 4) != value * 4) return false;
+        if (target != value) { resetControl(); tracking = false; poweredMs = 0; }
         target = value;
         return true;
     }
-    void stop() { enabled = output = demand = tracking = clockReady = false; poweredMs = 0; }
+    float powerPercent() const { return power; }
+    void stop() { resetControl(); enabled = tracking = clockReady = false; poweredMs = 0; }
     void account(uint32_t now) {
         if (clockReady && output && tracking) {
             uint32_t delta = elapsed(now, lastTick);
@@ -50,7 +61,7 @@ struct HeaterChannel {
         }
         lastTick = now; clockReady = true;
     }
-    void pause(uint32_t now) { account(now); output = false; }
+    void pause(uint32_t now) { account(now); output = false; controlReady = false; }
     Fault condition(const Probe& p, uint32_t now) const {
         if (!p.valid || !std::isfinite(p.value) || p.value < -20 || p.value >= 85 || elapsed(now, p.sampled) > 3000) return Sensor;
         if (p.value >= 55) return OverTemperature;
@@ -60,18 +71,42 @@ struct HeaterChannel {
         Fault current = condition(p, now);
         if (!riseWindowMs) { fault = NotCommissioned; stop(); return false; }
         if (current != None) { fault = current; stop(); return false; }
-        fault = None; enabled = true; output = demand = false;
+        resetControl(); windowStarted = now;
+        fault = None; enabled = true;
         poweredMs = 0; tracking = false; clockReady = true; lastTick = now; return true;
     }
     void tick(const Probe& p, uint32_t now) {
         account(now);
         Fault current = condition(p, now);
         if (enabled && current != None) { fault = current; stop(); }
-        if (!enabled || fault != None) { output = false; return; }
-        if (p.value >= target + 1.0f) { demand = tracking = false; poweredMs = 0; }
-        else if (p.value <= target - 1.0f) demand = true;
-        output = demand;
-        if (output && !tracking) { tracking = true; reference = p.value; poweredMs = 0; }
+        if (!enabled || fault != None) { resetControl(); return; }
+        if (p.value >= target + 1.0f) {
+            resetControl(); tracking = false; poweredMs = 0; return;
+        }
+        const float error = target - p.value;
+        if (!controlReady || elapsed(now, lastControl) >= ControlMs) {
+            // Never integrate a blocking maintenance interval or build up a
+            // hidden full-power demand while the PI output is saturated.
+            if (controlReady) {
+                float seconds = (elapsed(now, lastControl) > ControlMs ? ControlMs : elapsed(now, lastControl)) / 1000.0f;
+                float candidate = clampPower(integral + Ki * error * seconds);
+                if (Kp * error + candidate <= 100 || error < 0) integral = candidate;
+            }
+            power = clampPower(Kp * error + integral);
+            lastControl = now; controlReady = true;
+        }
+        uint32_t phase = elapsed(now, windowStarted);
+        if (phase >= WindowMs) { windowStarted += phase - phase % WindowMs; phase %= WindowMs; }
+        uint32_t onMs = static_cast<uint32_t>(power * WindowMs / 100.0f);
+        // Do not send sub-cycle pulses to an AC SSR (50/60 Hz).
+        if (onMs < MinPulseMs) onMs = 0;
+        else if (WindowMs - onMs < MinPulseMs) onMs = WindowMs;
+        demand = onMs > 0;
+        output = demand && phase < onMs;
+        // A stable holding temperature is not a failed heating response.
+        // Below the holding band, count actual SSR-on time, not wall time.
+        if (error <= 1.0f) { tracking = false; poweredMs = 0; }
+        else if (demand && !tracking) { tracking = true; reference = p.value; poweredMs = 0; }
         if (tracking && poweredMs >= riseWindowMs) {
             if (p.value - reference < minimumRise) { fault = NoTemperatureRise; stop(); return; }
             reference = p.value; poweredMs = 0;

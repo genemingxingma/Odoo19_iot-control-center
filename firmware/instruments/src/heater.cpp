@@ -120,6 +120,7 @@ void snapshot(JsonDocument& d, bool observation) {
     s["ip"] = WiFi.status() == WL_CONNECTED ? WiFi.localIP().toString() : String();
     s["enabled"] = heater.enabled; s["settings_ready"] = settingsReady;
     s["setpoint_source"] = savedSettings ? "saved" : "default";
+    s["control_method"] = "pi_fixed";
     s["temperature_record_interval_s"] = HeaterObservationMs / 1000;
     s["dropped_observations"] = journal.droppedObservations;
     s["journal_pending"] = journal.pending(); s["journal_free"] = journal.criticalFree();
@@ -129,6 +130,7 @@ void snapshot(JsonDocument& d, bool observation) {
     p["valid"] = probe.valid && elapsed(millis(), probe.sampled) <= 3000;
     if (p["valid"].as<bool>()) p["temperature"] = probe.value;
     p["target"] = heater.target; p["output"] = digitalRead(HEAT) == HIGH; p["demand"] = heater.demand; p["fault"] = faultCode();
+    p["power_percent"] = heater.powerPercent();
 }
 void recordFault() {
     if (!storage || recordedFault == faultCode()) return;
@@ -263,6 +265,7 @@ void usbDiagnostics() {
         if (WiFi.status() == WL_CONNECTED) { d["ip"] = WiFi.localIP().toString(); d["rssi"] = WiFi.RSSI(); }
         d["platform_configured"] = networkReady; d["settings_ready"] = settingsReady;
         d["setpoint_source"] = savedSettings ? "saved" : "default";
+        d["control_method"] = "pi_fixed"; d["power_percent"] = heater.powerPercent();
         d["temperature_record_interval_s"] = HeaterObservationMs / 1000;
         d["enabled"] = heater.enabled; d["output"] = digitalRead(HEAT) == HIGH; d["fault"] = faultCode();
         d["buzzer"] = digitalRead(BUZZER) == HIGH;

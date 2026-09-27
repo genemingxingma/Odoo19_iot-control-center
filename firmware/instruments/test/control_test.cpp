@@ -33,9 +33,9 @@ int main() {
     h.tick(p,100); assert(!h.output && !h.enabled); ++checks;
     assert(h.arm(p,100)); h.tick(p,100); assert(h.output); ++checks;
     p.value=38; h.tick(p,100); assert(!h.output); ++checks;
-    p.value=36.5; h.tick(p,100); assert(!h.output); ++checks;
-    p.value=35; h.tick(p,100); assert(h.output); ++checks;
-    p.valid=false; h.tick(p,101); assert(!h.output && !h.enabled && h.fault==Sensor); ++checks;
+    p.value=36.5; h.tick(p,1100); assert(!h.output && h.powerPercent()==10); ++checks;
+    p.value=35; p.sampled=2100; h.tick(p,2100); assert(h.output); ++checks;
+    p.valid=false; h.tick(p,2101); assert(!h.output && !h.enabled && h.fault==Sensor); ++checks;
     p.valid=true; h.tick(p,102); assert(!h.output && !h.enabled); ++checks;
     for (float invalid : {-127.0f,85.0f,55.0f,std::numeric_limits<float>::quiet_NaN(),std::numeric_limits<float>::infinity()}) {
         p.value=35; p.valid=true; p.sampled=100; assert(h.arm(p,100)); p.value=invalid; h.tick(p,101); assert(!h.output && !h.enabled); ++checks;
@@ -88,7 +88,8 @@ int main() {
     p.sampled=900000; paused.tick(p,900000); assert(paused.enabled && paused.poweredMs==300000); ++checks;
     assert(paused.setTarget(40) && paused.configureProtection(600,1)); ++checks;
     assert(!paused.configureProtection(1200,1)); ++checks;
-    p.sampled=1200000; paused.tick(p,1200000); assert(paused.fault==NoTemperatureRise); ++checks;
+    p.sampled=900001; paused.tick(p,900001); assert(paused.enabled && paused.poweredMs==0); ++checks;
+    p.sampled=1500001; paused.tick(p,1500001); assert(paused.fault==NoTemperatureRise); ++checks;
     HeaterChannel near; near.configureProtection(600,1); p={36,0,true}; near.arm(p,0); near.tick(p,0); near.pause(100);
     p={36.5f,1000,true}; near.tick(p,1000); assert(near.output && near.enabled); ++checks;
     HeaterChannel overflow; overflow.configureProtection(600,1); p={30,0xfffffff0u,true}; overflow.arm(p,p.sampled); overflow.tick(p,p.sampled);
