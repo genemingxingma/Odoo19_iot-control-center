@@ -57,7 +57,38 @@ durable outbox, original guide bodies and pre-refinement JS. Source/file-store
 and queue inventories were checked. Full dump decoding is verified without
 restoring into production. Shared laboratory/IoT deployment locks were held.
 
-No device flashing, relay switching, protection reset, Wi-Fi configuration or
-router mutation was performed. The second legacy heater remains detection-only
+The platform release itself performed no device flashing, relay switching,
+protection reset, Wi-Fi configuration or router mutation. The second legacy heater remains detection-only
 until load isolation and a reviewed device-specific migration image are ready.
 Its private connection details are outside this repository.
+
+## Subsequent Authorized Detection
+
+The user subsequently authorized power-cycling 06458F for legacy heater detection.
+Three bounded five-minute connection windows were completed between 14:31 and
+14:48 UTC. All ON/OFF intents went through the production command outbox and
+received device confirmation. No legacy OTA request was recorded, no image was
+served and no release authorization file was created. The observer remains healthy.
+
+Command 18 was created at 14:31:13.387180 UTC; its matching non-retained device
+status reached the bridge at 14:31:14.199000 and database ingress at 14:31:14.220992.
+This gives approximately 0.812 seconds to the device report and 22 milliseconds
+for that report's ingress. It verifies the fast status lane, not load current.
+The session tool's longer controller-roundtrip time includes SSH/Odoo startup
+and polling; it is not the physical relay actuation time.
+
+Final command 23 confirmed OFF, automatic ON blocked, no safety trip or delay.
+The temporary 360-second device watchdog used during each ON window was restored
+to the prior zero setting with OFF. Native production list observation also
+showed OFF / Confirmed without reloading the page.
+
+Router DNS 192.168.20.1 resolves the old CN OTA host to 192.168.20.200. A local
+Wi-Fi scan did not see either original fallback SSID; hidden SSIDs, coverage,
+stored EEPROM settings and the other controller's actual firmware are still
+unverified. Do not equate absence of a recorded request with proof of a specific
+Wi-Fi fault. No router/AP setting was changed.
+
+The fixed PI rc9 candidate and observer/session tools passed 116 local Python
+tests, native safety/UI tests, both firmware builds and the JS refresh harness.
+They are separate from the already accepted 19.0.2.6.1 production addon; rc9 has
+not been flashed or served as a first-generation migration image.
