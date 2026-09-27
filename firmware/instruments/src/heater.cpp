@@ -168,7 +168,8 @@ void paint() {
     HeaterView v; v.state = !commissioned ? "SETUP" : !settingsReady ? "SET TEMP" : heater.enabled ? "READY" : "OFF";
     v.temperature = value; v.target = target; v.deviceId = deviceId.c_str(); v.ip = ip.c_str(); v.version = runtime::version;
     v.online = WiFi.status() == WL_CONNECTED; v.output = digitalRead(HEAT) == HIGH;
-    v.fault = strcmp(code, "none") && strcmp(code, "configuration");
+    // Setup can show temperature and identity while the persisted fault stays latched.
+    v.fault = (commissioned || !journal.healthy) && strcmp(code, "none") && strcmp(code, "configuration");
     v.alarm = alarmText(); v.page = panel.page;
     drawHeater(oled, v);
 }

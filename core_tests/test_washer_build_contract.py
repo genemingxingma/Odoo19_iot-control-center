@@ -13,7 +13,7 @@ class WasherBuildContract(unittest.TestCase):
         self.assertIn('stopRun(Storage, "Operator screen restarted")',boot)
         self.assertIn('display.invalidate()',boot)
         self.assertNotIn('startRun()',boot)
-        self.assertIn('prints "UI|BOOT|4",0',(ROOT/'hmi/page-init-refresh-candidate.txt').read_text())
+        self.assertIn('prints "UI|BOOT|4",0',(ROOT/'hmi/page-init.txt').read_text())
         self.assertIn('prints "UI|HELLO|4",0',(ROOT/'hmi/heartbeat.txt').read_text())
 
     def test_controller_can_pair_with_an_already_booted_v4_screen(self):
@@ -141,5 +141,14 @@ class WasherBuildContract(unittest.TestCase):
         self.assertIn('d.setTextSize(4); d.setCursor(0, 13); d.print(v.temperature);',ui)
         self.assertIn('d.setTextSize(2); d.setCursor(0, 3); d.print("ALARM");',ui)
         self.assertNotIn('1:ID  2:HEAT  3:SET',ui)
+
+    def test_setup_display_does_not_replace_persisted_runtime_fault(self):
+        source=(ROOT/'src/heater.cpp').read_text()
+        fault=source.split('const char* faultCode()',1)[1].split('const char* alarmText()',1)[0]
+        alarm=source.split('const char* alarmText()',1)[1].split('String addressText',1)[0]
+        self.assertLess(fault.index('if (stalled)'), fault.index('if (!commissioned)'))
+        self.assertLess(alarm.index('if (stalled)'), alarm.index('if (!commissioned)'))
+        paint=source.split('void paint()',1)[1].split('void attachWatchdog()',1)[0]
+        self.assertIn('(commissioned || !journal.healthy)',paint)
 
 if __name__=='__main__': unittest.main()
