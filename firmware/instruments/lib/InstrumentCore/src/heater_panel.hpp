@@ -47,6 +47,7 @@ struct HeaterView {
     const char* version = "";
     const char* alarm = "";
     bool online = false, output = false, fault = false;
+    bool targetSaved = true;
     HeaterPage page = HeaterPage::Live;
 };
 
@@ -68,7 +69,7 @@ template<class Display> void drawHeater(Display& d, const HeaterView& v) {
     } else if (v.page == HeaterPage::Target) {
         d.setCursor(0, 0); d.print("TARGET");
         d.setTextSize(3); d.setCursor(0, 19); d.print(v.target);
-        d.setTextSize(1); d.setCursor(0, 54); d.print("SAVED ON DEVICE");
+        d.setTextSize(1); d.setCursor(0, 54); d.print(v.targetSaved ? "SAVED ON DEVICE" : "DEFAULT SETPOINT");
     } else {
         d.setCursor(0, 0); d.print(v.output ? "HEATING" : v.state);
         d.setCursor(120, 0); d.print("C");

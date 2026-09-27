@@ -56,6 +56,10 @@ int main() {
         v.alarm="SENSOR: HEAT OFF"; v.fault=true;
         drawHeater(d,v); assert(d.lines.back()=="HEAT OFF");
         v.alarm=""; v.fault=false; drawHeater(d,v);
+        if (page==HeaterPage::Target) {
+            v.targetSaved=false; drawHeater(d,v);
+            assert(d.lines.back()=="DEFAULT SETPOINT");
+        }
     }
     std::puts("HEATER_PANEL_TESTS_OK");
 }

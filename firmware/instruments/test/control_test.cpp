@@ -27,11 +27,12 @@ int main() {
     assert(!schedule.useBacklog(true)); ++checks;
     Probe p{35,100,true};
     HeaterChannel h;
+    h.setTarget(37);
     assert(!h.arm(p,100)); ++checks;
     assert(h.configureProtection(600,1)); ++checks;
     h.tick(p,100); assert(!h.output && !h.enabled); ++checks;
     assert(h.arm(p,100)); h.tick(p,100); assert(h.output); ++checks;
-    p.value=37; h.tick(p,100); assert(!h.output); ++checks;
+    p.value=38; h.tick(p,100); assert(!h.output); ++checks;
     p.value=36.5; h.tick(p,100); assert(!h.output); ++checks;
     p.value=35; h.tick(p,100); assert(h.output); ++checks;
     p.valid=false; h.tick(p,101); assert(!h.output && !h.enabled && h.fault==Sensor); ++checks;
@@ -79,8 +80,8 @@ int main() {
     HeaterChannel rising; rising.configureProtection(600,1); p={30,0,true}; rising.arm(p,0); rising.tick(p,0);
     p={31.0f,600000,true}; rising.tick(p,600000); assert(rising.enabled && rising.fault==None && rising.poweredMs==0); ++checks;
     p.sampled=1200000; rising.tick(p,1200000); assert(rising.fault==NoTemperatureRise); ++checks;
-    HeaterChannel held; held.configureProtection(600,1); p={36,0,true}; held.arm(p,0); held.tick(p,0);
-    p={37,500000,true}; held.tick(p,500000); assert(!held.output && held.enabled); ++checks;
+    HeaterChannel held; held.setTarget(37); held.configureProtection(600,1); p={36,0,true}; held.arm(p,0); held.tick(p,0);
+    p={38,500000,true}; held.tick(p,500000); assert(!held.output && held.enabled); ++checks;
     p.sampled=2400000; held.tick(p,2400000); assert(!held.output && held.enabled && held.fault==None); ++checks;
     HeaterChannel paused; paused.configureProtection(600,1); p={30,0,true}; paused.arm(p,0); paused.tick(p,0);
     paused.pause(300000); assert(!paused.output && paused.poweredMs==300000); ++checks;

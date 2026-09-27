@@ -31,7 +31,7 @@ def main():
             except (ValueError,UnicodeError): continue
             readings.append(value)
             print(json.dumps(value),flush=True)
-            active=any(value.get(k) for k in ('commissioned','enable_pin','inlet_a_pin','inlet_b_pin','drain_pwm','overflow_pwm','motor_running'))
+            active=any(value.get(k) for k in ('commissioned','enabled','output','enable_pin','inlet_a_pin','inlet_b_pin','drain_pwm','overflow_pwm','motor_running'))
             if active and not a.allow_isolated_startup:
                 raise RuntimeError('Output-locked test invariant failed; do not reconnect actuator power')
             if active and value.get('initialization') not in (1,2):

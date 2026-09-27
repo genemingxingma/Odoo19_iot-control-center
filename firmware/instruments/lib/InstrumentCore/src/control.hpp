@@ -26,7 +26,7 @@ struct Probe {
     bool valid = false;
 };
 struct HeaterChannel {
-    float target = 37;
+    float target = 42;
     bool enabled = false, output = false, demand = false;
     Fault fault = None;
     uint32_t riseWindowMs = 0, poweredMs = 0, lastTick = 0;
@@ -68,7 +68,7 @@ struct HeaterChannel {
         Fault current = condition(p, now);
         if (enabled && current != None) { fault = current; stop(); }
         if (!enabled || fault != None) { output = false; return; }
-        if (p.value >= target) { demand = tracking = false; poweredMs = 0; }
+        if (p.value >= target + 1.0f) { demand = tracking = false; poweredMs = 0; }
         else if (p.value <= target - 1.0f) demand = true;
         output = demand;
         if (output && !tracking) { tracking = true; reference = p.value; poweredMs = 0; }

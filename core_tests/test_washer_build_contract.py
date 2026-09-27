@@ -146,9 +146,23 @@ class WasherBuildContract(unittest.TestCase):
         source=(ROOT/'src/heater.cpp').read_text()
         fault=source.split('const char* faultCode()',1)[1].split('const char* alarmText()',1)[0]
         alarm=source.split('const char* alarmText()',1)[1].split('String addressText',1)[0]
-        self.assertLess(fault.index('if (stalled)'), fault.index('if (!commissioned)'))
+        self.assertLess(fault.index('if (stalled)'), fault.index('commissioned ? "none" : "configuration"'))
+        self.assertLess(fault.index('case Sensor:'), fault.index('commissioned ? "none" : "configuration"'))
         self.assertLess(alarm.index('if (stalled)'), alarm.index('if (!commissioned)'))
         paint=source.split('void paint()',1)[1].split('void attachWatchdog()',1)[0]
-        self.assertIn('(commissioned || !journal.healthy)',paint)
+        self.assertIn('(commissioned || !journal.healthy || heater.fault == Sensor || restoredStorageFault)',paint)
+
+    def test_heater_offline_default_and_hourly_history(self):
+        source=(ROOT/'src/heater.cpp').read_text()
+        runtime=(ROOT/'lib/InstrumentCore/src/heater_runtime.hpp').read_text()
+        self.assertIn('heaterDefaults(heater); settingsReady = true;', source)
+        self.assertIn('heater.setTarget(42); heater.configureProtection(600, 1);', runtime)
+        self.assertIn('60u * 60u * 1000u', runtime)
+        self.assertIn('elapsed(now, lastSample) >= HeaterObservationMs', source)
+        self.assertIn('settingsReady = savedSettings = true;', source)
+        self.assertIn('if (!settingsReady) journal.healthy = false;', source)
+        pause=source.split('void pauseForMaintenance',1)[1].split('void scanProbe',1)[0]
+        self.assertIn('outputsOff(); loopGuard.powered = false;', pause)
+        self.assertNotIn('probe.valid = false', pause)
 
 if __name__=='__main__': unittest.main()

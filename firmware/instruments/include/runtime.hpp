@@ -19,6 +19,7 @@
 #include <mbedtls/base64.h>
 #endif
 #include "control.hpp"
+#include "journal_budget.hpp"
 
 namespace runtime {
 #define INSTRUMENT_STRING_VALUE_(value) #value
@@ -54,7 +55,10 @@ inline String randomId() {
 }
 inline String deviceIdentity(const char* prefix) {
     uint8_t mac[6] = {};
+#ifndef ESP8266
     WiFi.mode(WIFI_STA);
+#endif
+    // ESP8266's MAC accessor reads the SDK identity without starting the radio.
     WiFi.macAddress(mac);
     char value[21];
     snprintf(value, sizeof(value), "%s-%02X%02X%02X%02X%02X%02X", prefix,
@@ -92,7 +96,7 @@ struct Network {
         bool serverReady = url.startsWith("https://") && url.indexOf('@') < 0 && url.indexOf('?') < 0 && url.indexOf('#') < 0 && safeId(uid) && token.length() >= 32 && token.length() <= 128 && ca.length() >= 100;
         if (!allowWifiOnly && (!serverReady || ssid.isEmpty())) return false;
         if (ssid.length() && ssid.length() <= 32 && password.length() <= 64) {
-            WiFi.mode(WIFI_STA); WiFi.persistent(false); WiFi.begin(ssid.c_str(), password.c_str());
+            WiFi.persistent(false); WiFi.mode(WIFI_STA); WiFi.begin(ssid.c_str(), password.c_str());
         }
         // UTC is used on wire; country and display timezone stay in the company.
         configTime(0, 0, doc["ntp"] | "pool.ntp.org");
@@ -176,6 +180,9 @@ class Journal {
 public:
     static constexpr unsigned ObservationLimit = 128;
     static constexpr unsigned MaximumEntries = 192;
+    unsigned observationLimit = ObservationLimit, maximumEntries = MaximumEntries;
+    bool recoverLegacyFull = false;
+    unsigned knownPending = 0, knownCritical = 0;
     String boot = randomId(), ackId, ackResult;
     uint32_t sequence = 0, lastCommand = 0;
     uint32_t queueNumber = 0;
@@ -183,11 +190,12 @@ public:
     bool healthy = true;
 private:
     void inventory(unsigned& count, String& oldestObservation) {
-        count = 0; oldestObservation = "";
+        count = 0; oldestObservation = ""; knownCritical = 0;
         auto seen = [&](String name) {
             if (!name.endsWith(".json")) return;
             ++count;
             name = name.substring(name.lastIndexOf('/') + 1);
+            if (!name.endsWith(".obs.json")) ++knownCritical;
             if (name.endsWith(".obs.json") && (!oldestObservation.length() || name < oldestObservation)) oldestObservation = name;
             uint32_t number = strtoul(name.c_str(), nullptr, 10);
             if (number > queueNumber) queueNumber = number;
@@ -198,18 +206,39 @@ private:
         File dir = LittleFS.open("/events"); File entry = dir.openNextFile();
         while (entry) { seen(entry.path()); entry.close(); entry = dir.openNextFile(); }
 #endif
+        knownPending = count;
     }
     bool dropObservation(const String& oldestObservation) {
         uint32_t next = droppedObservations >= INT32_MAX ? INT32_MAX : droppedObservations + 1;
-        if (!atomicFile("/observation-loss.json", "{\"count\":" + String(next) + "}")) { healthy = false; return false; }
+        if (recoverLegacyFull && oldestObservation.length()) {
+            DynamicJsonDocument sample(4096);
+            if (deserializeJson(sample, readFile(("/events/" + oldestObservation).c_str(), 4096)) ||
+                sample["observation"] != true || sample["alarm"] == true || sample.containsKey("log")) {
+                healthy = false; return false;
+            }
+        }
+        bool ok = instrument::evictObservation(next, oldestObservation.length() != 0, recoverLegacyFull,
+            [](uint32_t count) { return atomicFile("/observation-loss.json", "{\"count\":" + String(count) + "}"); },
+            [&]() { return LittleFS.remove("/events/" + oldestObservation); });
+        if (!ok) { healthy = false; return false; }
         droppedObservations = next;
-        if (!oldestObservation.length()) return true;
-        if (!LittleFS.remove("/events/" + oldestObservation)) { healthy = false; return false; }
         return true;
     }
 public:
-    void begin() {
+    void begin(bool smallFlash = false) {
         LittleFS.mkdir("/events");
+#ifdef ESP8266
+        if (smallFlash) {
+            FSInfo info;
+            if (!LittleFS.info(info) || !info.blockSize) { healthy = false; return; }
+            auto budget = instrument::JournalBudget::forBlocks(info.totalBytes / info.blockSize);
+            if (budget.observations < 8) { healthy = false; return; }
+            observationLimit = budget.observations; maximumEntries = budget.maximum;
+            recoverLegacyFull = true;
+        }
+#else
+        (void)smallFlash;
+#endif
         DynamicJsonDocument d(512);
         if (LittleFS.exists("/observation-loss.json")) {
             if (deserializeJson(d, readFile("/observation-loss.json", 128)) || !d["count"].is<uint32_t>()) {
@@ -225,6 +254,15 @@ public:
             if (!lastCommand || !safeId(ackId) || (ackResult != "applied" && ackResult != "rejected")) healthy = false;
         } else if (LittleFS.exists("/command.json")) {
             healthy = false;
+        }
+        if (healthy && recoverLegacyFull) {
+            unsigned count; String oldest;
+            inventory(count, oldest);
+            while (count > observationLimit && oldest.length()) {
+                if (!dropObservation(oldest)) return;
+                inventory(count, oldest); delay(1);
+            }
+            if (count >= maximumEntries) healthy = false;
         }
     }
     bool remember(uint32_t seq, const String& id, const char* result) {
@@ -244,13 +282,13 @@ public:
     }
     unsigned criticalFree() {
         unsigned count; String oldest; inventory(count, oldest);
-        return count < MaximumEntries ? MaximumEntries - count : 0;
+        return count < maximumEntries ? maximumEntries - count : 0;
     }
     bool reserveCritical(unsigned needed) {
-        if (!needed || needed >= MaximumEntries) return false;
+        if (!needed || needed >= maximumEntries) return false;
         unsigned count; String oldest;
         inventory(count, oldest);
-        while (count + needed > MaximumEntries - 1) {
+        while (count + needed > maximumEntries - 1) {
             if (!oldest.length() || !dropObservation(oldest)) return false;
             inventory(count, oldest);
         }
@@ -259,19 +297,21 @@ public:
     bool save(JsonDocument& doc, bool rollingObservation = false, bool terminal = false) {
         unsigned count; String oldestObservation; inventory(count, oldestObservation);
         if (rollingObservation && (doc["observation"] != true || doc["alarm"] == true)) { healthy = false; return false; }
-        if (rollingObservation && count >= ObservationLimit) {
+        if (rollingObservation && count >= observationLimit) {
             // Ordinary samples are a bounded offline ring; alarms and command
             // receipts are never evicted. Persist a conservative loss counter.
             if (!dropObservation(oldestObservation)) return false;
             if (!oldestObservation.length()) return true;
             --count;
         }
-        unsigned limit = terminal ? MaximumEntries : MaximumEntries - 1;
+        unsigned limit = terminal ? maximumEntries : maximumEntries - 1;
         if (count >= limit || queueNumber == UINT32_MAX) { healthy = false; return false; }
         if (rollingObservation) doc["status"]["dropped_observations"] = droppedObservations;
         String text; serializeJson(doc, text);
         char path[40]; snprintf(path, sizeof(path), rollingObservation ? "/events/%010lu.obs.json" : "/events/%010lu.json", static_cast<unsigned long>(++queueNumber));
         if (!atomicFile(path, text)) { healthy = false; return false; }
+        knownPending = count + 1;
+        if (!rollingObservation) ++knownCritical;
         return true;
     }
     String oldestPath() {
